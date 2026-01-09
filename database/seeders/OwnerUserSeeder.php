@@ -23,7 +23,7 @@ class OwnerUserSeeder extends Seeder
             'company_name' => 'T.mart',
             'company_address' => '123 Owner St',
             'workplace' => 'tmart.accountingpro.local',
-            'company_email' => 'info@futechnepal.com',
+            'company_email' => 'info@accountingpro.com',
             'company_pan_no' => 'PAN123456',
             'company_registration_no' => 'REG123456',
             'company_industry' => 'Technology',
