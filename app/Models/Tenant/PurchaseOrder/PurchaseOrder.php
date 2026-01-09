@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class PurchaseOrder extends Model
 {
     use HasFactory, SoftDeletes;
-    protected $table = 'purchase_order';
+    protected $table = 'purchase_orders';
     protected $fillable = [
         'supplier_id',
         'purchase_invoice_number',

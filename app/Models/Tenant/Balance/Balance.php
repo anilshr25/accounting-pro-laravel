@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Balance extends Model
 {
     use HasFactory, SoftDeletes;
-    protected $table = 'balance';
+    protected $table = 'balances';
     protected $fillable = [
         'date',
         'opening_balance',

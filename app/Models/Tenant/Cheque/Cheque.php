@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Cheque extends Model
 {
     use HasFactory, SoftDeletes;
-    protected $table = 'cheque';
+    protected $table = 'cheques';
     protected $fillable = [
         'bank_account_id',
         'supplier_id',

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('daybook', function (Blueprint $table) {
+        Schema::create('daybooks', function (Blueprint $table) {
             $table->id();
             $table->date('date');
             $table->string('name');
@@ -21,6 +21,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('daybook');
+        Schema::dropIfExists('daybooks');
     }
 };

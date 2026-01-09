@@ -8,11 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('cheque', function (Blueprint $table) {
+        Schema::create('cheques', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('bank_account_id')->nullable()->constrained('bank_account')->nullOnDelete();
-            $table->foreignId('supplier_id')->nullable()->constrained('supplier')->nullOnDelete();
-            $table->foreignId('customer_id')->nullable()->constrained('customer')->nullOnDelete();
+            $table->foreignId('bank_account_id')->nullable()->constrained('bank_accounts')->cascadeOnUpdate()->cascadeOnDelete();
+            $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->cascadeOnUpdate()->cascadeOnDelete();
+            $table->foreignId('customer_id')->nullable()->constrained('customers')->cascadeOnUpdate()->cascadeOnDelete();
             $table->string('type');
             $table->string('cheque_number');
             $table->string('pay_to')->nullable();
@@ -33,6 +33,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('cheque');
+        Schema::dropIfExists('cheques');
     }
 };

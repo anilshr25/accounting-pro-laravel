@@ -8,9 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('purchase_order', function (Blueprint $table) {
+        Schema::create('purchase_orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('supplier_id')->constrained('supplier')->nullOnDelete();
+            $table->foreignId('supplier_id')->constrained('suppliers')->cascadeOnUpdate()->cascadeOnDelete();
             $table->string('purchase_invoice_number');
             $table->date('order_date');
             $table->date('received_date');
@@ -26,6 +26,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('purchase_order');
+        Schema::dropIfExists('purchase_orders');
     }
 };

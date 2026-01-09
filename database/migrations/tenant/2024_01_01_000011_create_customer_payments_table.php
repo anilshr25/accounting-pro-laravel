@@ -8,9 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('customer_payment', function (Blueprint $table) {
+        Schema::create('customer_payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_id')->nullable()->constrained('customer')->nullOnDelete();
+            $table->foreignId('customer_id')->nullable()->constrained('customers')->cascadeOnUpdate()->cascadeOnDelete();
             $table->date('date');
             $table->string('miti');
             $table->decimal('amount', 15, 2);
@@ -25,6 +25,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('customer_payment');
+        Schema::dropIfExists('customer_payments');
     }
 };

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Daybook extends Model
 {
     use HasFactory;
-    protected $table = 'daybook';
+    protected $table = 'daybooks';
     protected $fillable = [
         'date',
         'name',

@@ -8,12 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('bank_account', function (Blueprint $table) {
+        Schema::create('balances', function (Blueprint $table) {
             $table->id();
-            $table->string('bank_name');
-            $table->string('account_number');
-            $table->string('account_type');
-            $table->decimal('balance', 15, 2)->default(0);
+            $table->date('date');
+            $table->decimal('opening_balance', 15, 2)->nullable();
+            $table->decimal('closing_balance', 15, 2)->nullable();
+            $table->string('shift');
             $table->timestamps();
             $table->softDeletes();
         });
@@ -21,6 +21,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('bank_account');
+        Schema::dropIfExists('balances');
     }
 };

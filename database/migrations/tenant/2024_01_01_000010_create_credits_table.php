@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('credit', function (Blueprint $table) {
+        Schema::create('credits', function (Blueprint $table) {
             $table->id();
             $table->string('type');
             $table->decimal('amount', 15, 2);
@@ -21,8 +21,8 @@ return new class extends Migration
                 'pending',
                 'completed',
             ])->default('pending');
-            $table->foreignId('customer_id')->nullable()->constrained('customer')->nullOnDelete();
-            $table->foreignId('supplier_id')->nullable()->constrained('supplier')->nullOnDelete();
+            $table->foreignId('customer_id')->nullable()->constrained('customers')->cascadeOnUpdate()->cascadeOnDelete();
+            $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->cascadeOnUpdate()->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -30,6 +30,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('credit');
+        Schema::dropIfExists('credits');
     }
 };
