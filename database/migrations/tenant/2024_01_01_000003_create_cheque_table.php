@@ -9,18 +9,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('cheque', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->unsignedBigInteger('bank_account_id')->nullable();
-            $table->unsignedBigInteger('supplier_id')->nullable();
-            $table->unsignedBigInteger('customer_id')->nullable();
-            $table->string('type')->nullable();
-            $table->string('cheque_number')->nullable();
+            $table->id();
+            $table->foreignId('bank_account_id')->nullable()->constrained('bank_account')->nullOnDelete();
+            $table->foreignId('supplier_id')->nullable()->constrained('supplier')->nullOnDelete();
+            $table->foreignId('customer_id')->nullable()->constrained('customer')->nullOnDelete();
+            $table->string('type');
+            $table->string('cheque_number');
             $table->string('pay_to')->nullable();
-            $table->decimal('amount', 15, 2)->nullable();
-            $table->date('date')->nullable();
-            $table->string('miti')->nullable();
+            $table->decimal('amount', 15, 2);
+            $table->date('date');
+            $table->string('miti');
             $table->text('remarks')->nullable();
-            $table->string('status')->nullable();
+            $table->enum('status', [
+                'pending',
+                'cleared',
+                'cancelled'
+            ])->default('pending');
             $table->string('bank_name')->nullable();
             $table->timestamps();
             $table->softDeletes();

@@ -9,16 +9,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('purchase_order', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->unsignedBigInteger('supplier_id')->nullable();
-            $table->string('purchase_invoice_number')->nullable();
-            $table->date('order_date')->nullable();
-            $table->date('received_date')->nullable();
-            $table->decimal('tax', 15, 2)->nullable();
-            $table->decimal('sub_total', 15, 2)->nullable();
-            $table->decimal('total', 15, 2)->nullable();
-            $table->string('status')->nullable();
-            $table->string('received_by')->nullable();
+            $table->id();
+            $table->foreignId('supplier_id')->constrained('supplier')->nullOnDelete();
+            $table->string('purchase_invoice_number');
+            $table->date('order_date');
+            $table->date('received_date');
+            $table->decimal('tax', 15, 2);
+            $table->decimal('sub_total', 15, 2);
+            $table->decimal('total', 15, 2);
+            $table->enum('status', ['invoiced', 'received'])->default('received');
+            $table->string('received_by');
             $table->timestamps();
             $table->softDeletes();
         });

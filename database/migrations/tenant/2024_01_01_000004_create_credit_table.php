@@ -9,17 +9,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('credit', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('type')->nullable();
-            $table->decimal('amount', 15, 2)->nullable();
+            $table->id();
+            $table->string('type');
+            $table->decimal('amount', 15, 2);
             $table->decimal('return_amount', 15, 2)->nullable();
             $table->text('description')->nullable();
-            $table->date('date')->nullable();
-            $table->string('miti')->nullable();
-            $table->string('shift')->nullable();
-            $table->string('status')->nullable();
-            $table->unsignedBigInteger('customer_id')->nullable();
-            $table->unsignedBigInteger('supplier_id')->nullable();
+            $table->date('date');
+            $table->string('miti');
+            $table->enum('shift', ['morning', 'evening']);
+            $table->enum('status', [
+                'pending',
+                'completed',
+            ])->default('pending');
+            $table->foreignId('customer_id')->nullable()->constrained('customer')->nullOnDelete();
+            $table->foreignId('supplier_id')->nullable()->constrained('supplier')->nullOnDelete();
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

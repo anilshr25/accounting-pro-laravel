@@ -9,11 +9,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('bank_account', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('bank_name')->nullable();
-            $table->string('account_number')->nullable();
-            $table->string('account_type')->nullable();
-            $table->decimal('balance', 15, 2)->nullable();
+            $table->id();
+            $table->string('bank_name');
+            $table->string('account_number');
+            $table->string('account_type');
+            $table->decimal('balance', 15, 2)->default(0);
             $table->timestamps();
             $table->softDeletes();
         });

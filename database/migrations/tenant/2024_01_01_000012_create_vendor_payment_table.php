@@ -9,13 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('vendor_payment', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->unsignedBigInteger('supplier_id')->nullable();
-            $table->date('date')->nullable();
-            $table->string('miti')->nullable();
-            $table->decimal('amount', 15, 2)->nullable();
-            $table->string('payment_type')->nullable();
-            $table->string('shift')->nullable();
+            $table->id();
+            $table->foreignId('supplier_id')->constrained('supplier')->nullOnDelete();
+            $table->date('date');
+            $table->string('miti');
+            $table->decimal('amount', 15, 2);
+            $table->enum('payment_type', ['cash', 'fonepay', 'cardpay']);
+            $table->enum('shift', ['morning', 'evening'])->nullable();
             $table->string('transaction_id')->nullable();
             $table->text('remarks')->nullable();
             $table->timestamps();

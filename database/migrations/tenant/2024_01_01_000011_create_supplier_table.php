@@ -9,13 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('supplier', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('name')->nullable();
+            $table->id();
+            $table->string('name');
             $table->string('email')->nullable();
-            $table->string('phone')->nullable();
+            $table->string('phone');
             $table->string('address')->nullable();
-            $table->decimal('opening_balance', 15, 2)->nullable();
-            $table->string('pan')->nullable();
+            $table->decimal('opening_balance', 15, 2)->default(0.00);
+            $table->string('pan');
             $table->timestamps();
             $table->softDeletes();
         });

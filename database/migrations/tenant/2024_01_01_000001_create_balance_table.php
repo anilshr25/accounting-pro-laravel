@@ -9,11 +9,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('balance', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->date('date')->nullable();
+            $table->id();
+            $table->date('date');
             $table->decimal('opening_balance', 15, 2)->nullable();
             $table->decimal('closing_balance', 15, 2)->nullable();
-            $table->string('shift')->nullable();
+            $table->string('shift');
             $table->timestamps();
             $table->softDeletes();
         });

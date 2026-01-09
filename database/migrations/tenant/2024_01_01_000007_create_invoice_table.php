@@ -9,17 +9,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('invoice', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->unsignedBigInteger('customer_id')->nullable();
-            $table->string('invoice_miti')->nullable();
-            $table->date('invoice_date')->nullable();
+            $table->id();
+            $table->foreignId('customer_id')->nullable()->constrained('customer')->nullOnDelete();
+            $table->string('invoice_miti');
+            $table->date('invoice_date');
             $table->decimal('tax', 15, 2)->nullable();
             $table->decimal('sub_total', 15, 2)->nullable();
-            $table->decimal('total', 15, 2)->nullable();
-            $table->string('payment_type')->nullable();
+            $table->decimal('total', 15, 2);
+            $table->enum('payment_type', ['cash', 'fonepay', 'cardpay']);
             $table->string('status')->nullable();
             $table->text('remarks')->nullable();
-            $table->string('shift')->nullable();
+            $table->enum('shift', ['morning', 'evening']);
             $table->boolean('sale_return')->nullable();
             $table->timestamps();
             $table->softDeletes();

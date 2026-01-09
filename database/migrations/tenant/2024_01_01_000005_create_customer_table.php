@@ -9,10 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('customer', function (Blueprint $table) {
-            $table->bigIncrements('id');
-            $table->string('name')->nullable();
+            $table->id();
+            $table->string('name');
             $table->string('email')->nullable();
-            $table->string('phone')->nullable();
+            $table->string('phone');
             $table->string('address')->nullable();
             $table->decimal('credit_balance', 15, 2)->nullable();
             $table->string('vat')->nullable();
