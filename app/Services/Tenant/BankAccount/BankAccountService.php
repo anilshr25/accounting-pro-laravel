@@ -34,6 +34,14 @@ class BankAccountService
         return $this->bank_account->find($id);
     }
 
+    public function show($id)
+    {
+        $bankAccount = $this->find($id);
+        if($bankAccount)
+            return new BankAccountResource($bankAccount);
+        return null;
+    }
+
     public function update($id, $data)
     {
         try {

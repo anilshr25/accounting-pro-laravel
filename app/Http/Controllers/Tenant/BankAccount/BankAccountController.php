@@ -29,6 +29,12 @@ class BankAccountController extends Controller
         return response(['status' => 'ERROR'], 500);
     }
 
+    public function show($id)
+    {
+        $bank_account = $this->bank_account->find($id);
+        return response(['data' => $bank_account], 200);
+    }
+
     public function update(BankAccountRequest $request, $id)
     {
         $bank_account = $this->bank_account->update($id, $request->validated());
