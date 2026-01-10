@@ -61,6 +61,9 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'is_mfa_enabled' => 'boolean',
+            'is_email_authentication_enabled' => 'boolean',
+            'is_login_verified' => 'boolean',
             'is_active' => 'boolean',
             'force_password_change' => 'boolean',
             'password' => 'hashed',

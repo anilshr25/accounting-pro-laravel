@@ -55,7 +55,7 @@ Route::group(['prefix' => 'api', 'middleware' => ['tenant', 'prevent_access_from
 // Tenant API routes
 Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains', 'stateful', 'web', 'user'])->group(function ($route) {
 
-    $route->post('logout', [LoginController::class, 'logout'])->name('admin.logout');
+    $route->post('logout', [LoginController::class, 'logout'])->name('logout');
     $route->get('do-verify', [LoginController::class, 'doVerify']);
 
     $route->get('balance', [BalanceController::class, 'index']);

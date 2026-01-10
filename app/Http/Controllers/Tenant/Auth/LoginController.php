@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Services\Tenant\User\UserService;
-use App\Http\Resources\Tenant\User\UserResource;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use App\Http\Resources\Tenant\Auth\AuthUserResource;
 
