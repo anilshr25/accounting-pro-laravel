@@ -16,6 +16,7 @@ use App\Http\Controllers\Tenant\Supplier\SupplierController;
 use App\Http\Controllers\Tenant\BankAccount\BankAccountController;
 use App\Http\Controllers\Tenant\Invoice\Item\InvoiceItemController;
 use App\Http\Controllers\Tenant\PurchaseOrder\PurchaseOrderController;
+use App\Http\Controllers\Tenant\User\UserController;
 use App\Http\Controllers\Tenant\VendorPayment\VendorPaymentController;
 use App\Http\Controllers\Tenant\Customer\Payment\CustomerPaymentController;
 use App\Http\Controllers\Tenant\PurchaseOrder\Item\PurchaseOrderItemController;
@@ -53,6 +54,9 @@ Route::group(['prefix' => 'api', 'middleware' => ['tenant', 'prevent_access_from
 
 // Tenant API routes
 Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains', 'stateful', 'web', 'user'])->group(function ($route) {
+
+    $route->post('logout', [\App\Http\Controllers\Admin\Auth\LoginController::class, 'logout'])->name('admin.logout');
+    $route->get('do-verify', [\App\Http\Controllers\Admin\Auth\LoginController::class, 'doVerify']);
 
     $route->get('balance', [BalanceController::class, 'index']);
     $route->post('balance', [BalanceController::class, 'store']);
@@ -119,4 +123,10 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->post('vendor-payment', [VendorPaymentController::class, 'store']);
     $route->put('vendor-payment/{id}', [VendorPaymentController::class, 'update']);
     $route->delete('vendor-payment/{id}', [VendorPaymentController::class, 'destroy']);
+
+    $route->get('user', [UserController::class, 'index']);
+    $route->post('user', [UserController::class, 'store']);
+    $route->get('user/{id}', [UserController::class, 'show']);
+    $route->put('user/{id}', [UserController::class, 'update']);
+    $route->delete('user/{id}', [UserController::class, 'destroy']);
 });
