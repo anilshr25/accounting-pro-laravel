@@ -28,7 +28,7 @@ class LoginController extends Controller
     {
         if ($request->token) {
             if ($this->attemptLogin($request)) {
-                $authUser = auth()->guard('user')->user();
+                $authUser = auth()->guard('web')->user();
                 $user = new \stdClass();
                 $user->uuid = $authUser->uuid;
                 $user->full_name = $authUser->full_name;
@@ -53,7 +53,7 @@ class LoginController extends Controller
 
     public function doVerify()
     {
-        $user = auth()->guard('user')->user();
+        $user = auth()->guard('web')->user();
         if (!empty($user)) {
             return response(['data' => new AuthUserResource($user)], 200);
         }
@@ -69,14 +69,14 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
-        $user = auth()->guard('user')->user();
+        $user = auth()->guard('web')->user();
         if ($user->uuid == $request->uuid) {
 
-            if (auth()->guard('user')->user()) {
+            if (auth()->guard('web')->user()) {
                 if ($response = $this->loggedOut($request)) {
                     return $response;
                 }
-                auth()->guard('user')->logout();
+                auth()->guard('web')->logout();
 
                 return response(['status' => 'OK', 'message' => 'Logout successfully.'], 200);
             }
@@ -97,6 +97,6 @@ class LoginController extends Controller
 
     protected function guard()
     {
-        return Auth::guard('user');
+        return Auth::guard('web');
     }
 }

@@ -68,7 +68,7 @@ class MFAController extends Controller
 
     public function activateEmailAuthenticator(Request $request)
     {
-        $authUser = auth()->guard('user')->user();
+        $authUser = auth()->guard('web')->user();
         if ($this->user->update($authUser->id, $request->all())) {
             return response(['status' => 'OK']);
         }
@@ -76,7 +76,7 @@ class MFAController extends Controller
 
     public function deactivateEmailAuthenticator()
     {
-        $authUser = auth()->guard('user')->user();
+        $authUser = auth()->guard('web')->user();
         if ($this->user->update($authUser->id, ['is_email_authentication_enabled' => false])) {
             return response(['status' => 'OK'], 200);
         }
@@ -85,7 +85,7 @@ class MFAController extends Controller
 
     public function getMfaAuthenticatorCode()
     {
-        $authUser = auth()->guard('user')->user();
+        $authUser = auth()->guard('web')->user();
         $secret = $this->authenticator->createSecret();
         $qrCodeUrl = $this->authenticator->getQRCodeUrl($authUser->email, $secret, $authUser->organisation->display_name ?? env('APP_NAME'));
         return response(['data' => ['secret_key' => $secret, 'qrCodeUrl' => $qrCodeUrl]]);
@@ -93,7 +93,7 @@ class MFAController extends Controller
 
     public function activateMfaAuthenticator(Request $request)
     {
-        $authUser = auth()->guard('user')->user();
+        $authUser = auth()->guard('web')->user();
         if ($request->filled('secret_key')) {
             $secret = $request->get('secret_key');
             $verificationCode = $request->get('auth_code');
@@ -114,7 +114,7 @@ class MFAController extends Controller
 
     public function deactivateMfaAuthenticator(Request $request)
     {
-        $authUser = auth()->guard('user')->user();
+        $authUser = auth()->guard('web')->user();
         $data = $request->all();
         $data['is_mfa_enabled'] = false;
         $data['mfa_secret_code'] = null;

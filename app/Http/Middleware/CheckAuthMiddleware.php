@@ -15,7 +15,7 @@ class CheckAuthMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->guard('user')->check()) {
+        if (auth()->guard('web')->check()) {
             return $next($request);
         }
         return response()->json(['message' => 'Unauthorized'], 401);
