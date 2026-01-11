@@ -139,5 +139,5 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->delete('user/{id}', [UserController::class, 'destroy']);
 
 
-    $route->get('ledger', LedgerController::class, 'index');
+    $route->get('ledger', [LedgerController::class, 'index']);
 });
