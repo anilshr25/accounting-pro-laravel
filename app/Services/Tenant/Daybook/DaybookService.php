@@ -8,7 +8,6 @@ use App\Http\Resources\Tenant\Daybook\DaybookResource;
 class DaybookService
 {
     protected $daybook;
-
     public function __construct(Daybook $daybook)
     {
         $this->daybook = $daybook;
@@ -29,9 +28,13 @@ class DaybookService
         }
     }
 
-    public function find($id)
+    public function find($id, $resource = false)
     {
-        return $this->daybook->find($id);
+        $daybook = $this->daybook->find($id);
+        if($daybook){
+            $resource ? new DaybookResource($resource) : $resource;
+        }
+        return null;
     }
 
     public function update($id, $data)

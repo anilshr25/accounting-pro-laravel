@@ -8,7 +8,6 @@ use App\Http\Resources\Tenant\Supplier\SupplierResource;
 class SupplierService
 {
     protected $supplier;
-
     public function __construct(Supplier $supplier)
     {
         $this->supplier = $supplier;

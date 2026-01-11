@@ -9,7 +9,6 @@ use App\Http\Resources\Tenant\User\UserResource;
 class UserService
 {
     protected User $user;
-
     public function __construct(User $user)
     {
         $this->user = $user;

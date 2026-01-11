@@ -8,7 +8,6 @@ use App\Http\Resources\Tenant\Customer\CustomerResource;
 class CustomerService
 {
     protected $customer;
-
     public function __construct(Customer $customer)
     {
         $this->customer = $customer;
@@ -31,9 +30,9 @@ class CustomerService
 
     public function find($id, $resource = false)
     {
-        $customer =  $this->customer->find($id);
-        if($customer) {
-            return $resource ? new CustomerResource($customer) : $customer;
+        $customer = $this->customer->find($id);
+        if($customer){
+            $resource ? new CustomerResource($resource) : $resource;
         }
         return null;
     }

@@ -8,7 +8,6 @@ use App\Http\Resources\Tenant\Invoice\Item\InvoiceItemResource;
 class InvoiceItemService
 {
     protected $invoice_item;
-
     public function __construct(InvoiceItem $invoice_item)
     {
         $this->invoice_item = $invoice_item;
@@ -29,9 +28,13 @@ class InvoiceItemService
         }
     }
 
-    public function find($id)
+    public function find($id, $resource = false)
     {
-        return $this->invoice_item->find($id);
+        $invoice_item = $this->invoice_item->find($id);
+        if($invoice_item){
+            $resource ? new InvoiceItemResource($resource) : $resource;
+        }
+        return null;
     }
 
     public function update($id, $data)

@@ -8,7 +8,6 @@ use App\Http\Resources\Tenant\BankAccount\BankAccountResource;
 class BankAccountService
 {
     protected $bank_account;
-
     public function __construct(BankAccount $bank_account)
     {
         $this->bank_account = $bank_account;
@@ -29,9 +28,13 @@ class BankAccountService
         }
     }
 
-    public function find($id)
+    public function find($id, $resource = false)
     {
-        return $this->bank_account->find($id);
+        $bank_account = $this->bank_account->find($id);
+        if($bank_account){
+            $resource ? new BankAccountResource($resource) : $resource;
+        }
+        return null;
     }
 
     public function show($id)

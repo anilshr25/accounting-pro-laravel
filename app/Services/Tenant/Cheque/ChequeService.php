@@ -8,7 +8,6 @@ use App\Http\Resources\Tenant\Cheque\ChequeResource;
 class ChequeService
 {
     protected $cheque;
-
     public function __construct(Cheque $cheque)
     {
         $this->cheque = $cheque;
@@ -29,9 +28,13 @@ class ChequeService
         }
     }
 
-    public function find($id)
+    public function find($id, $resource = false)
     {
-        return $this->cheque->find($id);
+        $cheque = $this->cheque->find($id);
+        if($cheque){
+            $resource ? new ChequeResource($resource) : $resource;
+        }
+        return null;
     }
 
     public function update($id, $data)

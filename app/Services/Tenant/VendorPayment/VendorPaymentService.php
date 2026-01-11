@@ -8,7 +8,6 @@ use App\Http\Resources\Tenant\VendorPayment\VendorPaymentResource;
 class VendorPaymentService
 {
     protected $vendor_payment;
-
     public function __construct(VendorPayment $vendor_payment)
     {
         $this->vendor_payment = $vendor_payment;
@@ -29,9 +28,13 @@ class VendorPaymentService
         }
     }
 
-    public function find($id)
+    public function find($id, $resource = false)
     {
-        return $this->vendor_payment->find($id);
+        $vendor_payment = $this->vendor_payment->find($id);
+        if($vendor_payment){
+            $resource ? new VendorPaymentResource($resource) : $resource;
+        }
+        return null;
     }
 
     public function update($id, $data)

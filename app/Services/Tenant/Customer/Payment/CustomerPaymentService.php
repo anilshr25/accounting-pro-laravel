@@ -8,7 +8,6 @@ use App\Http\Resources\Tenant\Customer\Payment\CustomerPaymentResource;
 class CustomerPaymentService
 {
     protected $customer_payment;
-
     public function __construct(CustomerPayment $customer_payment)
     {
         $this->customer_payment = $customer_payment;
@@ -29,9 +28,13 @@ class CustomerPaymentService
         }
     }
 
-    public function find($id)
+    public function find($id, $resource = false)
     {
-        return $this->customer_payment->find($id);
+        $customer_payment = $this->customer_payment->find($id);
+        if($customer_payment){
+            $resource ? new CustomerPaymentResource($resource) : $resource;
+        }
+        return null;
     }
 
     public function update($id, $data)

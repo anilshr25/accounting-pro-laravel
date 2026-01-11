@@ -8,7 +8,6 @@ use App\Http\Resources\Tenant\Balance\BalanceResource;
 class BalanceService
 {
     protected $balance;
-
     public function __construct(Balance $balance)
     {
         $this->balance = $balance;
@@ -29,9 +28,13 @@ class BalanceService
         }
     }
 
-    public function find($id)
+    public function find($id, $resource = false)
     {
-        return $this->balance->find($id);
+        $balance = $this->balance->find($id);
+        if($balance){
+            $resource ? new BalanceResource($resource) : $resource;
+        }
+        return null;
     }
 
     public function update($id, $data)

@@ -35,8 +35,6 @@ class VendorPaymentController extends Controller
         return response(['data' => $vendor_payment], 200);
     }
 
-
-
     public function update(VendorPaymentRequest $request, $id)
     {
         $vendor_payment = $this->vendor_payment->update($id, $request->validated());

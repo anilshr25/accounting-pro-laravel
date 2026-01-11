@@ -8,7 +8,6 @@ use App\Http\Resources\Tenant\Credit\CreditResource;
 class CreditService
 {
     protected $credit;
-
     public function __construct(Credit $credit)
     {
         $this->credit = $credit;
@@ -29,9 +28,13 @@ class CreditService
         }
     }
 
-    public function find($id)
+    public function find($id, $resource = false)
     {
-        return $this->credit->find($id);
+        $credit = $this->credit->find($id);
+        if($credit){
+            $resource ? new CreditResource($resource) : $resource;
+        }
+        return null;
     }
 
     public function update($id, $data)

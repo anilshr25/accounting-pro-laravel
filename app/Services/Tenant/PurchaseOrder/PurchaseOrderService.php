@@ -8,7 +8,6 @@ use App\Http\Resources\Tenant\PurchaseOrder\PurchaseOrderResource;
 class PurchaseOrderService
 {
     protected $purchase_order;
-
     public function __construct(PurchaseOrder $purchase_order)
     {
         $this->purchase_order = $purchase_order;
@@ -29,9 +28,13 @@ class PurchaseOrderService
         }
     }
 
-    public function find($id)
+    public function find($id, $resource = false)
     {
-        return $this->purchase_order->find($id);
+        $purchase_order = $this->purchase_order->find($id);
+        if($purchase_order){
+            $resource ? new PurchaseOrderResource($resource) : $resource;
+        }
+        return null;
     }
 
     public function update($id, $data)
