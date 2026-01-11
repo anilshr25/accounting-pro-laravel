@@ -31,10 +31,10 @@ class ChequeService
     public function find($id, $resource = false)
     {
         $cheque = $this->cheque->find($id);
-        if($cheque){
-            $resource ? new ChequeResource($resource) : $resource;
+        if (!$cheque) {
+            return null;
         }
-        return null;
+        return $resource ? new ChequeResource($cheque) : $cheque;
     }
 
     public function update($id, $data)

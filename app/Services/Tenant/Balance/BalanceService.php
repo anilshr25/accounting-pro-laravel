@@ -31,10 +31,10 @@ class BalanceService
     public function find($id, $resource = false)
     {
         $balance = $this->balance->find($id);
-        if($balance){
-            $resource ? new BalanceResource($resource) : $resource;
+        if (!$balance) {
+            return null;
         }
-        return null;
+        return $resource ? new BalanceResource($balance) : $balance;
     }
 
     public function update($id, $data)

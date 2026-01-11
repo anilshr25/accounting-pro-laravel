@@ -31,10 +31,10 @@ class CustomerPaymentService
     public function find($id, $resource = false)
     {
         $customer_payment = $this->customer_payment->find($id);
-        if($customer_payment){
-            $resource ? new CustomerPaymentResource($resource) : $resource;
+        if (!$customer_payment) {
+            return null;
         }
-        return null;
+        return $resource ? new CustomerPaymentResource($customer_payment) : $customer_payment;
     }
 
     public function update($id, $data)

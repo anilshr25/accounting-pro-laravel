@@ -31,10 +31,10 @@ class CreditService
     public function find($id, $resource = false)
     {
         $credit = $this->credit->find($id);
-        if($credit){
-            $resource ? new CreditResource($resource) : $resource;
+        if (!$credit) {
+            return null;
         }
-        return null;
+        return $resource ? new CreditResource($credit) : $credit;
     }
 
     public function update($id, $data)

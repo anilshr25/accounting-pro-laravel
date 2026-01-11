@@ -50,12 +50,13 @@ class UserService
         }
     }
 
-    public function find(string $uuid): ?UserResource
+    public function find($id, $resource = false)
     {
-        $user = $this->user->where('uuid', $uuid)->first();
-        if (!empty($user))
-            return new UserResource($user);
-        return null;
+        $user = $this->user->find($id);
+        if (!$user) {
+            return null;
+        }
+        return $resource ? new UserResource($user) : $user;
     }
 
     public function update(string $uuid, array $data): bool
@@ -84,4 +85,3 @@ class UserService
         }
     }
 }
-

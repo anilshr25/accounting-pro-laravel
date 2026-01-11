@@ -31,10 +31,10 @@ class DaybookService
     public function find($id, $resource = false)
     {
         $daybook = $this->daybook->find($id);
-        if($daybook){
-            $resource ? new DaybookResource($resource) : $resource;
+        if (!$daybook) {
+            return null;
         }
-        return null;
+        return $resource ? new DaybookResource($daybook) : $daybook;
     }
 
     public function update($id, $data)

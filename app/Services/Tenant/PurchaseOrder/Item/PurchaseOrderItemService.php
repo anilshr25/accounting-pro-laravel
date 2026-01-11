@@ -31,10 +31,10 @@ class PurchaseOrderItemService
     public function find($id, $resource = false)
     {
         $purchase_order_item = $this->purchase_order_item->find($id);
-        if($purchase_order_item){
-            $resource ? new PurchaseOrderItemResource($resource) : $resource;
+        if (!$purchase_order_item) {
+            return null;
         }
-        return null;
+        return $resource ? new PurchaseOrderItemResource($purchase_order_item) : $purchase_order_item;
     }
 
     public function update($id, $data)

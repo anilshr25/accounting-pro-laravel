@@ -31,10 +31,10 @@ class VendorPaymentService
     public function find($id, $resource = false)
     {
         $vendor_payment = $this->vendor_payment->find($id);
-        if($vendor_payment){
-            $resource ? new VendorPaymentResource($resource) : $resource;
+        if (!$vendor_payment) {
+            return null;
         }
-        return null;
+        return $resource ? new VendorPaymentResource($vendor_payment) : $vendor_payment;
     }
 
     public function update($id, $data)

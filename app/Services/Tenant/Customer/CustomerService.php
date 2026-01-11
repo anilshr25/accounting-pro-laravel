@@ -31,10 +31,10 @@ class CustomerService
     public function find($id, $resource = false)
     {
         $customer = $this->customer->find($id);
-        if($customer){
-            $resource ? new CustomerResource($resource) : $resource;
+        if (!$customer) {
+            return null;
         }
-        return null;
+        return $resource ? new CustomerResource($customer) : $customer;
     }
 
     public function update($id, $data)

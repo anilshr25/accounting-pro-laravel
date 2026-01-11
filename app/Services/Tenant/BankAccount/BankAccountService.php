@@ -31,9 +31,11 @@ class BankAccountService
     public function find($id, $resource = false)
     {
         $bank_account = $this->bank_account->find($id);
-        if($bank_account){
-            $resource ? new BankAccountResource($resource) : $resource;
+        if (!$bank_account) {
+            return null;
         }
+        return $resource ? new BankAccountResource($bank_account) : $bank_account;
+    }
         return null;
     }
 
@@ -42,7 +44,6 @@ class BankAccountService
         $bankAccount = $this->find($id);
         if($bankAccount)
             return new BankAccountResource($bankAccount);
-        return null;
     }
 
     public function update($id, $data)

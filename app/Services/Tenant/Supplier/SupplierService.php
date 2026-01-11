@@ -31,10 +31,10 @@ class SupplierService
     public function find($id, $resource = false)
     {
         $supplier = $this->supplier->find($id);
-        if($supplier){
-            $resource ? new SupplierResource($resource) : $resource;
+        if (!$supplier) {
+            return null;
         }
-        return null;
+        return $resource ? new SupplierResource($supplier) : $supplier;
     }
 
     public function update($id, $data)

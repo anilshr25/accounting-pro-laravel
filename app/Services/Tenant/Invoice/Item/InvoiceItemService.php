@@ -31,10 +31,10 @@ class InvoiceItemService
     public function find($id, $resource = false)
     {
         $invoice_item = $this->invoice_item->find($id);
-        if($invoice_item){
-            $resource ? new InvoiceItemResource($resource) : $resource;
+        if (!$invoice_item) {
+            return null;
         }
-        return null;
+        return $resource ? new InvoiceItemResource($invoice_item) : $invoice_item;
     }
 
     public function update($id, $data)
