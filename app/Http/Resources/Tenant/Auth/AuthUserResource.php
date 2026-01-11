@@ -31,7 +31,7 @@ class AuthUserResource extends JsonResource
             'is_mfa_enabled' => $this->is_mfa_enabled,
             'is_email_authentication_enabled' => $this->is_email_authentication_enabled,
             'is_active' => $this->is_active,
-            'last_logged_in' => formatYearMonthDateTime($this->last_logged_in),
+            'last_logged_in' => $this->last_logged_in?->format('d M Y H:i a'),
         ];
     }
 }
