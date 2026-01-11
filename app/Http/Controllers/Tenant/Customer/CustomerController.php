@@ -29,6 +29,12 @@ class CustomerController extends Controller
         return response(['status' => 'ERROR'], 500);
     }
 
+    public function show($id)
+    {
+        $customer = $this->customer->find($id, true);
+        return response(['data' => $customer], 200);
+    }
+
     public function update(CustomerRequest $request, $id)
     {
         $customer = $this->customer->update($id, $request->validated());

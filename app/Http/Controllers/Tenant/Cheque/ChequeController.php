@@ -29,6 +29,14 @@ class ChequeController extends Controller
         return response(['status' => 'ERROR'], 500);
     }
 
+    public function show($id)
+    {
+        $cheque = $this->cheque->find($id);
+        return response(['data' => $cheque], 200);
+    }
+
+
+
     public function update(ChequeRequest $request, $id)
     {
         $cheque = $this->cheque->update($id, $request->validated());

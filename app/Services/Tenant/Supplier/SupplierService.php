@@ -29,9 +29,13 @@ class SupplierService
         }
     }
 
-    public function find($id)
+    public function find($id, $resource = false)
     {
-        return $this->supplier->find($id);
+        $supplier = $this->supplier->find($id);
+        if($supplier){
+            $resource ? new SupplierResource($resource) : $resource;
+        }
+        return null;
     }
 
     public function update($id, $data)

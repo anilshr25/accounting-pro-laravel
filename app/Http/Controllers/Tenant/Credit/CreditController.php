@@ -29,6 +29,14 @@ class CreditController extends Controller
         return response(['status' => 'ERROR'], 500);
     }
 
+    public function show($id)
+    {
+        $credit = $this->credit->find($id);
+        return response(['data' => $credit], 200);
+    }
+
+
+
     public function update(CreditRequest $request, $id)
     {
         $credit = $this->credit->update($id, $request->validated());

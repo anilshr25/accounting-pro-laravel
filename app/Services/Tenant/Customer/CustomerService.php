@@ -29,9 +29,13 @@ class CustomerService
         }
     }
 
-    public function find($id)
+    public function find($id, $resource = false)
     {
-        return $this->customer->find($id);
+        $customer =  $this->customer->find($id);
+        if($customer) {
+            return $resource ? new CustomerResource($customer) : $customer;
+        }
+        return null;
     }
 
     public function update($id, $data)

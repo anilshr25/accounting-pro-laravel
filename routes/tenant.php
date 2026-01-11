@@ -60,6 +60,7 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
 
     $route->get('balance', [BalanceController::class, 'index']);
     $route->post('balance', [BalanceController::class, 'store']);
+    $route->get('balance/{id}', [BalanceController::class, 'show']);
     $route->put('balance/{id}', [BalanceController::class, 'update']);
     $route->delete('balance/{id}', [BalanceController::class, 'destroy']);
 
@@ -71,56 +72,67 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
 
     $route->get('cheque', [ChequeController::class, 'index']);
     $route->post('cheque', [ChequeController::class, 'store']);
+    $route->get('cheque/{id}', [ChequeController::class, 'show']);
     $route->put('cheque/{id}', [ChequeController::class, 'update']);
     $route->delete('cheque/{id}', [ChequeController::class, 'destroy']);
 
     $route->get('credit', [CreditController::class, 'index']);
     $route->post('credit', [CreditController::class, 'store']);
+    $route->get('credit/{id}', [CreditController::class, 'show']);
     $route->put('credit/{id}', [CreditController::class, 'update']);
     $route->delete('credit/{id}', [CreditController::class, 'destroy']);
 
     $route->get('customer', [CustomerController::class, 'index']);
     $route->post('customer', [CustomerController::class, 'store']);
+    $route->get('customer/{id}', [CustomerController::class, 'show']);
     $route->put('customer/{id}', [CustomerController::class, 'update']);
     $route->delete('customer/{id}', [CustomerController::class, 'destroy']);
 
     $route->get('customer-payment', [CustomerPaymentController::class, 'index']);
     $route->post('customer-payment', [CustomerPaymentController::class, 'store']);
+    $route->get('customer-payment/{id}', [CustomerPaymentController::class, 'show']);
     $route->put('customer-payment/{id}', [CustomerPaymentController::class, 'update']);
     $route->delete('customer-payment/{id}', [CustomerPaymentController::class, 'destroy']);
 
     $route->get('daybook', [DaybookController::class, 'index']);
     $route->post('daybook', [DaybookController::class, 'store']);
+    $route->get('daybook/{id}', [DaybookController::class, 'show']);
     $route->put('daybook/{id}', [DaybookController::class, 'update']);
     $route->delete('daybook/{id}', [DaybookController::class, 'destroy']);
 
     $route->get('invoice', [InvoiceController::class, 'index']);
     $route->post('invoice', [InvoiceController::class, 'store']);
+    $route->get('invoice/{id}', [InvoiceController::class, 'show']);
     $route->put('invoice/{id}', [InvoiceController::class, 'update']);
     $route->delete('invoice/{id}', [InvoiceController::class, 'destroy']);
 
     $route->get('invoice-item', [InvoiceItemController::class, 'index']);
     $route->post('invoice-item', [InvoiceItemController::class, 'store']);
+    $route->get('invoice-item/{id}', [InvoiceItemController::class, 'show']);
     $route->put('invoice-item/{id}', [InvoiceItemController::class, 'update']);
     $route->delete('invoice-item/{id}', [InvoiceItemController::class, 'destroy']);
 
     $route->get('purchase-order', [PurchaseOrderController::class, 'index']);
     $route->post('purchase-order', [PurchaseOrderController::class, 'store']);
+    $route->get('purchase-order/{id}', [PurchaseOrderController::class, 'show']);
     $route->put('purchase-order/{id}', [PurchaseOrderController::class, 'update']);
     $route->delete('purchase-order/{id}', [PurchaseOrderController::class, 'destroy']);
 
     $route->get('purchase-order-item', [PurchaseOrderItemController::class, 'index']);
     $route->post('purchase-order-item', [PurchaseOrderItemController::class, 'store']);
+    $route->get('purchase-order-item/{id}', [PurchaseOrderItemController::class, 'show']);
     $route->put('purchase-order-item/{id}', [PurchaseOrderItemController::class, 'update']);
     $route->delete('purchase-order-item/{id}', [PurchaseOrderItemController::class, 'destroy']);
 
     $route->get('supplier', [SupplierController::class, 'index']);
     $route->post('supplier', [SupplierController::class, 'store']);
+    $route->get('supplier/{id}', [SupplierController::class, 'show']);
     $route->put('supplier/{id}', [SupplierController::class, 'update']);
     $route->delete('supplier/{id}', [SupplierController::class, 'destroy']);
 
     $route->get('vendor-payment', [VendorPaymentController::class, 'index']);
     $route->post('vendor-payment', [VendorPaymentController::class, 'store']);
+    $route->get('vendor-payment/{id}', [VendorPaymentController::class, 'show']);
     $route->put('vendor-payment/{id}', [VendorPaymentController::class, 'update']);
     $route->delete('vendor-payment/{id}', [VendorPaymentController::class, 'destroy']);
 

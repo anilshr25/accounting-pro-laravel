@@ -29,6 +29,14 @@ class PurchaseOrderController extends Controller
         return response(['status' => 'ERROR'], 500);
     }
 
+    public function show($id)
+    {
+        $purchase_order = $this->purchase_order->find($id);
+        return response(['data' => $purchase_order], 200);
+    }
+
+
+
     public function update(PurchaseOrderRequest $request, $id)
     {
         $purchase_order = $this->purchase_order->update($id, $request->validated());

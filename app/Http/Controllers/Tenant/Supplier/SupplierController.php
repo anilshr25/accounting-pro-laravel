@@ -29,6 +29,12 @@ class SupplierController extends Controller
         return response(['status' => 'ERROR'], 500);
     }
 
+    public function show($id)
+    {
+        $supplier = $this->supplier->find($id, true);
+        return response(['data' => $supplier], 200);
+    }
+
     public function update(SupplierRequest $request, $id)
     {
         $supplier = $this->supplier->update($id, $request->validated());

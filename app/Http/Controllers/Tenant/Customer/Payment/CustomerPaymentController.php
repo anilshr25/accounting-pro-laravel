@@ -29,6 +29,14 @@ class CustomerPaymentController extends Controller
         return response(['status' => 'ERROR'], 500);
     }
 
+    public function show($id)
+    {
+        $customer_payment = $this->customer_payment->find($id);
+        return response(['data' => $customer_payment], 200);
+    }
+
+
+
     public function update(CustomerPaymentRequest $request, $id)
     {
         $customer_payment = $this->customer_payment->update($id, $request->validated());

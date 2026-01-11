@@ -29,6 +29,14 @@ class DaybookController extends Controller
         return response(['status' => 'ERROR'], 500);
     }
 
+    public function show($id)
+    {
+        $daybook = $this->daybook->find($id);
+        return response(['data' => $daybook], 200);
+    }
+
+
+
     public function update(DaybookRequest $request, $id)
     {
         $daybook = $this->daybook->update($id, $request->validated());

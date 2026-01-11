@@ -29,6 +29,14 @@ class InvoiceController extends Controller
         return response(['status' => 'ERROR'], 500);
     }
 
+    public function show($id)
+    {
+        $invoice = $this->invoice->find($id);
+        return response(['data' => $invoice], 200);
+    }
+
+
+
     public function update(InvoiceRequest $request, $id)
     {
         $invoice = $this->invoice->update($id, $request->validated());

@@ -29,6 +29,14 @@ class BalanceController extends Controller
         return response(['status' => 'ERROR'], 500);
     }
 
+    public function show($id)
+    {
+        $balance = $this->balance->find($id);
+        return response(['data' => $balance], 200);
+    }
+
+
+
     public function update(BalanceRequest $request, $id)
     {
         $balance = $this->balance->update($id, $request->validated());

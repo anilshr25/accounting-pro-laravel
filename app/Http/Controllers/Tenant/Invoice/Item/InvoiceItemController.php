@@ -29,6 +29,14 @@ class InvoiceItemController extends Controller
         return response(['status' => 'ERROR'], 500);
     }
 
+    public function show($id)
+    {
+        $invoice_item = $this->invoice_item->find($id);
+        return response(['data' => $invoice_item], 200);
+    }
+
+
+
     public function update(InvoiceItemRequest $request, $id)
     {
         $invoice_item = $this->invoice_item->update($id, $request->validated());
