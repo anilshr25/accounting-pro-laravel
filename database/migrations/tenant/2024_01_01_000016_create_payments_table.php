@@ -8,13 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('customer_payments', function (Blueprint $table) {
+        Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_id')->nullable()->constrained('customers')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->date('date');
-            $table->string('miti');
-            $table->decimal('amount', 15, 2);
-            $table->enum('payment_type', ['cash', 'fonepay', 'cardpay']);
+            $table->morphs('party');
+            $table->date('date')->nullable();
+            $table->string('miti')->nullable();
+            $table->decimal('amount', 15, 2)->nullable();
+            $table->string('payment_method')->nullable();
             $table->string('shift')->nullable();
             $table->string('transaction_id')->nullable();
             $table->text('remarks')->nullable();
@@ -25,6 +25,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('customer_payments');
+        Schema::dropIfExists('payments');
     }
 };

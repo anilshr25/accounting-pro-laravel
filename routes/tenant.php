@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Tenant\Auth\MFAController;
+use App\Http\Controllers\Tenant\User\UserController;
 use App\Http\Controllers\Tenant\Auth\LoginController;
 use App\Http\Controllers\Tenant\Cheque\ChequeController;
 use App\Http\Controllers\Tenant\Credit\CreditController;
+use App\Http\Controllers\Tenant\Ledger\LedgerController;
 use App\Http\Controllers\Tenant\Balance\BalanceController;
 use App\Http\Controllers\Tenant\Daybook\DaybookController;
 use App\Http\Controllers\Tenant\Invoice\InvoiceController;
+use App\Http\Controllers\Tenant\Payment\PaymentController;
 use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
 use App\Http\Controllers\Tenant\Customer\CustomerController;
 use App\Http\Controllers\Tenant\Supplier\SupplierController;
 use App\Http\Controllers\Tenant\BankAccount\BankAccountController;
 use App\Http\Controllers\Tenant\Invoice\Item\InvoiceItemController;
 use App\Http\Controllers\Tenant\PurchaseOrder\PurchaseOrderController;
-use App\Http\Controllers\Tenant\User\UserController;
-use App\Http\Controllers\Tenant\VendorPayment\VendorPaymentController;
-use App\Http\Controllers\Tenant\Customer\Payment\CustomerPaymentController;
 use App\Http\Controllers\Tenant\PurchaseOrder\Item\PurchaseOrderItemController;
 
 /*
@@ -88,11 +88,6 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->put('customer/{id}', [CustomerController::class, 'update']);
     $route->delete('customer/{id}', [CustomerController::class, 'destroy']);
 
-    $route->get('customer-payment', [CustomerPaymentController::class, 'index']);
-    $route->post('customer-payment', [CustomerPaymentController::class, 'store']);
-    $route->get('customer-payment/{id}', [CustomerPaymentController::class, 'show']);
-    $route->put('customer-payment/{id}', [CustomerPaymentController::class, 'update']);
-    $route->delete('customer-payment/{id}', [CustomerPaymentController::class, 'destroy']);
 
     $route->get('daybook', [DaybookController::class, 'index']);
     $route->post('daybook', [DaybookController::class, 'store']);
@@ -112,6 +107,12 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->put('invoice-item/{id}', [InvoiceItemController::class, 'update']);
     $route->delete('invoice-item/{id}', [InvoiceItemController::class, 'destroy']);
 
+    $route->get('payment', [PaymentController::class, 'index']);
+    $route->post('payment', [PaymentController::class, 'store']);
+    $route->get('payment/{id}', [PaymentController::class, 'show']);
+    $route->put('payment/{id}', [PaymentController::class, 'update']);
+    $route->delete('payment/{id}', [PaymentController::class, 'destroy']);
+
     $route->get('purchase-order', [PurchaseOrderController::class, 'index']);
     $route->post('purchase-order', [PurchaseOrderController::class, 'store']);
     $route->get('purchase-order/{id}', [PurchaseOrderController::class, 'show']);
@@ -130,15 +131,13 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->put('supplier/{id}', [SupplierController::class, 'update']);
     $route->delete('supplier/{id}', [SupplierController::class, 'destroy']);
 
-    $route->get('vendor-payment', [VendorPaymentController::class, 'index']);
-    $route->post('vendor-payment', [VendorPaymentController::class, 'store']);
-    $route->get('vendor-payment/{id}', [VendorPaymentController::class, 'show']);
-    $route->put('vendor-payment/{id}', [VendorPaymentController::class, 'update']);
-    $route->delete('vendor-payment/{id}', [VendorPaymentController::class, 'destroy']);
 
     $route->get('user', [UserController::class, 'index']);
     $route->post('user', [UserController::class, 'store']);
     $route->get('user/{id}', [UserController::class, 'show']);
     $route->put('user/{id}', [UserController::class, 'update']);
     $route->delete('user/{id}', [UserController::class, 'destroy']);
+
+
+    $route->get('ledger', LedgerController::class, 'index');
 });

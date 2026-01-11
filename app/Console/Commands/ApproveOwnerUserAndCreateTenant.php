@@ -79,6 +79,12 @@ class ApproveOwnerUserAndCreateTenant extends Command
 
             $this->info("✓ Owner user approved successfully");
 
+            $tenancyConfig = config('tenancy.database');
+            $suffix = str_replace(['.', '-', ' '], '_', strtolower($tenantName));
+            $this->info("✓ Suffix: {$suffix}");
+            config(['tenancy.database.suffix' => "_$suffix"]);
+            $tenancyConfig['suffix'] = $suffix;
+
             // 3. Create tenant
             $tenant = Tenant::create([
                 'id' => (string) \Str::uuid(),
@@ -95,10 +101,7 @@ class ApproveOwnerUserAndCreateTenant extends Command
 
             $this->info("✓ Domain created: {$domain}");
 
-            $tenancyConfig = config('tenancy.database');
-            $suffix = str_replace(['.', '-', ' '], '_', strtolower($tenantName));
-            $this->info("✓ Suffix: {$suffix}");
-            $databaseName = ($tenancyConfig['prefix'] ?? 'tenant') . $tenant->id . '_' . $suffix ?? ($tenancyConfig['suffix'] ??  '');
+            $databaseName = ($tenancyConfig['prefix'] ?? 'tenant') . $tenant->id . '_' .$tenancyConfig['suffix'];
             $this->info("✓ Tenant database will be: {$databaseName}");
             // Create the initial tenant user (after tenant migrations).
             $this->info("Creating initial tenant user...");

@@ -2,7 +2,9 @@
 
 namespace App\Services\Tenant\Cheque;
 
+use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Cheque\Cheque;
+use App\Services\Tenant\Ledger\LedgerService;
 use App\Http\Resources\Tenant\Cheque\ChequeResource;
 
 class ChequeService
@@ -19,10 +21,14 @@ class ChequeService
         return ChequeResource::collection($cheque);
     }
 
-    public function store($data)
+    public function store($data, $user)
     {
         try {
-            return $this->cheque->create($data);
+            return DB::transaction(function () use ($data, $user) {
+                $cheque = $this->cheque->create($data);
+                $cheque->party()->associate($user);
+                LedgerService::postCheaque($cheque);
+            });
         } catch (\Exception $ex) {
             return false;
         }

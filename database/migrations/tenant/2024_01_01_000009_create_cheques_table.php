@@ -11,8 +11,7 @@ return new class extends Migration
         Schema::create('cheques', function (Blueprint $table) {
             $table->id();
             $table->foreignId('bank_account_id')->nullable()->constrained('bank_accounts')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->foreignId('customer_id')->nullable()->constrained('customers')->cascadeOnUpdate()->cascadeOnDelete();
+            $table->morphs('party');       // party_type, party_id
             $table->string('type');
             $table->string('cheque_number');
             $table->string('pay_to')->nullable();

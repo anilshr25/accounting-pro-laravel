@@ -1,35 +1,35 @@
 <?php
 
-namespace App\Http\Controllers\Tenant\Cheque;
+namespace App\Http\Controllers\Tenant\Payment;
 
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use App\Services\Tenant\Cheque\ChequeService;
 use App\Services\Tenant\Customer\CustomerService;
 use App\Services\Tenant\Supplier\SupplierService;
-use App\Http\Requests\Tenant\Cheque\ChequeRequest;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Tenant\Payment\PaymentRequest;
+use App\Services\Tenant\Payment\PaymentService;
 
-class ChequeController extends Controller
+class PaymentController extends Controller
 {
-   protected $cheque;
+    protected $payment;
     protected $supplier;
     protected $customer;
 
-    public function __construct(ChequeService $cheque, SupplierService $supplier, CustomerService $customer)
+    public function __construct(PaymentService $payment, SupplierService $supplier, CustomerService $customer)
     {
-        $this->cheque = $cheque;
+        $this->payment = $payment;
         $this->supplier = $supplier;
         $this->customer = $customer;
     }
 
     public function index(Request $request)
     {
-        return $this->cheque->paginate($request, 25);
+        return $this->payment->paginate($request, 25);
     }
 
-    public function store(ChequeRequest $request)
+    public function store(PaymentRequest $request)
     {
-       $data = $request->validated();
+        $data = $request->validated();
         if (isset($data['type']) && isset($data['user_id'])) {
             if ($data['type'] == 'supplier') {
                 $user = $this->supplier->find($request->user_id);
@@ -37,8 +37,8 @@ class ChequeController extends Controller
             if ($data['type'] == 'customer') {
                 $user = $this->customer->find($request->user_id);
             }
-            $cheque = $this->cheque->store($data, $user);
-            if ($cheque)
+            $payment = $this->payment->store($data, $user);
+            if ($payment)
                 return response(['status' => 'OK'], 200);
             return response(['status' => 'ERROR'], 500);
         } else {
@@ -48,21 +48,21 @@ class ChequeController extends Controller
 
     public function show($id)
     {
-        $cheque = $this->cheque->find($id, true);
-        return response(['data' => $cheque], 200);
+        $payment = $this->payment->find($id, true);
+        return response(['data' => $payment], 200);
     }
 
-    public function update(ChequeRequest $request, $id)
+    public function update(PaymentRequest $request, $id)
     {
-        $cheque = $this->cheque->update($id, $request->validated());
-        if ($cheque)
+        $payment = $this->payment->update($id, $request->validated());
+        if ($payment)
             return response(['status' => 'OK'], 200);
         return response(['status' => 'ERROR'], 500);
     }
 
     public function destroy($id)
     {
-        if ($this->cheque->delete($id))
+        if ($this->payment->delete($id))
             return response(['status' => 'OK'], 200);
         return response(['status' => 'ERROR'], 500);
     }
