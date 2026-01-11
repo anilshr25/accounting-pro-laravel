@@ -31,7 +31,7 @@ class BalanceController extends Controller
 
     public function show($id)
     {
-        $balance = $this->balance->find($id);
+        $balance = $this->balance->find($id, true);
         return response(['data' => $balance], 200);
     }
 

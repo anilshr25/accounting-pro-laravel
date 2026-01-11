@@ -31,11 +31,9 @@ class CreditController extends Controller
 
     public function show($id)
     {
-        $credit = $this->credit->find($id);
+        $credit = $this->credit->find($id, true);
         return response(['data' => $credit], 200);
     }
-
-
 
     public function update(CreditRequest $request, $id)
     {

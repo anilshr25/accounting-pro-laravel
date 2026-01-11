@@ -31,11 +31,9 @@ class InvoiceItemController extends Controller
 
     public function show($id)
     {
-        $invoice_item = $this->invoice_item->find($id);
+        $invoice_item = $this->invoice_item->find($id, true);
         return response(['data' => $invoice_item], 200);
     }
-
-
 
     public function update(InvoiceItemRequest $request, $id)
     {

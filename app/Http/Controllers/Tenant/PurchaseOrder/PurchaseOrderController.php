@@ -31,11 +31,9 @@ class PurchaseOrderController extends Controller
 
     public function show($id)
     {
-        $purchase_order = $this->purchase_order->find($id);
+        $purchase_order = $this->purchase_order->find($id, true);
         return response(['data' => $purchase_order], 200);
     }
-
-
 
     public function update(PurchaseOrderRequest $request, $id)
     {

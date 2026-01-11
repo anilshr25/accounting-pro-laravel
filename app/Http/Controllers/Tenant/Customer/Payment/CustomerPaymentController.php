@@ -31,11 +31,9 @@ class CustomerPaymentController extends Controller
 
     public function show($id)
     {
-        $customer_payment = $this->customer_payment->find($id);
+        $customer_payment = $this->customer_payment->find($id, true);
         return response(['data' => $customer_payment], 200);
     }
-
-
 
     public function update(CustomerPaymentRequest $request, $id)
     {

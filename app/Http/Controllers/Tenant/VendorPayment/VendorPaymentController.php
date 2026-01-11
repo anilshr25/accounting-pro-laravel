@@ -31,7 +31,7 @@ class VendorPaymentController extends Controller
 
     public function show($id)
     {
-        $vendor_payment = $this->vendor_payment->find($id);
+        $vendor_payment = $this->vendor_payment->find($id, true);
         return response(['data' => $vendor_payment], 200);
     }
 

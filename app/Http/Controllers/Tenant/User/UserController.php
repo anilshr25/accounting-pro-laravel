@@ -32,7 +32,7 @@ class UserController extends Controller
 
     public function show($id)
     {
-        $member = $this->member->find($id);
+        $member = $this->member->find($id, true);
         return response(['data' => $member], 200);
     }
 

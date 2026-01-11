@@ -31,7 +31,7 @@ class ChequeController extends Controller
 
     public function show($id)
     {
-        $cheque = $this->cheque->find($id);
+        $cheque = $this->cheque->find($id, true);
         return response(['data' => $cheque], 200);
     }
 

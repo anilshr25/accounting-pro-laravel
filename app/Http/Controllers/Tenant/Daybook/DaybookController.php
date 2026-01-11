@@ -31,11 +31,9 @@ class DaybookController extends Controller
 
     public function show($id)
     {
-        $daybook = $this->daybook->find($id);
+        $daybook = $this->daybook->find($id, true);
         return response(['data' => $daybook], 200);
     }
-
-
 
     public function update(DaybookRequest $request, $id)
     {

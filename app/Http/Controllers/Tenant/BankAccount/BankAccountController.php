@@ -31,7 +31,7 @@ class BankAccountController extends Controller
 
     public function show($id)
     {
-        $bank_account = $this->bank_account->find($id);
+        $bank_account = $this->bank_account->find($id, true);
         return response(['data' => $bank_account], 200);
     }
 

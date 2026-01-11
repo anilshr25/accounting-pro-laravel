@@ -31,7 +31,7 @@ class PurchaseOrderItemController extends Controller
 
     public function show($id)
     {
-        $purchase_order_item = $this->purchase_order_item->find($id);
+        $purchase_order_item = $this->purchase_order_item->find($id, true);
         return response(['data' => $purchase_order_item], 200);
     }
 

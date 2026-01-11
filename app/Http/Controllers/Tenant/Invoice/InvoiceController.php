@@ -31,11 +31,9 @@ class InvoiceController extends Controller
 
     public function show($id)
     {
-        $invoice = $this->invoice->find($id);
+        $invoice = $this->invoice->find($id, true);
         return response(['data' => $invoice], 200);
     }
-
-
 
     public function update(InvoiceRequest $request, $id)
     {

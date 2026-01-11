@@ -36,8 +36,6 @@ class BankAccountService
         }
         return $resource ? new BankAccountResource($bank_account) : $bank_account;
     }
-        return null;
-    }
 
     public function show($id)
     {
