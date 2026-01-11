@@ -25,8 +25,12 @@ class ChequeService
     {
         try {
             return DB::transaction(function () use ($data, $user) {
-                $cheque = $this->cheque->create($data);
+                $cheque = new Cheque($data);
+
                 $cheque->party()->associate($user);
+
+                $cheque->save();
+
                 LedgerService::postCheaque($cheque);
             });
         } catch (\Exception $ex) {

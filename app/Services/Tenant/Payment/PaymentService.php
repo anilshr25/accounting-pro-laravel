@@ -26,9 +26,16 @@ class PaymentService
     {
         try {
             return DB::transaction(function () use ($data, $user) {
-                $payment = $this->payment->create($data);
+
+                $payment = new Payment($data);
+
                 $payment->party()->associate($user);
+
+                $payment->save();
+
                 LedgerService::postPayment($payment);
+
+                return $payment;
             });
         } catch (\Exception $e) {
             return false;
