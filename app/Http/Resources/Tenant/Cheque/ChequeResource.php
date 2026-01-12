@@ -17,13 +17,11 @@ class ChequeResource extends JsonResource
             'cheque_number' => $this->cheque_number,
             'pay_to' => $this->pay_to,
             'amount' => $this->amount,
-            'date' => $this->date,
+            'date' => $this->date?->format('Y-m-d'),
+            'formatted_date' => $this->date?->format('d M Y'),
             'miti' => $this->miti,
             'remarks' => $this->remarks,
             'status' => $this->status,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-            'deleted_at' => $this->deleted_at,
             'bank_name' => $this->bank_name,
         ];
     }

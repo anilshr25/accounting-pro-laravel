@@ -23,6 +23,9 @@ class Ledger extends Model
         'remarks',
         'balance',
     ];
+    protected $casts = [
+        'date' => 'datetime',
+    ];
 
     public function party()
     {

@@ -10,7 +10,8 @@ class DaybookResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'date' => $this->date,
+            'date' => $this->date?->format('Y-m-d'),
+            'formatted_date' => $this->date?->format('d M Y'),
             'name' => $this->name,
             'amount' => $this->amount,
             'type' => $this->type,

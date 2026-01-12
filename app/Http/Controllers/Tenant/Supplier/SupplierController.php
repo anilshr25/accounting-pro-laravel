@@ -21,6 +21,11 @@ class SupplierController extends Controller
         return $this->supplier->paginate($request, 25);
     }
 
+    public function search(Request $request)
+    {
+        return $this->supplier->search($request, 10);
+    }
+
     public function store(SupplierRequest $request)
     {
         $supplier = $this->supplier->store($request->validated());

@@ -12,10 +12,22 @@ class DaybookService
     {
         $this->daybook = $daybook;
     }
-
     public function paginate($request, $limit = 25)
     {
-        $daybook = $this->daybook->paginate($request->limit ?? $limit);
+        $daybook = $this->daybook
+            ->when($request->filled('date'), function ($query) use ($request) {
+                $query->whereDate('date', $request->date);
+            })
+            ->when($request->filled('name'), function ($query) use ($request) {
+                $query->where('name', 'like', "%{$request->name}%");
+            })
+            ->when($request->filled('amount'), function ($query) use ($request) {
+                $query->where('amount', $request->amount);
+            })
+            ->when($request->filled('type'), function ($query) use ($request) {
+                $query->where('type', $request->type);
+            })
+            ->paginate($request->limit ?? $limit);
         return DaybookResource::collection($daybook);
     }
 

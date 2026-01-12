@@ -12,7 +12,8 @@ class InvoiceResource extends JsonResource
             'id' => $this->id,
             'customer_id' => $this->customer_id,
             'invoice_miti' => $this->invoice_miti,
-            'invoice_date' => $this->invoice_date,
+            'invoice_date' => $this->invoice_date?->format('Y-m-d'),
+            'formatted_invoice_date' => $this->invoice_date?->format('d M Y'),
             'tax' => $this->tax,
             'sub_total' => $this->sub_total,
             'total' => $this->total,
@@ -21,9 +22,6 @@ class InvoiceResource extends JsonResource
             'remarks' => $this->remarks,
             'shift' => $this->shift,
             'sale_return' => $this->sale_return,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-            'deleted_at' => $this->deleted_at,
         ];
     }
 }

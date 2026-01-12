@@ -12,10 +12,16 @@ class BalanceService
     {
         $this->balance = $balance;
     }
-
     public function paginate($request, $limit = 25)
     {
-        $balance = $this->balance->paginate($request->limit ?? $limit);
+        $balance = $this->balance
+            ->when($request->filled('date'), function ($query) use ($request) {
+                $query->whereDate('date', $request->date);
+            })
+            ->when($request->filled('shift'), function ($query) use ($request) {
+                $query->where('shift', $request->shift);
+            })
+            ->paginate($request->limit ?? $limit);
         return BalanceResource::collection($balance);
     }
 

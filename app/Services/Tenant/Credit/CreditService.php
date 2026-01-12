@@ -12,10 +12,37 @@ class CreditService
     {
         $this->credit = $credit;
     }
-
     public function paginate($request, $limit = 25)
     {
-        $credit = $this->credit->paginate($request->limit ?? $limit);
+        $credit = $this->credit
+            ->when($request->filled('type'), function ($query) use ($request) {
+                $query->where('type', $request->type);
+            })
+            ->when($request->filled('amount'), function ($query) use ($request) {
+                $query->where('amount', $request->amount);
+            })
+            ->when($request->filled('return_amount'), function ($query) use ($request) {
+                $query->where('return_amount', $request->return_amount);
+            })
+            ->when($request->filled('description'), function ($query) use ($request) {
+                $query->where('description', 'like', "%{$request->description}%");
+            })
+            ->when($request->filled('date'), function ($query) use ($request) {
+                $query->whereDate('date', $request->date);
+            })
+            ->when($request->filled('miti'), function ($query) use ($request) {
+                $query->where('miti', 'like', "%{$request->miti}%");
+            })
+            ->when($request->filled('shift'), function ($query) use ($request) {
+                $query->where('shift', $request->shift);
+            })
+            ->when($request->filled('status'), function ($query) use ($request) {
+                $query->where('status', $request->status);
+            })
+            ->when($request->filled('customer_id'), function ($query) use ($request) {
+                $query->where('customer_id', $request->customer_id);
+            })
+            ->paginate($request->limit ?? $limit);
         return CreditResource::collection($credit);
     }
 

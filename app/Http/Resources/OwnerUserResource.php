@@ -40,8 +40,7 @@ class OwnerUserResource extends JsonResource
             'status' => $this->status,
             'approved_by' => $this->approved_by,
             'remarks' => $this->remarks,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+
         ];
     }
 }

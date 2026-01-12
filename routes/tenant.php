@@ -73,6 +73,7 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->get('cheque', [ChequeController::class, 'index']);
     $route->post('cheque', [ChequeController::class, 'store']);
     $route->get('cheque/{id}', [ChequeController::class, 'show']);
+    $route->put('cheque/{id}/clear', [ChequeController::class, 'chequeClear']);
     $route->put('cheque/{id}', [ChequeController::class, 'update']);
     $route->delete('cheque/{id}', [ChequeController::class, 'destroy']);
 
@@ -83,6 +84,7 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->delete('credit/{id}', [CreditController::class, 'destroy']);
 
     $route->get('customer', [CustomerController::class, 'index']);
+    $route->get('customer/get/search', [CustomerController::class, 'search'])->name('tenant.customer.search');
     $route->post('customer', [CustomerController::class, 'store']);
     $route->get('customer/{id}', [CustomerController::class, 'show']);
     $route->put('customer/{id}', [CustomerController::class, 'update']);
@@ -126,6 +128,7 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->delete('purchase-order-item/{id}', [PurchaseOrderItemController::class, 'destroy']);
 
     $route->get('supplier', [SupplierController::class, 'index']);
+    $route->get('supplier/get/search', [SupplierController::class, 'search'])->name('tenant.supplier.search');
     $route->post('supplier', [SupplierController::class, 'store']);
     $route->get('supplier/{id}', [SupplierController::class, 'show']);
     $route->put('supplier/{id}', [SupplierController::class, 'update']);

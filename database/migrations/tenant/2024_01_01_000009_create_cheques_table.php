@@ -14,7 +14,6 @@ return new class extends Migration
             $table->morphs('party');       // party_type, party_id
             $table->string('type');
             $table->string('cheque_number');
-            $table->string('pay_to')->nullable();
             $table->decimal('amount', 15, 2);
             $table->date('date');
             $table->string('miti');

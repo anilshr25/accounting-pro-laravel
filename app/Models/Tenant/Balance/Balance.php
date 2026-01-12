@@ -16,4 +16,7 @@ class Balance extends Model
         'closing_balance',
         'shift',
     ];
+    protected $casts = [
+        'date' => 'datetime',
+    ];
 }

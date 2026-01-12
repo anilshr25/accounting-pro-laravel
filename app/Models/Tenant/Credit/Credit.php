@@ -19,7 +19,9 @@ class Credit extends Model
         'shift',
         'status',
         'customer_id',
-        'supplier_id',
+    ];
+    protected $casts = [
+        'date' => 'datetime',
     ];
     public $timestamps = false;
 }

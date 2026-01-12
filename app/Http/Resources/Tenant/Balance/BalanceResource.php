@@ -10,13 +10,11 @@ class BalanceResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'date' => $this->date,
+            'date' => $this->date?->format('Y-m-d'),
+            'formatted_date' => $this->date?->format('d M Y'),
             'opening_balance' => $this->opening_balance,
             'closing_balance' => $this->closing_balance,
             'shift' => $this->shift,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-            'deleted_at' => $this->deleted_at,
         ];
     }
 }

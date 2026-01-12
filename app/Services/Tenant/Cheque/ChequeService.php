@@ -14,26 +14,62 @@ class ChequeService
     {
         $this->cheque = $cheque;
     }
-
     public function paginate($request, $limit = 25)
     {
-        $cheque = $this->cheque->paginate($request->limit ?? $limit);
+        $cheque = $this->cheque
+            ->when($request->filled('bank_account_id'), function ($query) use ($request) {
+                $query->where('bank_account_id', $request->bank_account_id);
+            })
+            ->when($request->filled('party_type'), function ($query) use ($request) {
+                $query->where('party_type', $request->party_type);
+            })
+            ->when($request->filled('party_id'), function ($query) use ($request) {
+                $query->where('party_id', $request->party_id);
+            })
+            ->when($request->filled('type'), function ($query) use ($request) {
+                $query->where('type', $request->type);
+            })
+            ->when($request->filled('cheque_number'), function ($query) use ($request) {
+                $query->where('cheque_number', 'like', "%{$request->cheque_number}%");
+            })
+
+            ->when($request->filled('amount'), function ($query) use ($request) {
+                $query->where('amount', $request->amount);
+            })
+            ->when($request->filled('date'), function ($query) use ($request) {
+                $query->whereDate('date', $request->date);
+            })
+            ->when($request->filled('miti'), function ($query) use ($request) {
+                $query->where('miti', 'like', "%{$request->miti}%");
+            })
+            ->when($request->filled('status'), function ($query) use ($request) {
+                $query->where('status', $request->status);
+            })
+            ->when($request->filled('bank_name'), function ($query) use ($request) {
+                $query->where('bank_name', $request->bank_name);
+            })
+            ->paginate($request->limit ?? $limit);
         return ChequeResource::collection($cheque);
     }
 
     public function store($data, $user)
     {
-        try{
-           return DB::transaction(function () use ($data, $user) {
-                $cheque = new Cheque($data);
+        try {
+            if (!empty($user)) {
+                return DB::transaction(function () use ($data, $user) {
+                    $cheque = new Cheque($data);
 
-                $cheque->party()->associate($user);
+                    $cheque->party()->associate($user);
 
-                $cheque->save();
+                    $cheque->save();
 
-                LedgerService::postCheaque($cheque);
-                return $cheque;
-            });
+                    LedgerService::postCheaque($cheque);
+
+                    return $cheque;
+                });
+            } else {
+                return $this->cheque->create($data);
+            }
         } catch (\Exception $ex) {
             return false;
         }
@@ -55,6 +91,20 @@ class ChequeService
             if (!$cheque) {
                 return false;
             }
+            return $cheque->update($data);
+        } catch (\Exception $ex) {
+            return false;
+        }
+    }
+
+    public function chequeClear($id, $data)
+    {
+        try {
+            $cheque = $this->find($id);
+            if (!$cheque) {
+                return false;
+            }
+            LedgerService::postCheaque($cheque);
             return $cheque->update($data);
         } catch (\Exception $ex) {
             return false;
