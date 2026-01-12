@@ -22,7 +22,6 @@ return new class extends Migration
                 'completed',
             ])->default('pending');
             $table->foreignId('customer_id')->nullable()->constrained('customers')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->cascadeOnUpdate()->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });

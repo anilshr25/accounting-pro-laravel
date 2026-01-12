@@ -12,10 +12,41 @@ class SupplierService
     {
         $this->supplier = $supplier;
     }
-
     public function paginate($request, $limit = 25)
     {
-        $supplier = $this->supplier->paginate($request->limit ?? $limit);
+        $supplier = $this->supplier
+            ->when($request->filled('info'), function ($query) use ($request) {
+                $query->where(function ($sub) use ($request) {
+                    $info = $request->info;
+                    $sub->where('name', 'like', "%{$info}%")
+                        ->orWhere('email', 'like', "%{$info}%")
+                        ->orWhere('phone', 'like', "%{$info}%");
+                });
+            })
+            ->when($request->filled('address'), function ($query) use ($request) {
+                $query->where('address', 'like', "%{$request->address}%");
+            })
+            ->when($request->filled('pan'), function ($query) use ($request) {
+                $query->where('pan', 'like', "%{$request->pan}%");
+            })
+            ->paginate($request->limit ?? $limit);
+        return SupplierResource::collection($supplier);
+    }
+
+    public function search($request, $limit = 10)
+    {
+        $supplier = $this->supplier
+            ->when($request->filled('info'), function ($query) use ($request) {
+                $query->where(function ($sub) use ($request) {
+                    $info = $request->info;
+                    $sub->where('name', 'like', "%{$info}%")
+                        ->orWhere('email', 'like', "%{$info}%")
+                        ->orWhere('phone', 'like', "%{$info}%");
+                });
+            })
+            ->orderBy('id', 'DESC')
+            ->limit($limit)
+            ->get();
         return SupplierResource::collection($supplier);
     }
 

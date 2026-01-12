@@ -12,11 +12,10 @@ class Cheque extends Model
     protected $table = 'cheques';
     protected $fillable = [
         'bank_account_id',
-        'supplier_id',
-        'customer_id',
+        'party_type',
+        'party_id',
         'type',
         'cheque_number',
-        'pay_to',
         'amount',
         'date',
         'miti',

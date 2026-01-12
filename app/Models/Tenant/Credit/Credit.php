@@ -19,7 +19,6 @@ class Credit extends Model
         'shift',
         'status',
         'customer_id',
-        'supplier_id',
     ];
     public $timestamps = false;
 }

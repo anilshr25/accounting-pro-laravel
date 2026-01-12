@@ -12,10 +12,44 @@ class CustomerService
     {
         $this->customer = $customer;
     }
-
     public function paginate($request, $limit = 25)
     {
-        $customer = $this->customer->paginate($request->limit ?? $limit);
+        $customer = $this->customer
+            ->when($request->filled('info'), function ($query) use ($request) {
+                $query->where(function ($sub) use ($request) {
+                    $info = $request->info;
+                    $sub->where('name', 'like', "%{$info}%")
+                        ->orWhere('email', 'like', "%{$info}%")
+                        ->orWhere('phone', 'like', "%{$info}%");
+                });
+            })
+            ->when($request->filled('address'), function ($query) use ($request) {
+                $query->where('address', 'like', "%{$request->address}%");
+            })
+            ->when($request->filled('credit_balance'), function ($query) use ($request) {
+                $query->where('credit_balance', $request->credit_balance);
+            })
+            ->when($request->filled('vat'), function ($query) use ($request) {
+                $query->where('vat', 'like', "%{$request->vat}%");
+            })
+            ->paginate($request->limit ?? $limit);
+        return CustomerResource::collection($customer);
+    }
+
+    public function search($request, $limit = 10)
+    {
+        $customer = $this->customer
+            ->when($request->filled('info'), function ($query) use ($request) {
+                $query->where(function ($sub) use ($request) {
+                    $info = $request->info;
+                    $sub->where('name', 'like', "%{$info}%")
+                        ->orWhere('email', 'like', "%{$info}%")
+                        ->orWhere('phone', 'like', "%{$info}%");
+                });
+            })
+            ->orderBy('id', 'DESC')
+            ->limit($limit)
+            ->get();
         return CustomerResource::collection($customer);
     }
 

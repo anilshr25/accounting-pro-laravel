@@ -2,6 +2,7 @@
 
 namespace App\Services\Tenant\Ledger;
 
+use App\Http\Resources\Tenant\Ledger\LedgerResource;
 use App\Models\Tenant\Customer\Customer;
 use App\Models\Tenant\Supplier\Supplier;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,36 @@ class LedgerService
 
     public function paginate($request, $limit = 25)
     {
-        return $this->ledger->paginate($request->limit ?? $limit);
+        $ledgers = $this->ledger
+            ->when($request->filled('date'), function ($query) use ($request) {
+                $query->whereDate('date', $request->date);
+            })
+            ->when($request->filled('party_type'), function ($query) use ($request) {
+                $query->where('party_type', $request->party_type);
+            })
+            ->when($request->filled('party_id'), function ($query) use ($request) {
+                $query->where('party_id', $request->party_id);
+            })
+            ->when($request->filled('debit'), function ($query) use ($request) {
+                $query->where('debit', $request->debit);
+            })
+            ->when($request->filled('credit'), function ($query) use ($request) {
+                $query->where('credit', $request->credit);
+            })
+            ->when($request->filled('reference_type'), function ($query) use ($request) {
+                $query->where('reference_type', $request->reference_type);
+            })
+            ->when($request->filled('reference_id'), function ($query) use ($request) {
+                $query->where('reference_id', $request->reference_id);
+            })
+            ->when($request->filled('remarks'), function ($query) use ($request) {
+                $query->where('remarks', 'like', "%{$request->remarks}%");
+            })
+            ->when($request->filled('balance'), function ($query) use ($request) {
+                $query->where('balance', $request->balance);
+            })
+            ->paginate($request->limit ?? $limit);
+        return LedgerResource::collection($ledgers);
     }
 
     public function store($data)

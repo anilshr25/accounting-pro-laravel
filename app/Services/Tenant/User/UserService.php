@@ -13,18 +13,26 @@ class UserService
     {
         $this->user = $user;
     }
-
-    public function paginate(mixed $request, int $limit = 25)
+    public function paginate($request, $limit = 25)
     {
-        $user = $this->user->query()
-            ->when($request->filled('info'), function ($query) use ($request) {
-                $query->where('info', 'like', '%' . $request->info . '%');
+        $user = $this->user
+        ->when($request->filled('info'), function ($query) use ($request) {
+            $query->where(function ($sub) use ($request) {
+                $info = $request->info;
+                $sub->where('first_name', 'like', "%{$info}%")
+                    ->orWhere('last_name', 'like', "%{$info}%")
+                    ->orWhere('email', 'like', "%{$info}%")
+                    ->orWhere('phone', 'like', "%{$info}%");
+            });
+        })
+            ->when($request->filled('company_name'), function ($query) use ($request) {
+                $query->where('company_name', 'like', "%{$request->company_name}%");
             })
             ->when($request->filled('is_active'), function ($query) use ($request) {
-                $query->whereIsActive($request->is_active);
+                $query->where('is_active', $request->is_active);
             })
             ->orderBy('id', 'DESC')
-            ->paginate($limit);
+            ->paginate($request->limit ?? $limit);
         return UserResource::collection($user);
     }
 

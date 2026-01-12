@@ -12,10 +12,13 @@ class InvoiceItemService
     {
         $this->invoice_item = $invoice_item;
     }
-
     public function paginate($request, $limit = 25)
     {
-        $invoice_item = $this->invoice_item->paginate($request->limit ?? $limit);
+        $invoice_item = $this->invoice_item
+            ->when($request->filled('invoice_id'), function ($query) use ($request) {
+                $query->where('invoice_id', $request->invoice_id);
+            })
+            ->paginate($request->limit ?? $limit);
         return InvoiceItemResource::collection($invoice_item);
     }
 

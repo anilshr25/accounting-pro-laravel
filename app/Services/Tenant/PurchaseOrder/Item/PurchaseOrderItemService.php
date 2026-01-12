@@ -12,10 +12,13 @@ class PurchaseOrderItemService
     {
         $this->purchase_order_item = $purchase_order_item;
     }
-
     public function paginate($request, $limit = 25)
     {
-        $purchase_order_item = $this->purchase_order_item->paginate($request->limit ?? $limit);
+        $purchase_order_item = $this->purchase_order_item
+            ->when($request->filled('purchase_order_id'), function ($query) use ($request) {
+                $query->where('purchase_order_id', $request->purchase_order_id);
+            })
+            ->paginate($request->limit ?? $limit);
         return PurchaseOrderItemResource::collection($purchase_order_item);
     }
 

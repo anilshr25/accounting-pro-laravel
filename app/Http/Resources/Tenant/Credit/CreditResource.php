@@ -10,6 +10,7 @@ class CreditResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'customer_id' => $this->customer_id,
             'type' => $this->type,
             'amount' => $this->amount,
             'return_amount' => $this->return_amount,
@@ -19,8 +20,6 @@ class CreditResource extends JsonResource
             'miti' => $this->miti,
             'shift' => $this->shift,
             'status' => $this->status,
-            'customer_id' => $this->customer_id,
-            'supplier_id' => $this->supplier_id,
         ];
     }
 }
