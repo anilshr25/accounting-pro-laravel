@@ -11,8 +11,8 @@ class ChequeResource extends JsonResource
         return [
             'id' => $this->id,
             'bank_account_id' => $this->bank_account_id,
-            'supplier_id' => $this->supplier_id,
-            'customer_id' => $this->customer_id,
+            'party_id' => $this->party_id,
+            'party' => $this->party->name ?? null,
             'type' => $this->type,
             'cheque_number' => $this->cheque_number,
             'pay_to' => $this->pay_to,
