@@ -11,6 +11,7 @@ class PaymentResource extends JsonResource
         return [
             'id' => $this->id,
             'party_id' => $this->party_id,
+            'party' => $this->party->name ?? null,
             'date' => $this->date,
             'miti' => $this->miti,
             'amount' => $this->amount,
