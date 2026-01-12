@@ -14,9 +14,7 @@ class BalanceResource extends JsonResource
             'opening_balance' => $this->opening_balance,
             'closing_balance' => $this->closing_balance,
             'shift' => $this->shift,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-            'deleted_at' => $this->deleted_at,
+
         ];
     }
 }
