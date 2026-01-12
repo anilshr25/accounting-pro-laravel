@@ -20,34 +20,35 @@ class LedgerService
     public function paginate($request, $limit = 25)
     {
         $ledgers = $this->ledger
-            ->when($request->filled('date'), function ($query) use ($request) {
-                $query->whereDate('date', $request->date);
-            })
-            ->when($request->filled('party_type'), function ($query) use ($request) {
-                $query->where('party_type', $request->party_type);
-            })
-            ->when($request->filled('party_id'), function ($query) use ($request) {
-                $query->where('party_id', $request->party_id);
-            })
-            ->when($request->filled('debit'), function ($query) use ($request) {
-                $query->where('debit', $request->debit);
-            })
-            ->when($request->filled('credit'), function ($query) use ($request) {
-                $query->where('credit', $request->credit);
-            })
-            ->when($request->filled('reference_type'), function ($query) use ($request) {
-                $query->where('reference_type', $request->reference_type);
-            })
-            ->when($request->filled('reference_id'), function ($query) use ($request) {
-                $query->where('reference_id', $request->reference_id);
-            })
-            ->when($request->filled('remarks'), function ($query) use ($request) {
-                $query->where('remarks', 'like', "%{$request->remarks}%");
-            })
-            ->when($request->filled('balance'), function ($query) use ($request) {
-                $query->where('balance', $request->balance);
-            })
-            ->paginate($request->limit ?? $limit);
+            ->when(
+                $request->filled('date'),
+                fn($q) =>
+                $q->whereDate('date', $request->date)
+            )
+            ->when(
+                $request->filled('party_type'),
+                fn($q) =>
+                $q->where('party_type', 'supplier')
+            )
+            ->when(
+                $request->filled('party_id'),
+                fn($q) =>
+                $q->where('party_id', $request->party_id)
+            )
+            ->when(
+                $request->filled('reference_type'),
+                fn($q) =>
+                $q->where('reference_type', $request->reference_type)
+            )
+            ->when(
+                $request->filled('reference_id'),
+                fn($q) =>
+                $q->where('reference_id', $request->reference_id)
+            )
+            ->orderBy('date')
+            ->orderBy('id')
+            ->paginate($request->integer('limit', $limit));
+
         return LedgerResource::collection($ledgers);
     }
 
@@ -94,7 +95,6 @@ class LedgerService
     public static function postPayment($payment)
     {
         DB::transaction(function () use ($payment) {
-            \Log::info("data", ['data' => $payment]);
             // Prevent double posting
             if ($payment->is_posted) {
                 throw new \Exception('Payment already posted to ledger.');

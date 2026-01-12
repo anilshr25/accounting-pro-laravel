@@ -16,13 +16,13 @@ class LedgerResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'date' => $this->date,
+            'date' => $this->date?->format('Y-m-d'),
+            'formated_date' => $this->date?->format('d M Y'),
             'party_id' => $this->party_id,
-            'party' => $this->party,
+            'party' => $this->party?->name,
             'debit' => $this->debit,
             'credit' => $this->credit,
             'reference_id' => $this->reference_id,
-            'reference' => $this->reference,
             'remarks' => $this->remarks,
             'balance' => $this->balance,
         ];
