@@ -23,8 +23,8 @@ class ChequeService
 
     public function store($data, $user)
     {
-        try {
-            return DB::transaction(function () use ($data, $user) {
+        try{
+           return DB::transaction(function () use ($data, $user) {
                 $cheque = new Cheque($data);
 
                 $cheque->party()->associate($user);
@@ -32,6 +32,7 @@ class ChequeService
                 $cheque->save();
 
                 LedgerService::postCheaque($cheque);
+                return $cheque;
             });
         } catch (\Exception $ex) {
             return false;

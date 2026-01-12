@@ -24,4 +24,9 @@ class Cheque extends Model
         'status',
         'bank_name',
     ];
+
+    public function party()
+    {
+        return $this->morphTo();
+    }
 }
