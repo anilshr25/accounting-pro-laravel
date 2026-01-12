@@ -54,7 +54,6 @@ class PaymentService
 
     public function store($data, $user)
     {
-        try {
             return DB::transaction(function () use ($data, $user) {
 
                 $payment = new Payment($data);
@@ -67,9 +66,7 @@ class PaymentService
 
                 return $payment;
             });
-        } catch (\Exception $e) {
-            return false;
-        }
+
     }
 
     public function find($id, $resource = false)

@@ -94,7 +94,7 @@ class LedgerService
     public static function postPayment($payment)
     {
         DB::transaction(function () use ($payment) {
-
+            \Log::info("data", ['data' => $payment]);
             // Prevent double posting
             if ($payment->is_posted) {
                 throw new \Exception('Payment already posted to ledger.');
@@ -111,10 +111,10 @@ class LedgerService
             $credit = 0;
 
             // Accounting logic
-            if ($payment->party_type === Customer::class) {
+            if ($payment->party_type === 'customer') {
                 $debit = $payment->amount;
                 $newBalance = $lastBalance - $payment->amount;
-            } elseif ($payment->party_type === Supplier::class) {
+            } elseif ($payment->party_type === 'supplier') {
                 $credit = $payment->amount;
                 $newBalance = $lastBalance - $payment->amount;
             } else {
@@ -157,10 +157,10 @@ class LedgerService
             $credit = 0;
 
             // Accounting logic
-            if ($cheque->party_type === Customer::class) {
+            if ($cheque->party_type === 'customer') {
                 $debit = $cheque->amount;
                 $newBalance = $lastBalance - $cheque->amount;
-            } elseif ($cheque->party_type === Supplier::class) {
+            } elseif ($cheque->party_type === 'supplier') {
                 $credit = $cheque->amount;
                 $newBalance = $lastBalance - $cheque->amount;
             } else {
