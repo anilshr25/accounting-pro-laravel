@@ -3,16 +3,22 @@
 namespace App\Services\Tenant\PurchaseOrder;
 
 use App\Models\Tenant\PurchaseOrder\PurchaseOrder;
-use App\Models\Tenant\PurchaseOrder\Ledger\PurchaseOrderLedger;
+use App\Models\Tenant\PurchaseOrder\Item\PurchaseOrderItem;
 use App\Http\Resources\Tenant\PurchaseOrder\PurchaseOrderResource;
+use Illuminate\Support\Facades\DB;
 
 class PurchaseOrderService
 {
     protected $purchase_order;
+    protected $purchase_order_item;
 
-    public function __construct(PurchaseOrder $purchase_order)
+    public function __construct(
+        PurchaseOrder $purchase_order,
+        PurchaseOrderItem $purchase_order_item
+    )
     {
         $this->purchase_order = $purchase_order;
+        $this->purchase_order_item = $purchase_order_item;
     }
     public function paginate($request, $limit = 25)
     {
@@ -42,8 +48,16 @@ class PurchaseOrderService
     public function store($data)
     {
         try {
-            $purchase_order = $this->purchase_order->create($data);
-            return $purchase_order;
+            return DB::transaction(function () use ($data) {
+                $items = $data['items'] ?? [];
+                unset($data['items']);
+                $purchase_order = $this->purchase_order->create($data);
+                if (!$purchase_order) {
+                    return false;
+                }
+                $this->syncItems($purchase_order->id, $items);
+                return $purchase_order;
+            });
         } catch (\Exception $ex) {
             return false;
         }
@@ -61,12 +75,21 @@ class PurchaseOrderService
     public function update($id, $data)
     {
         try {
-            $purchase_order = $this->find($id);
-            if (!$purchase_order) {
-                return false;
-            }
-            $updated = $purchase_order->update($data);
-            return $updated;
+            return DB::transaction(function () use ($id, $data) {
+                $purchase_order = $this->find($id);
+                if (!$purchase_order) {
+                    return false;
+                }
+                $items = $data['items'] ?? null;
+                unset($data['items']);
+                $updated = $purchase_order->update($data);
+                if ($updated) {
+                    if (is_array($items)) {
+                        $this->syncItems($purchase_order->id, $items);
+                    }
+                }
+                return $updated;
+            });
         } catch (\Exception $ex) {
             return false;
         }
@@ -85,4 +108,19 @@ class PurchaseOrderService
         }
     }
 
+    protected function syncItems($purchaseOrderId, array $items)
+    {
+        $this->purchase_order_item->newQuery()
+            ->where('purchase_order_id', $purchaseOrderId)
+            ->delete();
+
+        if (empty($items)) {
+            return;
+        }
+
+        foreach ($items as $item) {
+            $item['purchase_order_id'] = $purchaseOrderId;
+            $this->purchase_order_item->create($item);
+        }
+    }
 }
