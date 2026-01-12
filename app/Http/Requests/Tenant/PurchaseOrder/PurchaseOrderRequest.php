@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Tenant\PurchaseOrder;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class PurchaseOrderRequest extends FormRequest
 {
@@ -14,8 +15,12 @@ class PurchaseOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'supplier_id' => 'nullable|integer',
-            'purchase_invoice_number' => 'nullable|string|max:255',
+            'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
+            'purchase_invoice_number' => [
+                'nullable',
+                'string',
+                Rule::unique('purchase_orders', 'purchase_invoice_number')->ignore($this->route('id')),
+            ],
             'order_date' => 'nullable|date',
             'received_date' => 'nullable|date',
             'tax' => 'nullable|numeric',
@@ -23,6 +28,18 @@ class PurchaseOrderRequest extends FormRequest
             'total' => 'nullable|numeric',
             'status' => 'nullable|string|max:255',
             'received_by' => 'nullable|string|max:255',
+            'type' => 'nullable|string|max:255',
+            'date' => 'nullable|date',
+            'credit' => 'nullable|numeric',
+            'debit' => 'nullable|numeric',
+            'cheque_id' => 'nullable|integer',
+            'remarks' => 'nullable|string',
+            'balance' => 'nullable|numeric',
+            'items' => 'required|array|min:1',
+            'items.*.description' => 'required|string',
+            'items.*.quantity' => 'required|numeric',
+            'items.*.rate' => 'required|numeric',
+            'items.*.amount' => 'required|numeric',
         ];
     }
 }
