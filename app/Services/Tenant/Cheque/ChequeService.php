@@ -63,7 +63,9 @@ class ChequeService
 
                     $cheque->save();
 
-                    LedgerService::postCheaque($cheque);
+                    if (isset($data['status']) && $data == 'cleared') {
+                        LedgerService::postCheaque($cheque);
+                    }
 
                     return $cheque;
                 });
