@@ -70,20 +70,20 @@ class ChequeController extends Controller
         return response(['status' => 'ERROR'], 500);
     }
 
-    // public function chequeClear($id)
-    // {
-    //     $cheque = $this->cheque->find($id);
-    //     if (!$cheque) {
-    //         return response(['status' => 'ERROR', 'message' => 'Cheque not found'], 404);
-    //     }
-    //     if ($cheque->status === 'cleared') {
-    //         return response(['status' => 'OK', 'message' => 'Cheque already cleared'], 200);
-    //     }
-    //     $user = $cheque->
-    //     $updated = $this->cheque->chequeClear($id, ['status' => 'cleared'], $user);
-    //     if ($updated) {
-    //         return response(['status' => 'OK'], 200);
-    //     }
-    //     return response(['status' => 'ERROR'], 500);
-    // }
+    public function chequeClear($id)
+    {
+        $cheque = $this->cheque->find($id);
+        if (!$cheque) {
+            return response(['status' => 'ERROR', 'message' => 'Cheque not found'], 404);
+        }
+        if ($cheque->status === 'cleared') {
+            return response(['status' => 'OK', 'message' => 'Cheque already cleared'], 200);
+        }
+        $user = $cheque->party ?? null;
+        $updated = $this->cheque->chequeClear($id, ['status' => 'cleared'], $user);
+        if ($updated) {
+            return response(['status' => 'OK'], 200);
+        }
+        return response(['status' => 'ERROR'], 500);
+    }
 }

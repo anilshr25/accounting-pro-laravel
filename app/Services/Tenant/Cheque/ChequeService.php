@@ -97,6 +97,20 @@ class ChequeService
         }
     }
 
+    public function chequeClear($id, $data)
+    {
+        try {
+            $cheque = $this->find($id);
+            if (!$cheque) {
+                return false;
+            }
+            LedgerService::postCheaque($cheque);
+            return $cheque->update($data);
+        } catch (\Exception $ex) {
+            return false;
+        }
+    }
+
     public function delete($id)
     {
         try {
