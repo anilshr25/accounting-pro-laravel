@@ -9,12 +9,10 @@ use App\Http\Resources\Tenant\PurchaseOrder\PurchaseOrderResource;
 class PurchaseOrderService
 {
     protected $purchase_order;
-    protected $purchase_order_ledger;
 
-    public function __construct(PurchaseOrder $purchase_order, PurchaseOrderLedger $purchase_order_ledger)
+    public function __construct(PurchaseOrder $purchase_order)
     {
         $this->purchase_order = $purchase_order;
-        $this->purchase_order_ledger = $purchase_order_ledger;
     }
     public function paginate($request, $limit = 25)
     {
@@ -45,10 +43,6 @@ class PurchaseOrderService
     {
         try {
             $purchase_order = $this->purchase_order->create($data);
-            if (!$purchase_order) {
-                return false;
-            }
-            $this->syncLedger($purchase_order->id, $data);
             return $purchase_order;
         } catch (\Exception $ex) {
             return false;
@@ -72,9 +66,6 @@ class PurchaseOrderService
                 return false;
             }
             $updated = $purchase_order->update($data);
-            if ($updated) {
-                $this->syncLedger($purchase_order->id, $data);
-            }
             return $updated;
         } catch (\Exception $ex) {
             return false;
@@ -94,27 +85,4 @@ class PurchaseOrderService
         }
     }
 
-    protected function syncLedger($purchaseOrderId, $data)
-    {
-        $type = $data['type'] ?? 'purchase';
-        if ($type !== 'purchase') {
-            return;
-        }
-
-        $fields = [
-            'date',
-            'credit',
-            'debit',
-            'cheque_id',
-            'remarks',
-            'balance',
-        ];
-        $ledgerData = array_intersect_key($data, array_flip($fields));
-        $ledgerData['purchase_order_id'] = $purchaseOrderId;
-
-        $this->purchase_order_ledger->newQuery()->updateOrCreate(
-            ['purchase_order_id' => $purchaseOrderId],
-            $ledgerData
-        );
-    }
 }
