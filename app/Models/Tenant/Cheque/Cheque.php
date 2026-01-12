@@ -23,6 +23,9 @@ class Cheque extends Model
         'status',
         'bank_name',
     ];
+    protected $casts = [
+        'date' => 'datetime',
+    ];
 
     public function party()
     {

@@ -55,16 +55,21 @@ class ChequeService
     public function store($data, $user)
     {
         try {
-            return DB::transaction(function () use ($data, $user) {
-                $cheque = new Cheque($data);
+            if (!empty($user)) {
+                return DB::transaction(function () use ($data, $user) {
+                    $cheque = new Cheque($data);
 
-                $cheque->party()->associate($user);
+                    $cheque->party()->associate($user);
 
-                $cheque->save();
+                    $cheque->save();
 
-                LedgerService::postCheaque($cheque);
-                return $cheque;
-            });
+                    LedgerService::postCheaque($cheque);
+
+                    return $cheque;
+                });
+            } else {
+                return $this->cheque->create($data);
+            }
         } catch (\Exception $ex) {
             return false;
         }

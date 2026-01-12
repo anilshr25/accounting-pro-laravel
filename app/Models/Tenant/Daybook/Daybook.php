@@ -17,5 +17,8 @@ class Daybook extends Model
         'total_amount',
         'remarks',
     ];
+    protected $casts = [
+        'date' => 'datetime',
+    ];
     public $timestamps = false;
 }

@@ -23,4 +23,8 @@ class Invoice extends Model
         'shift',
         'sale_return',
     ];
+    protected $casts = [
+        'invoice_date' => 'datetime',
+        'sale_return' => 'boolean',
+    ];
 }

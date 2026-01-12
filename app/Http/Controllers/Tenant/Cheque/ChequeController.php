@@ -11,7 +11,7 @@ use App\Http\Requests\Tenant\Cheque\ChequeRequest;
 
 class ChequeController extends Controller
 {
-   protected $cheque;
+    protected $cheque;
     protected $supplier;
     protected $customer;
 
@@ -29,13 +29,16 @@ class ChequeController extends Controller
 
     public function store(ChequeRequest $request)
     {
-       $data = $request->validated();
+        $data = $request->validated();
         if (isset($data['type']) && isset($data['pay_to'])) {
-            if ($data['type'] == 'supplier') {
-                $user = $this->supplier->find($request->pay_to);
-            }
-            if ($data['type'] == 'customer') {
-                $user = $this->customer->find($request->pay_to);
+            $user = null;
+            if (isset($data['status']) && $data['status'] == 'cleared') {
+                if ($data['type'] == 'supplier') {
+                    $user = $this->supplier->find($request->pay_to);
+                }
+                if ($data['type'] == 'customer') {
+                    $user = $this->customer->find($request->pay_to);
+                }
             }
             $cheque = $this->cheque->store($data, $user);
             if ($cheque)
@@ -66,4 +69,21 @@ class ChequeController extends Controller
             return response(['status' => 'OK'], 200);
         return response(['status' => 'ERROR'], 500);
     }
+
+    // public function chequeClear($id)
+    // {
+    //     $cheque = $this->cheque->find($id);
+    //     if (!$cheque) {
+    //         return response(['status' => 'ERROR', 'message' => 'Cheque not found'], 404);
+    //     }
+    //     if ($cheque->status === 'cleared') {
+    //         return response(['status' => 'OK', 'message' => 'Cheque already cleared'], 200);
+    //     }
+    //     $user = $cheque->
+    //     $updated = $this->cheque->chequeClear($id, ['status' => 'cleared'], $user);
+    //     if ($updated) {
+    //         return response(['status' => 'OK'], 200);
+    //     }
+    //     return response(['status' => 'ERROR'], 500);
+    // }
 }

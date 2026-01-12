@@ -21,4 +21,8 @@ class PurchaseOrder extends Model
         'status',
         'received_by',
     ];
+    protected $casts = [
+        'order_date' => 'datetime',
+        'received_date' => 'datetime',
+    ];
 }

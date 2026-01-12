@@ -20,4 +20,7 @@ class CustomerPayment extends Model
         'transaction_id',
         'remarks',
     ];
+    protected $casts = [
+        'date' => 'datetime',
+    ];
 }

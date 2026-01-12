@@ -20,5 +20,8 @@ class Credit extends Model
         'status',
         'customer_id',
     ];
+    protected $casts = [
+        'date' => 'datetime',
+    ];
     public $timestamps = false;
 }

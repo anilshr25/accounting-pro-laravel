@@ -24,6 +24,9 @@ class Payment extends Model
         'is_posted',
         'remarks',
     ];
+    protected $casts = [
+        'date' => 'datetime',
+    ];
 
     public function party()
     {
