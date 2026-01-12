@@ -17,9 +17,8 @@ class PurchaseOrderRequest extends FormRequest
         return [
             'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
             'purchase_invoice_number' => [
-                'nullable',
-                'string',
-                Rule::unique('purchase_orders', 'purchase_invoice_number')->ignore($this->route('id')),
+                'required',
+                'string'
             ],
             'order_date' => 'nullable|date',
             'received_date' => 'nullable|date',
