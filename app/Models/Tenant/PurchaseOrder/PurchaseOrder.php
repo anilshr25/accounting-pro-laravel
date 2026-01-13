@@ -5,6 +5,7 @@ namespace App\Models\Tenant\PurchaseOrder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Tenant\PurchaseOrder\Item\PurchaseOrderItem;
 
 class PurchaseOrder extends Model
 {
@@ -25,4 +26,9 @@ class PurchaseOrder extends Model
         'order_date' => 'datetime',
         'received_date' => 'datetime',
     ];
+
+    protected function items()
+    {
+        return $this->hasMany(PurchaseOrderItem::class, 'purchase_order_id');
+    }
 }
