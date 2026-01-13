@@ -5,20 +5,21 @@ namespace App\Services\Tenant\PurchaseOrder;
 use App\Models\Tenant\PurchaseOrder\PurchaseOrder;
 use App\Models\Tenant\PurchaseOrder\Item\PurchaseOrderItem;
 use App\Http\Resources\Tenant\PurchaseOrder\PurchaseOrderResource;
+use App\Services\Tenant\Ledger\LedgerService;
 use Illuminate\Support\Facades\DB;
 
 class PurchaseOrderService
 {
     protected $purchase_order;
-    protected $purchase_order_item;
+    protected $purchaseOrderItem;
 
     public function __construct(
         PurchaseOrder $purchase_order,
-        PurchaseOrderItem $purchase_order_item
+        PurchaseOrderItem $purchaseOrderItem
     )
     {
         $this->purchase_order = $purchase_order;
-        $this->purchase_order_item = $purchase_order_item;
+        $this->purchaseOrderItem = $purchaseOrderItem;
     }
     public function paginate($request, $limit = 25)
     {
@@ -41,6 +42,7 @@ class PurchaseOrderService
             ->when($request->filled('received_by'), function ($query) use ($request) {
                 $query->where('received_by', 'like', "%{$request->received_by}%");
             })
+             ->orderBy('order_date', 'ASC')
             ->paginate($request->limit ?? $limit);
         return PurchaseOrderResource::collection($purchase_order);
     }
@@ -56,6 +58,7 @@ class PurchaseOrderService
                     return false;
                 }
                 $this->syncItems($purchase_order->id, $items);
+                LedgerService::postPurchaseOrder($purchase_order);
                 return $purchase_order;
             });
         } catch (\Exception $ex) {
@@ -80,13 +83,14 @@ class PurchaseOrderService
                 if (!$purchase_order) {
                     return false;
                 }
-                $items = $data['items'] ?? null;
+                $items = $data['items'] ?? [];
                 unset($data['items']);
                 $updated = $purchase_order->update($data);
                 if ($updated) {
                     if (is_array($items)) {
                         $this->syncItems($purchase_order->id, $items);
                     }
+                    LedgerService::postPurchaseOrder($purchase_order);
                 }
                 return $updated;
             });
@@ -110,7 +114,7 @@ class PurchaseOrderService
 
     protected function syncItems($purchaseOrderId, array $items)
     {
-        $this->purchase_order_item->newQuery()
+        $this->purchaseOrderItem->newQuery()
             ->where('purchase_order_id', $purchaseOrderId)
             ->delete();
 
@@ -120,7 +124,7 @@ class PurchaseOrderService
 
         foreach ($items as $item) {
             $item['purchase_order_id'] = $purchaseOrderId;
-            $this->purchase_order_item->create($item);
+            $this->purchaseOrderItem->create($item);
         }
     }
 }

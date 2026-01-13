@@ -48,6 +48,7 @@ class ChequeService
             ->when($request->filled('bank_name'), function ($query) use ($request) {
                 $query->where('bank_name', $request->bank_name);
             })
+            ->orderBy('date', 'ASC')
             ->paginate($request->limit ?? $limit);
         return ChequeResource::collection($cheque);
     }
