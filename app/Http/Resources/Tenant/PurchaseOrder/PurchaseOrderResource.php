@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Tenant\PurchaseOrder;
 
+use App\Http\Resources\Tenant\PurchaseOrder\Item\PurchaseOrderItemResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class PurchaseOrderResource extends JsonResource
@@ -22,7 +23,7 @@ class PurchaseOrderResource extends JsonResource
             'total' => $this->total,
             'status' => $this->status,
             'received_by' => $this->received_by,
-            'items' => $this->items
+            'items' => $this->items ? PurchaseOrderItemResource::collection($this->items) : [],
         ];
     }
 }

@@ -111,12 +111,12 @@ class LedgerService
             // Accounting logic
             if ($payment->party_type === 'customer') {
                 $debit = $payment->amount;
-                $newBalance = $lastBalance - $payment->amount;
+                $newBalance = $lastBalance + $payment->amount;
             } elseif ($payment->party_type === 'supplier') {
                 $credit = $payment->amount;
                 $openingBalance = $payment->party?->opening_balance ?? 0;
                 $baseBalance = $lastBalance ?? $openingBalance;
-                $newBalance = $baseBalance + $credit;
+                $newBalance = $baseBalance - $credit;
             } else {
                 throw new \Exception('Unsupported party type');
             }
@@ -159,12 +159,12 @@ class LedgerService
             // Accounting logic
             if ($cheque->party_type === 'customer') {
                 $debit = $cheque->amount;
-                $newBalance = $lastBalance - $cheque->amount;
+                $newBalance = $lastBalance + $cheque->amount;
             } elseif ($cheque->party_type === 'supplier') {
                 $credit = $cheque->amount;
                 $openingBalance = $cheque->party?->opening_balance ?? 0;
                 $baseBalance = $lastBalance ?? $openingBalance;
-                $newBalance = $baseBalance + $credit;
+                $newBalance = $baseBalance - $credit;
             } else {
                 throw new \Exception('Unsupported party type');
             }
