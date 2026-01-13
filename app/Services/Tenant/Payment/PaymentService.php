@@ -2,10 +2,11 @@
 
 namespace App\Services\Tenant\Payment;
 
+use Exception;
+use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Payment\Payment;
-use App\Http\Resources\Tenant\Payment\PaymentResource;
 use App\Services\Tenant\Ledger\LedgerService;
-use DB;
+use App\Http\Resources\Tenant\Payment\PaymentResource;
 
 class PaymentService
 {
@@ -48,12 +49,14 @@ class PaymentService
             ->when($request->filled('remarks'), function ($query) use ($request) {
                 $query->where('remarks', 'like', "%{$request->remarks}%");
             })
+            ->orderBy('date', 'ASC')
             ->paginate($request->limit ?? $limit);
         return PaymentResource::collection($payment);
     }
 
     public function store($data, $user)
     {
+        try {
             return DB::transaction(function () use ($data, $user) {
 
                 $payment = new Payment($data);
@@ -66,7 +69,9 @@ class PaymentService
 
                 return $payment;
             });
-
+        } catch (Exception $th) {
+            return false;
+        }
     }
 
     public function find($id, $resource = false)

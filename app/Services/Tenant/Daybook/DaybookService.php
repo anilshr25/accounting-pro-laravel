@@ -27,6 +27,7 @@ class DaybookService
             ->when($request->filled('type'), function ($query) use ($request) {
                 $query->where('type', $request->type);
             })
+            ->orderBy('date', 'ASC')
             ->paginate($request->limit ?? $limit);
         return DaybookResource::collection($daybook);
     }
