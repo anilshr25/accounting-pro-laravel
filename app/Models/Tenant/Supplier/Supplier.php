@@ -16,6 +16,7 @@ class Supplier extends Model
         'phone',
         'address',
         'opening_balance',
+        'closing_balance',
         'pan',
     ];
 }

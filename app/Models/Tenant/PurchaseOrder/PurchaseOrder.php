@@ -2,9 +2,10 @@
 
 namespace App\Models\Tenant\PurchaseOrder;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Tenant\Supplier\Supplier;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Tenant\PurchaseOrder\Item\PurchaseOrderItem;
 
 class PurchaseOrder extends Model
@@ -26,6 +27,11 @@ class PurchaseOrder extends Model
         'order_date' => 'datetime',
         'received_date' => 'datetime',
     ];
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
 
     protected function items()
     {

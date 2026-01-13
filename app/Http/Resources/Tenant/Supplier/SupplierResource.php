@@ -24,6 +24,7 @@ class SupplierResource extends JsonResource
             'phone' => $this->phone,
             'address' => $this->address,
             'opening_balance' => $this->opening_balance,
+            'closing_balance' => $this->closing_balance,
             'pan' => $this->pan,
 
         ];

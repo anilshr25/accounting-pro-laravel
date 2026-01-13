@@ -14,12 +14,12 @@ class SupplierRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'nullable|string|max:255',
+            'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string|max:255',
-            'opening_balance' => 'nullable|numeric',
-            'pan' => 'nullable|string|max:255',
+            'phone' => 'required|string|max:50',
+            'address' => 'required|string|max:255',
+            'opening_balance' => 'required|numeric',
+            'pan' => 'required|string|max:255',
         ];
     }
 }

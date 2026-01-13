@@ -103,7 +103,7 @@ class LedgerService
                 ->where('party_id', $payment->party_id)
                 ->latest('date')
                 ->latest('id')
-                ->value('balance') ?? 0;
+                ->value('balance');
 
             $debit = 0;
             $credit = 0;
@@ -114,7 +114,9 @@ class LedgerService
                 $newBalance = $lastBalance - $payment->amount;
             } elseif ($payment->party_type === 'supplier') {
                 $credit = $payment->amount;
-                $newBalance = $lastBalance - $payment->amount;
+                $openingBalance = $payment->party?->opening_balance ?? 0;
+                $baseBalance = $lastBalance ?? $openingBalance;
+                $newBalance = $baseBalance + $credit;
             } else {
                 throw new \Exception('Unsupported party type');
             }
@@ -149,7 +151,7 @@ class LedgerService
                 ->where('party_id', $cheque->party_id)
                 ->latest('date')
                 ->latest('id')
-                ->value('balance') ?? 0;
+                ->value('balance');
 
             $debit = 0;
             $credit = 0;
@@ -160,7 +162,9 @@ class LedgerService
                 $newBalance = $lastBalance - $cheque->amount;
             } elseif ($cheque->party_type === 'supplier') {
                 $credit = $cheque->amount;
-                $newBalance = $lastBalance - $cheque->amount;
+                $openingBalance = $cheque->party?->opening_balance ?? 0;
+                $baseBalance = $lastBalance ?? $openingBalance;
+                $newBalance = $baseBalance + $credit;
             } else {
                 throw new \Exception('Unsupported party type');
             }
@@ -199,9 +203,11 @@ class LedgerService
                 $lastBalanceQuery->where('id', '!=', $existing->id);
             }
 
-            $lastBalance = $lastBalanceQuery->latest('date')->latest('id')->value('balance') ?? 0;
+            $lastBalance = $lastBalanceQuery->latest('date')->latest('id')->value('balance');
+            $openingBalance = $purchaseOrder->supplier?->opening_balance ?? 0;
+            $baseBalance = $lastBalance ?? $openingBalance;
             $debit = $purchaseOrder->total ?? 0;
-            $newBalance = $lastBalance + $debit;
+            $newBalance = $baseBalance + $debit;
 
             $data = [
                 'date' => $purchaseOrder->order_date ?? $purchaseOrder->received_date,
