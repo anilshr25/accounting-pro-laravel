@@ -11,6 +11,7 @@ class PurchaseOrderResource extends JsonResource
         return [
             'id' => $this->id,
             'supplier_id' => $this->supplier_id,
+            'supplier' => $this->supplier?->name,
             'purchase_invoice_number' => $this->purchase_invoice_number,
             'order_date' => $this->order_date?->format('Y-m-d'),
             'formatted_order_date' => $this->order_date?->format('d M Y'),
