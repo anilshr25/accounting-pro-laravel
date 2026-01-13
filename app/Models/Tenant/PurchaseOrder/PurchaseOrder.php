@@ -2,6 +2,8 @@
 
 namespace App\Models\Tenant\PurchaseOrder;
 
+use App\Services\Traits\Auditable;
+
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Tenant\Supplier\Supplier;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -10,7 +12,7 @@ use App\Models\Tenant\PurchaseOrder\Item\PurchaseOrderItem;
 
 class PurchaseOrder extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Auditable;
     protected $table = 'purchase_orders';
     protected $fillable = [
         'supplier_id',

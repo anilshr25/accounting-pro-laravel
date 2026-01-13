@@ -14,7 +14,6 @@ trait Auditable
         static::created(fn ($model) => !static::$auditingDisabled && $model->logAuditEvent('created'));
         static::updated(fn ($model) => !static::$auditingDisabled && $model->logAuditEvent('updated'));
         static::deleted(fn ($model) => !static::$auditingDisabled && $model->handleDeleteEvent());
-        static::restored(fn ($model) => !static::$auditingDisabled && $model->logAuditEvent('restored'));
     }
 
     public static function disableAuditing()
@@ -60,7 +59,7 @@ trait Auditable
         ]);
     }
 
-    protected function getAuditChanges(string $actionType) 
+    protected function getAuditChanges(string $actionType)
     {
         $changes = match ($actionType) {
             'created' => [
@@ -85,9 +84,9 @@ trait Auditable
         return $this->filterRelevantChanges($changes);
     }
 
-    protected function filterRelevantChanges(array $changes) 
+    protected function filterRelevantChanges(array $changes)
     {
-        $allowedFields = config('audit-log.allowed_fields', []);
+        $allowedFields = $this->getModelAuditFields();
 
         if (empty($allowedFields)) {
             return $changes;
@@ -104,7 +103,13 @@ trait Auditable
         return $changes;
     }
 
-    protected function getAuditDescription(string $actionType, array $changes)     
+    protected function getModelAuditFields(): array
+    {
+        $key = Str::snake(class_basename($this));
+        return config("model_audit.models.{$key}.include", []);
+    }
+
+    protected function getAuditDescription(string $actionType, array $changes)
     {
         $modelName = $this->getCleanModelName(get_class($this));
         $userName = $this->getAuditUserName();
@@ -114,12 +119,11 @@ trait Auditable
             'updated' => $this->getUpdateDescription($changes, $userName),
             'soft_deleted' => $this->getSoftDeleteDescription($changes, $userName),
             'force_deleted' => "$modelName permanently deleted by $userName",
-            'restored' => "$modelName restored by $userName",
             default => 'Unknown event',
         };
     }
 
-    protected function getCreatedDescription(array $changes, string $userName)     
+    protected function getCreatedDescription(array $changes, string $userName)
     {
         $modelName = $this->getCleanModelName(get_class($this));
 
@@ -136,7 +140,7 @@ trait Auditable
         return "$modelName created with ".implode(', ', $descriptionParts)." by $userName";
     }
 
-    protected function getUpdateDescription(array $changes, string $userName)     
+    protected function getUpdateDescription(array $changes, string $userName)
     {
         $modelName = $this->getCleanModelName(get_class($this));
         $description = [];
@@ -160,7 +164,7 @@ trait Auditable
             : implode(', ', $description)." by $userName";
     }
 
-    protected function getSoftDeleteDescription(array $changes, string $userName)     
+    protected function getSoftDeleteDescription(array $changes, string $userName)
     {
         $modelName = $this->getCleanModelName(get_class($this));
 
@@ -177,7 +181,7 @@ trait Auditable
         return "$modelName soft deleted with ".implode(', ', $descriptionParts)." by $userName";
     }
 
-    protected function formatValueDescription($value)     
+    protected function formatValueDescription($value)
     {
         if ($value === null || $value === '') {
             return 'empty';
@@ -190,7 +194,7 @@ trait Auditable
         return "'{$this->formatValue($value)}'";
     }
 
-    protected function convertEnumValues(array $values) 
+    protected function convertEnumValues(array $values)
     {
         foreach ($values as $key => $value) {
             if ($value instanceof \UnitEnum) {
@@ -200,12 +204,12 @@ trait Auditable
         return $values;
     }
 
-    protected function formatFieldName(string $field)     
+    protected function formatFieldName(string $field)
     {
         return Str::headline($field);
     }
 
-    protected function formatValue($value)     
+    protected function formatValue($value)
     {
         if (is_array($value)) {
             return json_encode($value);
@@ -218,7 +222,7 @@ trait Auditable
         return (string) $value;
     }
 
-    protected function getCleanModelName(string $model)     
+    protected function getCleanModelName(string $model)
     {
         $className = class_basename($model);
 
@@ -234,11 +238,11 @@ trait Auditable
 
     protected function getAuditUser()
     {
-        $guard = config('audit-log.user_guard', 'user');
+        $guard = config('audit-log.user_guard', 'web');
         return auth()->guard($guard)->user();
     }
 
-    protected function getAuditUserName()     
+    protected function getAuditUserName()
     {
         $user = $this->getAuditUser();
 
