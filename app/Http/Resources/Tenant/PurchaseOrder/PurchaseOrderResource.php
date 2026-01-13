@@ -21,7 +21,7 @@ class PurchaseOrderResource extends JsonResource
             'total' => $this->total,
             'status' => $this->status,
             'received_by' => $this->received_by,
-
+            'items' => $this->items
         ];
     }
 }
