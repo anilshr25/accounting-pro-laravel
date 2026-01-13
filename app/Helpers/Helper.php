@@ -1,12 +1,13 @@
 <?php
 
-use App\Models\Cms\SiteSetting\SiteSetting;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Nilambar\NepaliDate\NepaliDate;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Config;
+use App\Models\Tenant\SiteSetting\SiteSetting;
 
 function formatDate($date, $format = 'd M Y', $default = true)
 {
@@ -307,9 +308,10 @@ function s3_image_url($path, $signed = false)
 
 function setStorageConfig()
 {
-    if (getStorageType() == 'aws' || getStorageType() == 'wasabi') {
-        $setting = SiteSetting::first();
-        if ($setting->storage_type == 'aws') {
+    $storeageType = getStorageType();
+    if ($storeageType == 'aws' || $storeageType == 'wasabi') {
+        $setting = getSetting();
+        if ($storeageType == 'aws') {
             Config::set('filesystems.disks.aws.driver', "s3");
             Config::set('filesystems.disks.aws.key', $setting->storage_access_key);
             Config::set('filesystems.disks.aws.secret', $setting->storage_secret_key);
@@ -318,7 +320,7 @@ function setStorageConfig()
             Config::set('filesystems.disks.aws.endpoint', "https://s3.{$setting->storage_region}.amazonaws.com");
         }
 
-        if ($setting->storage_type == 'wasabi') {
+        if ($storeageType == 'wasabi') {
             Config::set('filesystems.disks.wasabi.driver', "s3");
             Config::set('filesystems.disks.wasabi.key', $setting->storage_access_key);
             Config::set('filesystems.disks.wasabi.secret', $setting->storage_secret_key);
@@ -377,11 +379,6 @@ function convertDate($date, $option = 'ad')
         return null;
     }
     return null;
-}
-
-function shareBlogLink($router, $blog)
-{
-    return \Share::page($router, $blog->title)->facebook()->twitter()->linkedin()->telegram()->whatsapp();
 }
 
 function siteSettingCache()
