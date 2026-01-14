@@ -73,7 +73,8 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->get('cheque', [ChequeController::class, 'index']);
     $route->post('cheque', [ChequeController::class, 'store']);
     $route->get('cheque/{id}', [ChequeController::class, 'show']);
-    $route->put('cheque/{id}/clear', [ChequeController::class, 'chequeClear']);
+    $route->post('cheque/{id}/clear', [ChequeController::class, 'chequeClear']);
+    $route->post('cheque/{id}/cancel', [ChequeController::class, 'chequeCancel']);
     $route->put('cheque/{id}', [ChequeController::class, 'update']);
     $route->delete('cheque/{id}', [ChequeController::class, 'destroy']);
 

@@ -21,6 +21,7 @@ class BalanceService
             ->when($request->filled('shift'), function ($query) use ($request) {
                 $query->where('shift', $request->shift);
             })
+            ->orderBy('date', 'ASC')
             ->paginate($request->limit ?? $limit);
         return BalanceResource::collection($balance);
     }

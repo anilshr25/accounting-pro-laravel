@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Tenant\PurchaseOrder;
 
+use App\Http\Resources\Tenant\PurchaseOrder\Item\PurchaseOrderItemResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class PurchaseOrderResource extends JsonResource
@@ -11,6 +12,7 @@ class PurchaseOrderResource extends JsonResource
         return [
             'id' => $this->id,
             'supplier_id' => $this->supplier_id,
+            'supplier' => $this->supplier?->name,
             'purchase_invoice_number' => $this->purchase_invoice_number,
             'order_date' => $this->order_date?->format('Y-m-d'),
             'formatted_order_date' => $this->order_date?->format('d M Y'),
@@ -21,7 +23,7 @@ class PurchaseOrderResource extends JsonResource
             'total' => $this->total,
             'status' => $this->status,
             'received_by' => $this->received_by,
-
+            'items' => $this->items ? PurchaseOrderItemResource::collection($this->items) : [],
         ];
     }
 }

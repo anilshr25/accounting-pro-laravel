@@ -23,6 +23,7 @@ class LedgerResource extends JsonResource
             'debit' => $this->debit,
             'credit' => $this->credit,
             'reference_id' => $this->reference_id,
+            'status' => $this->reference?->status_text ?? $this->reference?->payment_method_text,
             'remarks' => $this->remarks,
             'balance' => $this->balance,
         ];

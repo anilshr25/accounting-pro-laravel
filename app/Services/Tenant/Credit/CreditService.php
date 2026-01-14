@@ -42,6 +42,7 @@ class CreditService
             ->when($request->filled('customer_id'), function ($query) use ($request) {
                 $query->where('customer_id', $request->customer_id);
             })
+            ->orderBy('date', 'ASC')
             ->paginate($request->limit ?? $limit);
         return CreditResource::collection($credit);
     }

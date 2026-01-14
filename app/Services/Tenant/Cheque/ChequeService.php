@@ -4,6 +4,7 @@ namespace App\Services\Tenant\Cheque;
 
 use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Cheque\Cheque;
+use App\Models\Tenant\Ledger\Ledger;
 use App\Services\Tenant\Ledger\LedgerService;
 use App\Http\Resources\Tenant\Cheque\ChequeResource;
 
@@ -48,6 +49,7 @@ class ChequeService
             ->when($request->filled('bank_name'), function ($query) use ($request) {
                 $query->where('bank_name', $request->bank_name);
             })
+            ->orderBy('date', 'ASC')
             ->paginate($request->limit ?? $limit);
         return ChequeResource::collection($cheque);
     }
@@ -63,9 +65,7 @@ class ChequeService
 
                     $cheque->save();
 
-                    if (isset($data['status']) && $data == 'cleared') {
-                        LedgerService::postCheaque($cheque);
-                    }
+                    LedgerService::postCheaque($cheque);
 
                     return $cheque;
                 });
@@ -107,6 +107,21 @@ class ChequeService
                 return false;
             }
             LedgerService::postCheaque($cheque);
+            return $cheque->update($data);
+        } catch (\Exception $ex) {
+            return false;
+        }
+    }
+
+    public function chequeCancel($id, $data)
+    {
+        try {
+            $cheque = $this->find($id);
+            if (!$cheque) {
+                return false;
+            }
+            LedgerService::deleteCheque($cheque->id);
+
             return $cheque->update($data);
         } catch (\Exception $ex) {
             return false;

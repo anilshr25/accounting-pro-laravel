@@ -2,13 +2,16 @@
 
 namespace App\Models\Tenant\Payment;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Services\Traits\Auditable;
+
+use App\Models\Tenant\Ledger\Ledger;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Payment extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Auditable;
 
     protected $table = 'payments';
 
@@ -27,6 +30,13 @@ class Payment extends Model
     protected $casts = [
         'date' => 'datetime',
     ];
+
+    protected $appends = ['payment_method_text'];
+
+    public function getPaymentMethodTextAttribute()
+    {
+        return $this->payment_method ? ucfirst($this->payment_method) : null;
+    }
 
     public function party()
     {

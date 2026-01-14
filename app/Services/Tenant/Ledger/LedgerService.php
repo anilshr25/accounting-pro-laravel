@@ -3,8 +3,6 @@
 namespace App\Services\Tenant\Ledger;
 
 use App\Http\Resources\Tenant\Ledger\LedgerResource;
-use App\Models\Tenant\Customer\Customer;
-use App\Models\Tenant\Supplier\Supplier;
 use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Ledger\Ledger;
 
@@ -105,7 +103,7 @@ class LedgerService
                 ->where('party_id', $payment->party_id)
                 ->latest('date')
                 ->latest('id')
-                ->value('balance') ?? 0;
+                ->value('balance');
 
             $debit = 0;
             $credit = 0;
@@ -113,10 +111,12 @@ class LedgerService
             // Accounting logic
             if ($payment->party_type === 'customer') {
                 $debit = $payment->amount;
-                $newBalance = $lastBalance - $payment->amount;
+                $newBalance = $lastBalance + $payment->amount;
             } elseif ($payment->party_type === 'supplier') {
                 $credit = $payment->amount;
-                $newBalance = $lastBalance - $payment->amount;
+                $openingBalance = $payment->party?->opening_balance ?? 0;
+                $baseBalance = $lastBalance ?? $openingBalance;
+                $newBalance = $baseBalance - $credit;
             } else {
                 throw new \Exception('Unsupported party type');
             }
@@ -151,7 +151,7 @@ class LedgerService
                 ->where('party_id', $cheque->party_id)
                 ->latest('date')
                 ->latest('id')
-                ->value('balance') ?? 0;
+                ->value('balance');
 
             $debit = 0;
             $credit = 0;
@@ -159,10 +159,12 @@ class LedgerService
             // Accounting logic
             if ($cheque->party_type === 'customer') {
                 $debit = $cheque->amount;
-                $newBalance = $lastBalance - $cheque->amount;
+                $newBalance = $lastBalance + $cheque->amount;
             } elseif ($cheque->party_type === 'supplier') {
                 $credit = $cheque->amount;
-                $newBalance = $lastBalance - $cheque->amount;
+                $openingBalance = $cheque->party?->opening_balance ?? 0;
+                $baseBalance = $lastBalance ?? $openingBalance;
+                $newBalance = $baseBalance - $credit;
             } else {
                 throw new \Exception('Unsupported party type');
             }
@@ -173,7 +175,7 @@ class LedgerService
                 'debit' => $debit,
                 'credit' => $credit,
                 'balance' => $newBalance,
-                'remarks' => 'Cheaque',
+                'remarks' => 'Cheque',
             ]);
 
             $ledger->party()->associate($cheque->party);
@@ -182,5 +184,55 @@ class LedgerService
 
             $cheque->update(['is_posted' => true]);
         });
+    }
+
+    public static function postPurchaseOrder($purchaseOrder)
+    {
+        DB::transaction(function () use ($purchaseOrder) {
+            $partyType = 'supplier';
+            $partyId = $purchaseOrder->supplier_id;
+
+            $existing = Ledger::where('reference_type', 'purchase_order')
+                ->where('reference_id', $purchaseOrder->id)
+                ->first();
+
+            $lastBalanceQuery = Ledger::where('party_type', $partyType)
+                ->where('party_id', $partyId);
+
+            if ($existing) {
+                $lastBalanceQuery->where('id', '!=', $existing->id);
+            }
+
+            $lastBalance = $lastBalanceQuery->latest('date')->latest('id')->value('balance');
+            $openingBalance = $purchaseOrder->supplier?->opening_balance ?? 0;
+            $baseBalance = $lastBalance ?? $openingBalance;
+            $debit = $purchaseOrder->total ?? 0;
+            $newBalance = $baseBalance + $debit;
+
+            $data = [
+                'date' => $purchaseOrder->order_date ?? $purchaseOrder->received_date,
+                'party_type' => $partyType,
+                'party_id' => $partyId,
+                'debit' => $debit,
+                'credit' => 0,
+                'reference_type' => 'purchase_order',
+                'reference_id' => $purchaseOrder->id,
+                'remarks' => 'Purchase Order',
+                'balance' => $newBalance,
+            ];
+
+            if ($existing) {
+                $existing->update($data);
+            } else {
+                Ledger::create($data);
+            }
+        });
+    }
+    public static function deleteCheque($chequeId)
+    {
+        DB::transaction(Ledger::query()
+            ->where('reference_type', 'cheque')
+            ->where('reference_id', $chequeId)
+            ->delete(...));
     }
 }
