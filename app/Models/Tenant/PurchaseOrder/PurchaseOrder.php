@@ -30,6 +30,13 @@ class PurchaseOrder extends Model
         'received_date' => 'datetime',
     ];
 
+    protected $appends = ['status_text'];
+
+    protected function getStatusTextAttribute()
+    {
+        return $this->status ? ucfirst($this->status) : null;
+    }
+
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');

@@ -228,4 +228,11 @@ class LedgerService
             }
         });
     }
+    public static function deleteCheque($chequeId)
+    {
+        DB::transaction(Ledger::query()
+            ->where('reference_type', 'cheque')
+            ->where('reference_id', $chequeId)
+            ->delete(...));
+    }
 }

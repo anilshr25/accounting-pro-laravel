@@ -4,9 +4,10 @@ namespace App\Models\Tenant\Cheque;
 
 use App\Services\Traits\Auditable;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Tenant\BankAccount\BankAccount;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Cheque extends Model
 {
@@ -29,8 +30,20 @@ class Cheque extends Model
         'date' => 'datetime',
     ];
 
+    protected $appends = ['status_text'];
+
+    protected function getStatusTextAttribute()
+    {
+        return $this->status ? ucfirst($this->status) : null;
+    }
+
     public function party()
     {
         return $this->morphTo();
+    }
+
+    public function bank_account()
+    {
+        return $this->belongsTo(BankAccount::class, 'bank_account_id');
     }
 }
