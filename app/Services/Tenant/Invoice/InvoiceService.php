@@ -36,7 +36,7 @@ class InvoiceService
             ->when($request->filled('sale_return'), function ($query) use ($request) {
                 $query->where('sale_return', $request->sale_return);
             })
-            ->orderBy('date', 'ASC')
+            ->orderBy('invoice_date', 'ASC')
             ->paginate($request->limit ?? $limit);
         return InvoiceResource::collection($invoice);
 
