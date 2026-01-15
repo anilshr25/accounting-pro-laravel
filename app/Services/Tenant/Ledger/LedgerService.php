@@ -34,6 +34,18 @@ class LedgerService
                 $q->where('party_id', $request->party_id)
             )
             ->when(
+                $request->filled('party_info'),
+                fn($q) =>
+                $q->whereHasMorph('party', ['supplier', 'customer'], function ($query, $type) use ($request) {
+                    $info = $request->party_info;
+                    $query->where('name', 'like', "%{$info}%")
+                        ->orWhere('email', 'like', "%{$info}%");
+                    if ($type === 'supplier') {
+                        $query->orWhere('pan', 'like', "%{$info}%");
+                    }
+                })
+            )
+            ->when(
                 $request->filled('reference_type'),
                 fn($q) =>
                 $q->where('reference_type', $request->reference_type)
@@ -187,6 +199,66 @@ class LedgerService
             $ledger->save();
 
             $cheque->update(['is_posted' => true]);
+        });
+    }
+
+    public static function syncChequeLedger($cheque)
+    {
+        DB::transaction(function () use ($cheque) {
+            $partyType = $cheque->party_type;
+            $partyId = $cheque->party_id;
+
+            if (!$partyType || !$partyId) {
+                return;
+            }
+
+            $existing = Ledger::where('reference_type', 'cheque')
+                ->where('reference_id', $cheque->id)
+                ->first();
+
+            $lastBalanceQuery = Ledger::where('party_type', $partyType)
+                ->where('party_id', $partyId);
+
+            if ($existing) {
+                $lastBalanceQuery->where('id', '!=', $existing->id);
+            }
+
+            $lastBalance = $lastBalanceQuery->latest('date')->latest('id')->value('balance');
+
+            $debit = 0;
+            $credit = 0;
+
+            if ($partyType === 'customer') {
+                $debit = $cheque->amount ?? 0;
+                $openingBalance = $cheque->party?->credit_balance ?? 0;
+                $baseBalance = $lastBalance ?? $openingBalance;
+                $newBalance = $baseBalance - $debit;
+            } elseif ($partyType === 'supplier') {
+                $credit = $cheque->amount ?? 0;
+                $openingBalance = $cheque->party?->opening_balance ?? 0;
+                $baseBalance = $lastBalance ?? $openingBalance;
+                $newBalance = $baseBalance + $credit;
+            } else {
+                return;
+            }
+
+            $data = [
+                'date' => $cheque->date,
+                'party_type' => $partyType,
+                'party_id' => $partyId,
+                'debit' => $debit,
+                'credit' => $credit,
+                'reference_type' => 'cheque',
+                'reference_id' => $cheque->id,
+                'remarks' => 'Cheque',
+                'balance' => $newBalance,
+            ];
+
+            if ($existing) {
+                $existing->update($data);
+            } else {
+                Ledger::create($data);
+            }
         });
     }
 

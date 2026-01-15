@@ -4,7 +4,6 @@ namespace App\Services\Tenant\Cheque;
 
 use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Cheque\Cheque;
-use App\Models\Tenant\Ledger\Ledger;
 use App\Services\Tenant\Ledger\LedgerService;
 use App\Http\Resources\Tenant\Cheque\ChequeResource;
 
@@ -27,13 +26,22 @@ class ChequeService
             ->when($request->filled('party_id'), function ($query) use ($request) {
                 $query->where('party_id', $request->party_id);
             })
+            ->when($request->filled('party_info'), function ($query) use ($request) {
+                $info = $request->party_info;
+                $query->whereHasMorph('party', ['supplier', 'customer'], function ($q, $type) use ($info) {
+                    $q->where('name', 'like', "%{$info}%")
+                        ->orWhere('email', 'like', "%{$info}%");
+                    if ($type === 'supplier') {
+                        $q->orWhere('pan', 'like', "%{$info}%");
+                    }
+                });
+            })
             ->when($request->filled('type'), function ($query) use ($request) {
                 $query->where('type', $request->type);
             })
             ->when($request->filled('cheque_number'), function ($query) use ($request) {
                 $query->where('cheque_number', 'like', "%{$request->cheque_number}%");
             })
-
             ->when($request->filled('amount'), function ($query) use ($request) {
                 $query->where('amount', $request->amount);
             })
@@ -93,7 +101,11 @@ class ChequeService
             if (!$cheque) {
                 return false;
             }
-            return $cheque->update($data);
+            $updated = $cheque->update($data);
+            if ($updated) {
+                LedgerService::syncChequeLedger($cheque);
+            }
+            return $updated;
         } catch (\Exception $ex) {
             return false;
         }
@@ -106,7 +118,6 @@ class ChequeService
             if (!$cheque) {
                 return false;
             }
-            LedgerService::postCheaque($cheque);
             return $cheque->update($data);
         } catch (\Exception $ex) {
             return false;
