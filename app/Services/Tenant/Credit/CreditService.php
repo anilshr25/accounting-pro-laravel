@@ -4,6 +4,7 @@ namespace App\Services\Tenant\Credit;
 
 use App\Models\Tenant\Credit\Credit;
 use App\Http\Resources\Tenant\Credit\CreditResource;
+use App\Services\Tenant\Ledger\LedgerService;
 
 class CreditService
 {
@@ -50,7 +51,11 @@ class CreditService
     public function store($data)
     {
         try {
-            return $this->credit->create($data);
+            $credit = $this->credit->create($data);
+            if ($credit) {
+                LedgerService::postCredit($credit);
+            }
+            return $credit;
         } catch (\Exception $ex) {
             return false;
         }
@@ -72,7 +77,11 @@ class CreditService
             if (!$credit) {
                 return false;
             }
-            return $credit->update($data);
+            $updated = $credit->update($data);
+            if ($updated) {
+                LedgerService::postCredit($credit);
+            }
+            return $updated;
         } catch (\Exception $ex) {
             return false;
         }

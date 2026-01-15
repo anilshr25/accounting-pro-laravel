@@ -14,15 +14,16 @@ class CreditRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => 'nullable|string|max:255',
-            'amount' => 'nullable|numeric',
+            'invoice_no' => 'required|string|max:255',
+            'type' => 'required|string|max:255',
+            'amount' => 'required|numeric',
             'return_amount' => 'nullable|numeric',
             'description' => 'nullable|string|max:255',
-            'date' => 'nullable|date',
-            'miti' => 'nullable|string|max:255',
+            'date' => 'required|date',
+            'miti' => 'required|string|max:255',
             'shift' => 'nullable|string|max:255',
             'status' => 'nullable|string|max:255',
-            'customer_id' => 'nullable|integer',
+            'customer_id' => 'required|integer',
             'supplier_id' => 'nullable|integer',
         ];
     }

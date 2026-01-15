@@ -10,18 +10,15 @@ return new class extends Migration
     {
         Schema::create('credits', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('customer_id')->nullable()->constrained('customers')->cascadeOnUpdate()->cascadeOnDelete();
+            $table->date('date');
+            $table->string('miti');
             $table->string('type');
             $table->decimal('amount', 15, 2);
             $table->decimal('return_amount', 15, 2)->nullable();
             $table->text('description')->nullable();
-            $table->date('date');
-            $table->string('miti');
-            $table->enum('shift', ['morning', 'evening']);
-            $table->enum('status', [
-                'pending',
-                'completed',
-            ])->default('pending');
-            $table->foreignId('customer_id')->nullable()->constrained('customers')->cascadeOnUpdate()->cascadeOnDelete();
+            $table->enum('shift', ['morning', 'evening'])->nullable();
+            $table->string('status')->default('pending');
             $table->timestamps();
             $table->softDeletes();
         });

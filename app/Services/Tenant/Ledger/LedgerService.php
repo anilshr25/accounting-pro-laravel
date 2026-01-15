@@ -26,7 +26,7 @@ class LedgerService
             ->when(
                 $request->filled('party_type'),
                 fn($q) =>
-                $q->where('party_type', 'supplier')
+                $q->where('party_type', $request->party_type)
             )
             ->when(
                 $request->filled('party_id'),
@@ -111,7 +111,9 @@ class LedgerService
             // Accounting logic
             if ($payment->party_type === 'customer') {
                 $debit = $payment->amount;
-                $newBalance = $lastBalance + $payment->amount;
+                $openingBalance = $payment->party?->credit_balance ?? 0;
+                $baseBalance = $lastBalance ?? $openingBalance;
+                $newBalance = $baseBalance - $debit;
             } elseif ($payment->party_type === 'supplier') {
                 $credit = $payment->amount;
                 $openingBalance = $payment->party?->opening_balance ?? 0;
@@ -159,7 +161,9 @@ class LedgerService
             // Accounting logic
             if ($cheque->party_type === 'customer') {
                 $debit = $cheque->amount;
-                $newBalance = $lastBalance + $cheque->amount;
+                $openingBalance = $cheque->party?->credit_balance ?? 0;
+                $baseBalance = $lastBalance ?? $openingBalance;
+                $newBalance = $baseBalance - $debit;
             } elseif ($cheque->party_type === 'supplier') {
                 $credit = $cheque->amount;
                 $openingBalance = $cheque->party?->opening_balance ?? 0;
@@ -218,6 +222,53 @@ class LedgerService
                 'reference_type' => 'purchase_order',
                 'reference_id' => $purchaseOrder->id,
                 'remarks' => 'Purchase Order',
+                'balance' => $newBalance,
+            ];
+
+            if ($existing) {
+                $existing->update($data);
+            } else {
+                Ledger::create($data);
+            }
+        });
+    }
+
+    public static function postCredit($credit)
+    {
+        DB::transaction(function () use ($credit) {
+            $partyType = 'customer';
+            $partyId = $credit->customer_id;
+
+            if (!$partyId) {
+                return;
+            }
+
+            $existing = Ledger::where('reference_type', 'credit')
+                ->where('reference_id', $credit->id)
+                ->first();
+
+            $lastBalanceQuery = Ledger::where('party_type', $partyType)
+                ->where('party_id', $partyId);
+
+            if ($existing) {
+                $lastBalanceQuery->where('id', '!=', $existing->id);
+            }
+
+            $lastBalance = $lastBalanceQuery->latest('date')->latest('id')->value('balance');
+            $openingBalance = $credit->customer?->credit_balance ?? 0;
+            $baseBalance = $lastBalance ?? $openingBalance;
+            $creditAmount = $credit->amount ?? 0;
+            $newBalance = $baseBalance + $creditAmount;
+
+            $data = [
+                'date' => $credit->date,
+                'party_type' => $partyType,
+                'party_id' => $partyId,
+                'debit' => 0,
+                'credit' => $creditAmount,
+                'reference_type' => 'credit',
+                'reference_id' => $credit->id,
+                'remarks' => 'Credit',
                 'balance' => $newBalance,
             ];
 
