@@ -15,7 +15,6 @@ class ChequeResource extends JsonResource
             'party' => $this->party->name ?? null,
             'type' => $this->type,
             'cheque_number' => $this->cheque_number,
-            'pay_to' => $this->pay_to,
             'amount' => $this->amount,
             'date' => $this->date?->format('Y-m-d'),
             'formatted_date' => $this->date?->format('d M Y'),

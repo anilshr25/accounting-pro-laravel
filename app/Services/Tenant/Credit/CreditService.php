@@ -50,15 +50,15 @@ class CreditService
 
     public function store($data)
     {
-        try {
+        // try {
             $credit = $this->credit->create($data);
             if ($credit) {
                 LedgerService::postCredit($credit);
             }
             return $credit;
-        } catch (\Exception $ex) {
-            return false;
-        }
+        // } catch (\Exception $ex) {
+        //     return false;
+        // }
     }
 
     public function find($id, $resource = false)
