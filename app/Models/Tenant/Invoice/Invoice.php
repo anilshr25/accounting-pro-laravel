@@ -7,6 +7,7 @@ use App\Services\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Tenant\Customer\Customer;
 
 class Invoice extends Model
 {
@@ -29,4 +30,9 @@ class Invoice extends Model
         'invoice_date' => 'datetime',
         'sale_return' => 'boolean',
     ];
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
 }
