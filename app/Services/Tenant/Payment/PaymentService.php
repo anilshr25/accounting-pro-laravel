@@ -25,6 +25,16 @@ class PaymentService
             ->when($request->filled('party_id'), function ($query) use ($request) {
                 $query->where('party_id', $request->party_id);
             })
+            ->when($request->filled('party_info'), function ($query) use ($request) {
+                $info = $request->party_info;
+                $query->whereHasMorph('party', ['supplier', 'customer'], function ($q, $type) use ($info) {
+                    $q->where('name', 'like', "%{$info}%")
+                        ->orWhere('email', 'like', "%{$info}%");
+                    if ($type === 'supplier') {
+                        $q->orWhere('pan', 'like', "%{$info}%");
+                    }
+                });
+            })
             ->when($request->filled('date'), function ($query) use ($request) {
                 $query->whereDate('date', $request->date);
             })

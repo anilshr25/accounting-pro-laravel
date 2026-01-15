@@ -30,6 +30,15 @@ class PurchaseOrderService
             ->when($request->filled('purchase_invoice_number'), function ($query) use ($request) {
                 $query->where('purchase_invoice_number', 'like', "%{$request->purchase_invoice_number}%");
             })
+            ->when($request->filled('info'), function ($query) use ($request) {
+                $info = $request->info;
+                $query->whereHas('supplier', function ($q) use ($info) {
+                    $q->where('name', 'like', "%{$info}%")
+                        ->orWhere('email', 'like', "%{$info}%")
+                        ->orWhere('phone', 'like', "%{$info}%")
+                        ->orWhere('pan', 'like', "%{$info}%");
+                });
+            })
             ->when($request->filled('order_date'), function ($query) use ($request) {
                 $query->whereDate('order_date', $request->order_date);
             })

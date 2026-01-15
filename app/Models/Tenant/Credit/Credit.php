@@ -2,26 +2,32 @@
 
 namespace App\Models\Tenant\Credit;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Tenant\Customer\Customer;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Credit extends Model
 {
     use HasFactory;
     protected $table = 'credits';
     protected $fillable = [
-        'type',
-        'amount',
-        'return_amount',
-        'description',
+        'customer_id',
         'date',
         'miti',
         'shift',
+        'type',
+        'invoice_no',
+        'amount',
+        'return_amount',
+        'description',
         'status',
-        'customer_id',
     ];
     protected $casts = [
         'date' => 'datetime',
     ];
-    public $timestamps = false;
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
 }

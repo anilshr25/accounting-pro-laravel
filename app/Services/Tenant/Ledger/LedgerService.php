@@ -26,12 +26,24 @@ class LedgerService
             ->when(
                 $request->filled('party_type'),
                 fn($q) =>
-                $q->where('party_type', 'supplier')
+                $q->where('party_type', $request->party_type)
             )
             ->when(
                 $request->filled('party_id'),
                 fn($q) =>
                 $q->where('party_id', $request->party_id)
+            )
+            ->when(
+                $request->filled('party_info'),
+                fn($q) =>
+                $q->whereHasMorph('party', ['supplier', 'customer'], function ($query, $type) use ($request) {
+                    $info = $request->party_info;
+                    $query->where('name', 'like', "%{$info}%")
+                        ->orWhere('email', 'like', "%{$info}%");
+                    if ($type === 'supplier') {
+                        $query->orWhere('pan', 'like', "%{$info}%");
+                    }
+                })
             )
             ->when(
                 $request->filled('reference_type'),
@@ -111,7 +123,9 @@ class LedgerService
             // Accounting logic
             if ($payment->party_type === 'customer') {
                 $debit = $payment->amount;
-                $newBalance = $lastBalance + $payment->amount;
+                $openingBalance = $payment->party?->credit_balance ?? 0;
+                $baseBalance = $lastBalance ?? $openingBalance;
+                $newBalance = $baseBalance - $debit;
             } elseif ($payment->party_type === 'supplier') {
                 $credit = $payment->amount;
                 $openingBalance = $payment->party?->opening_balance ?? 0;
@@ -159,7 +173,9 @@ class LedgerService
             // Accounting logic
             if ($cheque->party_type === 'customer') {
                 $debit = $cheque->amount;
-                $newBalance = $lastBalance + $cheque->amount;
+                $openingBalance = $cheque->party?->credit_balance ?? 0;
+                $baseBalance = $lastBalance ?? $openingBalance;
+                $newBalance = $baseBalance - $debit;
             } elseif ($cheque->party_type === 'supplier') {
                 $credit = $cheque->amount;
                 $openingBalance = $cheque->party?->opening_balance ?? 0;
@@ -183,6 +199,66 @@ class LedgerService
             $ledger->save();
 
             $cheque->update(['is_posted' => true]);
+        });
+    }
+
+    public static function syncChequeLedger($cheque)
+    {
+        DB::transaction(function () use ($cheque) {
+            $partyType = $cheque->party_type;
+            $partyId = $cheque->party_id;
+
+            if (!$partyType || !$partyId) {
+                return;
+            }
+
+            $existing = Ledger::where('reference_type', 'cheque')
+                ->where('reference_id', $cheque->id)
+                ->first();
+
+            $lastBalanceQuery = Ledger::where('party_type', $partyType)
+                ->where('party_id', $partyId);
+
+            if ($existing) {
+                $lastBalanceQuery->where('id', '!=', $existing->id);
+            }
+
+            $lastBalance = $lastBalanceQuery->latest('date')->latest('id')->value('balance');
+
+            $debit = 0;
+            $credit = 0;
+
+            if ($partyType === 'customer') {
+                $debit = $cheque->amount ?? 0;
+                $openingBalance = $cheque->party?->credit_balance ?? 0;
+                $baseBalance = $lastBalance ?? $openingBalance;
+                $newBalance = $baseBalance - $debit;
+            } elseif ($partyType === 'supplier') {
+                $credit = $cheque->amount ?? 0;
+                $openingBalance = $cheque->party?->opening_balance ?? 0;
+                $baseBalance = $lastBalance ?? $openingBalance;
+                $newBalance = $baseBalance + $credit;
+            } else {
+                return;
+            }
+
+            $data = [
+                'date' => $cheque->date,
+                'party_type' => $partyType,
+                'party_id' => $partyId,
+                'debit' => $debit,
+                'credit' => $credit,
+                'reference_type' => 'cheque',
+                'reference_id' => $cheque->id,
+                'remarks' => 'Cheque',
+                'balance' => $newBalance,
+            ];
+
+            if ($existing) {
+                $existing->update($data);
+            } else {
+                Ledger::create($data);
+            }
         });
     }
 
@@ -218,6 +294,53 @@ class LedgerService
                 'reference_type' => 'purchase_order',
                 'reference_id' => $purchaseOrder->id,
                 'remarks' => 'Purchase Order',
+                'balance' => $newBalance,
+            ];
+
+            if ($existing) {
+                $existing->update($data);
+            } else {
+                Ledger::create($data);
+            }
+        });
+    }
+
+    public static function postCredit($credit)
+    {
+        DB::transaction(function () use ($credit) {
+            $partyType = 'customer';
+            $partyId = $credit->customer_id;
+
+            if (!$partyId) {
+                return;
+            }
+
+            $existing = Ledger::where('reference_type', 'credit')
+                ->where('reference_id', $credit->id)
+                ->first();
+
+            $lastBalanceQuery = Ledger::where('party_type', $partyType)
+                ->where('party_id', $partyId);
+
+            if ($existing) {
+                $lastBalanceQuery->where('id', '!=', $existing->id);
+            }
+
+            $lastBalance = $lastBalanceQuery->latest('date')->latest('id')->value('balance');
+            $openingBalance = $credit->customer?->credit_balance ?? 0;
+            $baseBalance = $lastBalance ?? $openingBalance;
+            $creditAmount = $credit->amount ?? 0;
+            $newBalance = $baseBalance + $creditAmount;
+
+            $data = [
+                'date' => $credit->date,
+                'party_type' => $partyType,
+                'party_id' => $partyId,
+                'debit' => 0,
+                'credit' => $creditAmount,
+                'reference_type' => 'credit',
+                'reference_id' => $credit->id,
+                'remarks' => 'Credit',
                 'balance' => $newBalance,
             ];
 

@@ -18,6 +18,14 @@ class InvoiceService
             ->when($request->filled('customer_id'), function ($query) use ($request) {
                 $query->where('customer_id', $request->customer_id);
             })
+            ->when($request->filled('info'), function ($query) use ($request) {
+                $info = $request->info;
+                $query->whereHas('customer', function ($q) use ($info) {
+                    $q->where('name', 'like', "%{$info}%")
+                        ->orWhere('email', 'like', "%{$info}%")
+                        ->orWhere('phone', 'like', "%{$info}%");
+                });
+            })
             ->when($request->filled('invoice_miti'), function ($query) use ($request) {
                 $query->where('invoice_miti', 'like', "%{$request->invoice_miti}%");
             })

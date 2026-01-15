@@ -17,7 +17,7 @@ class ChequeRequest extends FormRequest
             'bank_account_id' => 'nullable|integer',
             'type' => 'required|string|max:255',
             'cheque_number' => 'required|string|max:255',
-            'pay_to' => 'required|string|max:255',
+            'party_id' => 'required|integer',
             'amount' => 'required|numeric',
             'date' => 'required|date',
             'miti' => 'nullable|string|max:255',

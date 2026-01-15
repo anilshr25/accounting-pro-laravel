@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Tenant\Cheque\Cheque;
+use App\Models\Tenant\Credit\Credit;
 use App\Models\Tenant\Payment\Payment;
 use App\Models\Tenant\User\User;
 use Illuminate\Support\ServiceProvider;
@@ -33,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
             'payment' => Payment::class,
             'cheque' => Cheque::class,
             'purchase_order' => PurchaseOrder::class,
+            'credit' => Credit::class,
         ]);
     }
 }

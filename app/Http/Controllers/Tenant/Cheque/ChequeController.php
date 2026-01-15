@@ -30,13 +30,13 @@ class ChequeController extends Controller
     public function store(ChequeRequest $request)
     {
         $data = $request->validated();
-        if (isset($data['type']) && isset($data['pay_to'])) {
+        if (isset($data['type']) && isset($data['party_id'])) {
             $user = null;
             if ($data['type'] == 'supplier') {
-                $user = $this->supplier->find($request->pay_to);
+                $user = $this->supplier->find($request->party_id);
             }
             if ($data['type'] == 'customer') {
-                $user = $this->customer->find($request->pay_to);
+                $user = $this->customer->find($request->party_id);
             }
             $cheque = $this->cheque->store($data, $user);
             if ($cheque)
