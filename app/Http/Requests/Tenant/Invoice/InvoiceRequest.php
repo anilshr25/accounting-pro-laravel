@@ -25,7 +25,7 @@ class InvoiceRequest extends FormRequest
             'shift' => 'required|string|max:255',
             'sale_return' => 'nullable|boolean',
             'items' => 'required|array|min:1',
-            'items.*.description' => 'required|integer',
+            'items.*.description' => 'required|string',
             'items.*.quantity' => 'required|numeric',
             'items.*.rate' => 'required|numeric',
             'items.*.amount' => 'required|numeric',
