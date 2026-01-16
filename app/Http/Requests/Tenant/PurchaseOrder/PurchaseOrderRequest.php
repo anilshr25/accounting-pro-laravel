@@ -21,7 +21,9 @@ class PurchaseOrderRequest extends FormRequest
                 'string'
             ],
             'order_date' => 'nullable|date',
+            'order_date_miti' => 'nullable|string|max:255',
             'received_date' => 'nullable|date',
+            'received_date_miti' => 'nullable|string|max:255',
             'tax' => 'nullable|numeric',
             'sub_total' => 'nullable|numeric',
             'total' => 'nullable|numeric',
