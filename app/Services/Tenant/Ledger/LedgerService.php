@@ -3,8 +3,6 @@
 namespace App\Services\Tenant\Ledger;
 
 use App\Http\Resources\Tenant\Ledger\LedgerResource;
-use App\Models\Tenant\Customer\Customer;
-use App\Models\Tenant\Supplier\Supplier;
 use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Ledger\Ledger;
 
@@ -141,11 +139,14 @@ class LedgerService
             $updated = 0;
 
             foreach ($ledgers as $ledger) {
+                $debit = (float) ($ledger->debit ?? 0);
+                $credit = (float) ($ledger->credit ?? 0);
+
                 if ($first && $useOpening) {
-                    $currentBalance = ($ledger->debit != 0) ? $openingBalance + $ledger->debit : $openingBalance - $ledger->credit;
+                    $currentBalance = $this->calculateBalance($partyType, $openingBalance, $debit, $credit);
                     $first = false;
                 } else {
-                    $currentBalance = ($ledger->debit != 0) ? $currentBalance + $ledger->debit : $currentBalance - $ledger->credit;
+                    $currentBalance = $this->calculateBalance($partyType, $currentBalance, $debit, $credit);
                 }
                 $ledger->update(['balance' => $currentBalance]);
                 $updated++;
@@ -408,10 +409,12 @@ class LedgerService
     }
     public static function deleteCheque($chequeId)
     {
-        DB::transaction(Ledger::query()
-            ->where('reference_type', 'cheque')
-            ->where('reference_id', $chequeId)
-            ->delete(...));
+        DB::transaction(function () use ($chequeId) {
+            Ledger::query()
+                ->where('reference_type', 'cheque')
+                ->where('reference_id', $chequeId)
+                ->delete();
+        });
     }
 
     protected function getOpeningBalance(string $partyType, int $partyId): float
@@ -433,6 +436,19 @@ class LedgerService
             return (float) ($party->credit_balance ?? 0);
         }
         return 0.0;
+    }
+
+    protected function calculateBalance(string $partyType, float $base, float $debit, float $credit): float
+    {
+        if ($partyType === 'supplier') {
+            return $debit != 0 ? $base + $debit : $base - $credit;
+        }
+
+        if ($partyType === 'customer') {
+            return $credit != 0 ? $base + $credit : $base - $debit;
+        }
+
+        return $base + ($credit - $debit);
     }
 
 }
