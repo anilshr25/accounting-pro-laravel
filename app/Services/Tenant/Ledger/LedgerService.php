@@ -137,15 +137,15 @@ class LedgerService
 
             $currentBalance = $previousBalance ?? $openingBalance;
             $first = $previousBalance === null;
+            $useOpening = $previousBalance === null && $openingBalance != 0;
             $updated = 0;
 
             foreach ($ledgers as $ledger) {
-                $amount = $this->getLedgerAmount($ledger);
-                if ($first && $openingBalance > 0) {
-                    $currentBalance = $openingBalance + $amount;
+                if ($first && $useOpening) {
+                    $currentBalance = ($ledger->debit != 0) ? $openingBalance + $ledger->debit : $openingBalance - $ledger->credit;
                     $first = false;
                 } else {
-                    $currentBalance = $currentBalance + $amount;
+                    $currentBalance = ($ledger->debit != 0) ? $currentBalance + $ledger->debit : $currentBalance - $ledger->credit;
                 }
                 $ledger->update(['balance' => $currentBalance]);
                 $updated++;
@@ -435,14 +435,4 @@ class LedgerService
         return 0.0;
     }
 
-    protected function getLedgerAmount(Ledger $ledger): float
-    {
-        if ($ledger->reference_type === 'purchase_order') {
-            return (float) ($ledger->debit ?? 0);
-        }
-        if ($ledger->reference_type === 'cheque') {
-            return (float) (($ledger->credit ?? 0) ?: ($ledger->debit ?? 0));
-        }
-        return (float) (($ledger->credit ?? 0) ?: ($ledger->debit ?? 0));
-    }
 }
