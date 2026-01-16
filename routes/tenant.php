@@ -9,6 +9,7 @@ use App\Http\Controllers\Tenant\Auth\LoginController;
 use App\Http\Controllers\Tenant\Cheque\ChequeController;
 use App\Http\Controllers\Tenant\Credit\CreditController;
 use App\Http\Controllers\Tenant\Ledger\LedgerController;
+use App\Http\Controllers\Tenant\Ledger\LedgerAdjustmentController;
 use App\Http\Controllers\Tenant\Balance\BalanceController;
 use App\Http\Controllers\Tenant\Daybook\DaybookController;
 use App\Http\Controllers\Tenant\Invoice\InvoiceController;
@@ -109,6 +110,8 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->get('invoice-item/{id}', [InvoiceItemController::class, 'show']);
     $route->put('invoice-item/{id}', [InvoiceItemController::class, 'update']);
     $route->delete('invoice-item/{id}', [InvoiceItemController::class, 'destroy']);
+
+    $route->post('ledger/adjustment', [LedgerAdjustmentController::class, 'adjust']);
 
     $route->get('payment', [PaymentController::class, 'index']);
     $route->post('payment', [PaymentController::class, 'store']);
