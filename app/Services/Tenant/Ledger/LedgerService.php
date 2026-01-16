@@ -3,6 +3,8 @@
 namespace App\Services\Tenant\Ledger;
 
 use App\Http\Resources\Tenant\Ledger\LedgerResource;
+use App\Models\Tenant\Customer\Customer;
+use App\Models\Tenant\Supplier\Supplier;
 use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Ledger\Ledger;
 
@@ -97,6 +99,59 @@ class LedgerService
                 return false;
             }
             return $ledger->delete();
+        } catch (\Exception $ex) {
+            return false;
+        }
+    }
+
+    public function adjustBalances(string $partyType, int $partyId, ?string $dateFrom = null)
+    {
+        try {
+            $openingBalance = $this->getOpeningBalance($partyType, $partyId);
+            $query = Ledger::query()
+                ->where('party_type', $partyType)
+                ->where('party_id', $partyId)
+                ->orderBy('date')
+                ->orderBy('id');
+
+            if ($dateFrom) {
+                $query->whereDate('date', '>=', $dateFrom);
+            }
+
+            $ledgers = $query->get();
+
+            if ($ledgers->isEmpty()) {
+                return 0;
+            }
+
+            $previousBalance = null;
+            if ($dateFrom) {
+                $previousBalance = Ledger::query()
+                    ->where('party_type', $partyType)
+                    ->where('party_id', $partyId)
+                    ->whereDate('date', '<', $dateFrom)
+                    ->orderBy('date', 'DESC')
+                    ->orderBy('id', 'DESC')
+                    ->value('balance');
+            }
+
+            $currentBalance = $previousBalance ?? $openingBalance;
+            $first = $previousBalance === null;
+            $updated = 0;
+
+            foreach ($ledgers as $ledger) {
+                $amount = $this->getLedgerAmount($ledger);
+                if ($first && $openingBalance > 0) {
+                    $currentBalance = $openingBalance + $amount;
+                    $first = false;
+                } else {
+                    $currentBalance = $currentBalance + $amount;
+                }
+                $ledger->update(['balance' => $currentBalance]);
+                $updated++;
+            }
+
+            return $updated;
         } catch (\Exception $ex) {
             return false;
         }
@@ -357,5 +412,37 @@ class LedgerService
             ->where('reference_type', 'cheque')
             ->where('reference_id', $chequeId)
             ->delete(...));
+    }
+
+    protected function getOpeningBalance(string $partyType, int $partyId): float
+    {
+        $ledger = new Ledger([
+            'party_type' => $partyType,
+            'party_id' => $partyId,
+        ]);
+        $party = $ledger->party;
+
+        if (!$party) {
+            return 0.0;
+        }
+
+        if ($partyType === 'supplier') {
+            return (float) ($party->opening_balance ?? 0);
+        }
+        if ($partyType === 'customer') {
+            return (float) ($party->credit_balance ?? 0);
+        }
+        return 0.0;
+    }
+
+    protected function getLedgerAmount(Ledger $ledger): float
+    {
+        if ($ledger->reference_type === 'purchase_order') {
+            return (float) ($ledger->debit ?? 0);
+        }
+        if ($ledger->reference_type === 'cheque') {
+            return (float) (($ledger->credit ?? 0) ?: ($ledger->debit ?? 0));
+        }
+        return (float) (($ledger->credit ?? 0) ?: ($ledger->debit ?? 0));
     }
 }
