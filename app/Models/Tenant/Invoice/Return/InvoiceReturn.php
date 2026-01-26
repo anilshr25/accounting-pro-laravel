@@ -15,6 +15,7 @@ class InvoiceReturn extends Model
     protected $table = 'invoice_returns';
     protected $fillable = [
         'customer_id',
+        'sales_return_number',
         'remarks',
         'return_date',
         'return_miti',

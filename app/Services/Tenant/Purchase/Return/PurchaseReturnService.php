@@ -23,12 +23,6 @@ class PurchaseReturnService
     public function paginate($request, $limit = 25)
     {
         $query = $this->purchase_return
-            ->with('purchaseOrder:id,purchase_invoice_number')
-            ->when($request->filled('purchase_invoice_number'), function ($q) use ($request) {
-                $q->whereHas('purchaseOrder', function ($q2) use ($request) {
-                    $q2->where('invoice_number', $request->purchase_invoice_number);
-                });
-            })
             ->when($request->filled('returned_by'), fn($q) => $q->where('returned_by', 'like', "%{$request->returned_by}%"))
             ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
             ->when($request->filled('return_date'), fn($q) => $q->whereDate('return_date', $request->return_date))
@@ -42,14 +36,6 @@ class PurchaseReturnService
     {
         try {
             return DB::transaction(function () use ($data) {
-                if (!empty($data['purchase_invoice_number'])) {
-                    $purchaseOrder = \App\Models\Tenant\Purchase\Order\PurchaseOrder::where('purchase_invoice_number', $data['purchase_invoice_number'])->first();
-                    if (!$purchaseOrder) {
-                        throw new \Exception("Purchase order not found for invoice {$data['purchase_invoice']}");
-                    }
-                    $data['purchase_order_id'] = $purchaseOrder->id;
-                    unset($data['purchase_invoice']); // remove invoice key
-                }
                 $items = $data['items'] ?? [];
                 unset($data['items']);
 
@@ -87,15 +73,6 @@ class PurchaseReturnService
                 $purchase_return = $this->purchase_return->find($id);
                 if (!$purchase_return) {
                     return false;
-                }
-
-                if (!empty($data['purchase_invoice'])) {
-                    $purchaseOrder = \App\Models\Tenant\Purchase\Order\PurchaseOrder::where('invoice_number', $data['purchase_invoice'])->first();
-                    if (!$purchaseOrder) {
-                        throw new \Exception("Purchase order not found for invoice {$data['purchase_invoice']}");
-                    }
-                    $data['purchase_order_id'] = $purchaseOrder->id;
-                    unset($data['purchase_invoice']);
                 }
 
                 $items = $data['items'] ?? [];

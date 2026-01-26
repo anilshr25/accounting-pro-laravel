@@ -11,12 +11,11 @@ class PurchaseReturnResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'purchase_invoice_number' => $this->purchaseOrder?->purchase_invoice_number,
+            'purchase_return_number' => $this->purchase_return_number,
             'supplier' => $this->supplier?->name,
-            'purchase_invoice_number' => $this->purchase_invoice_number,
-            'return_date' => $this->order_date?->format('Y-m-d'),
-            'formatted_return_date' => $this->order_date?->format('d M Y'),
-            'return_date_miti' => $this->order_date_miti,
+            'return_date' => $this->return_date?->format('Y-m-d'),
+            'formatted_return_date' => $this->return_date?->format('d M Y'),
+            'return_date_miti' => $this->return_date_miti,
             'tax' => $this->tax,
             'sub_total' => $this->sub_total,
             'total' => $this->total,

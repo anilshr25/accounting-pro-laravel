@@ -14,7 +14,8 @@ class PurchaseReturnRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'purchase_invoice_number' => 'required|exists:purchase_orders,purchase_invoice_number',
+            'supplier_id' => 'required|exists:suppliers,id',
+            'purchase_return_number' => 'required|string|max:255',
             'return_date' => 'required|date',
             'return_miti' => 'required|string|max:255',
             'tax' => 'nullable|numeric',

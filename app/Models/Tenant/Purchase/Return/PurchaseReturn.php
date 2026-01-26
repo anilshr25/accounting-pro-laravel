@@ -7,15 +7,16 @@ use App\Services\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\Tenant\Purchase\Order\PurchaseOrder;
 use App\Models\Tenant\Purchase\Return\Item\PurchaseReturnItem;
+use App\Models\Tenant\Supplier\Supplier;
 
 class PurchaseReturn extends Model
 {
     use HasFactory, SoftDeletes, Auditable;
     protected $table = 'purchase_returns';
     protected $fillable = [
-        'purchase_order_id',
+        'supplier_id',
+        'purchase_return_number',
         'returned_by',
         'remarks',
         'return_date',
@@ -31,22 +32,17 @@ class PurchaseReturn extends Model
         'return_miti' => 'date',
     ];
 
-    protected $appends = ['status_text', 'purchase_invoice_number'];
-    protected $hidden = ['purchase_order_id', 'purchaseOrder'];
+    protected $appends = ['status_text'];
 
     protected function getStatusTextAttribute()
     {
         return $this->status ? ucfirst($this->status) : null;
     }
 
-    public function getPurchaseInvoiceNumberAttribute()
-    {
-        return $this->purchaseOrder ? $this->purchaseOrder->purchase_invoice_number : null;
-    }
 
-    public function purchaseOrder()
+    public function supplier()
     {
-        return $this->belongsTo(PurchaseOrder::class);
+        return $this->belongsTo(Supplier::class);
     }
 
     protected function items()

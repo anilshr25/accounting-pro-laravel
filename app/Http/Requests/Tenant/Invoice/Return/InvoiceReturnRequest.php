@@ -15,6 +15,7 @@ class InvoiceReturnRequest extends FormRequest
     {
         return [
             'customer_id' => 'required|integer|exists:customers,id',
+            'sales_return_number' => 'required|string|max:255',
             'return_date' => 'required|date',
             'return_miti' => 'required|string|max:255',
             'shift' => 'required|string|max:255',

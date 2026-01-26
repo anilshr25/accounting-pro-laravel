@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('invoice_returns', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_id')->constrained('customers')->cascadeOnDelete();
+            $table->string('sales_return_number')->unique();
             $table->string('remarks')->nullable();
             $table->date('return_date');
             $table->date('return_miti');

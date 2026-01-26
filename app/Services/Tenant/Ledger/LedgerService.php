@@ -364,16 +364,12 @@ class LedgerService
     {
         DB::transaction(function () use ($purchaseReturn) {
 
-            $purchaseReturn->load('purchaseOrder.supplier');
+            $purchaseReturn->load('supplier');
 
-            if (!$purchaseReturn->purchaseOrder) {
-                throw new \Exception('Purchase Order not found for Purchase Return');
-            }
-
-            $supplier = $purchaseReturn->purchaseOrder->supplier;
+            $supplier = $purchaseReturn->supplier;
 
             if (!$supplier) {
-                throw new \Exception('Supplier not found for Purchase Order');
+                throw new \Exception('Supplier not found for Purchase Return');
             }
 
             $partyType = 'supplier';
