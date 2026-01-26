@@ -31,13 +31,18 @@ class PurchaseReturn extends Model
         'return_miti' => 'date',
     ];
 
-    protected $appends = ['status_text'];
+    protected $appends = ['status_text', 'purchase_invoice_number'];
+    protected $hidden = ['purchase_order_id', 'purchaseOrder'];
 
     protected function getStatusTextAttribute()
     {
         return $this->status ? ucfirst($this->status) : null;
     }
 
+    public function getPurchaseInvoiceNumberAttribute()
+    {
+        return $this->purchaseOrder ? $this->purchaseOrder->purchase_invoice_number : null;
+    }
 
     public function purchaseOrder()
     {

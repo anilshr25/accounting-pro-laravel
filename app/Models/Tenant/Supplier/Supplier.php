@@ -7,6 +7,7 @@ use App\Services\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Tenant\Ledger\Ledger;
 
 class Supplier extends Model
 {
@@ -21,4 +22,20 @@ class Supplier extends Model
         'closing_balance',
         'pan',
     ];
+
+    protected $appends = ['closing_balance'];
+
+    public function ledgers()
+    {
+        return $this->morphMany(Ledger::class, 'party');
+    }
+
+    public function getClosingBalanceAttribute()
+{
+    $totalCredit = $this->ledgers()->sum('credit');
+    $totalDebit  = $this->ledgers()->sum('debit');
+
+    return $this->opening_balance + $totalDebit - $totalCredit;
+}
+
 }

@@ -23,7 +23,8 @@ class CustomerResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'address' => $this->address,
-            'credit_balance' => $this->credit_balance,
+            'opening_balance' => $this->opening_balance,
+            'closing_balance' => $this->closing_balance,
             'vat' => $this->vat,
 
         ];
