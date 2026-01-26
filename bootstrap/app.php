@@ -19,7 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'stateful' => \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ])->web([
             TransformAPIHeaders::class,
-        ]);
+        ])->validateCsrfTokens(['api/*']);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -19,8 +19,13 @@ use App\Http\Controllers\Tenant\Customer\CustomerController;
 use App\Http\Controllers\Tenant\Supplier\SupplierController;
 use App\Http\Controllers\Tenant\BankAccount\BankAccountController;
 use App\Http\Controllers\Tenant\Invoice\Item\InvoiceItemController;
-use App\Http\Controllers\Tenant\PurchaseOrder\PurchaseOrderController;
-use App\Http\Controllers\Tenant\PurchaseOrder\Item\PurchaseOrderItemController;
+use App\Http\Controllers\Tenant\Purchase\Order\PurchaseOrderController;
+use App\Http\Controllers\Tenant\Purchase\Order\Item\PurchaseOrderItemController;
+use App\Http\Controllers\Tenant\Purchase\Return\PurchaseReturnController;
+use App\Http\Controllers\Tenant\Purchase\Return\Item\PurchaseReturnItemController;
+use App\Http\Controllers\Tenant\Invoice\Return\InvoiceReturnController;
+use App\Http\Controllers\Tenant\Invoice\Return\Item\InvoiceReturnItemController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -144,6 +149,31 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->get('user/{id}', [UserController::class, 'show']);
     $route->put('user/{id}', [UserController::class, 'update']);
     $route->delete('user/{id}', [UserController::class, 'destroy']);
+
+
+    $route->get('purchase-return', [PurchaseReturnController::class, 'index']);
+    $route->post('purchase-return', [PurchaseReturnController::class, 'store']);
+    $route->get('purchase-return/{id}', [PurchaseReturnController::class, 'show']);
+    $route->put('purchase-return/{id}', [PurchaseReturnController::class, 'update']);
+    $route->delete('purchase-return/{id}', [PurchaseReturnController::class, 'destroy']);
+
+    $route->get('purchase-return-item', [PurchaseReturnItemController::class, 'index']);
+    $route->post('purchase-return-item', [PurchaseReturnItemController::class, 'store']);
+    $route->get('purchase-return-item/{id}', [PurchaseReturnItemController::class, 'show']);
+    $route->put('purchase-return-item/{id}', [PurchaseReturnItemController::class, 'update']);
+    $route->delete('purchase-return-item/{id}', [PurchaseReturnItemController::class, 'destroy']);
+
+    $route->get('invoice-return', [InvoiceReturnController::class, 'index']);
+    $route->post('invoice-return', [InvoiceReturnController::class, 'store']);
+    $route->get('invoice-return/{id}', [InvoiceReturnController::class, 'show']);
+    $route->put('invoice-return/{id}', [InvoiceReturnController::class, 'update']);
+    $route->delete('invoice-return/{id}', [InvoiceReturnController::class, 'destroy']);
+
+    $route->get('invoice-return-item', [InvoiceReturnItemController::class, 'index']);
+    $route->post('invoice-return-item', [InvoiceReturnItemController::class, 'store']);
+    $route->get('invoice-return-item/{id}', [InvoiceReturnItemController::class, 'show']);
+    $route->put('invoice-return-item/{id}', [InvoiceReturnItemController::class, 'update']);
+    $route->delete('invoice-return-item/{id}', [InvoiceReturnItemController::class, 'destroy']);
 
 
     $route->get('ledger', [LedgerController::class, 'index']);
