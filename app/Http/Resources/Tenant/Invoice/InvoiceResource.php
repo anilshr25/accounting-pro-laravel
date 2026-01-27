@@ -22,6 +22,7 @@ class InvoiceResource extends JsonResource
             'remarks' => $this->remarks,
             'shift' => $this->shift,
             'sale_return' => $this->sale_return,
+            'items' => \App\Http\Resources\Tenant\Invoice\Item\InvoiceItemResource::collection($this->whenLoaded('items')),
         ];
     }
 }
