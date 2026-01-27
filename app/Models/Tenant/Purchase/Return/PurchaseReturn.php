@@ -32,20 +32,26 @@ class PurchaseReturn extends Model
         'return_miti' => 'date',
     ];
 
-    protected $appends = ['status_text'];
+    protected $hidden = ['supplier'];
+    
+    protected $appends = ['status_text', 'supplier_name'];
 
     protected function getStatusTextAttribute()
     {
         return $this->status ? ucfirst($this->status) : null;
     }
 
+    public function getSupplierNameAttribute()
+    {
+        return $this->supplier?->name;
+    }
 
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);
     }
 
-    protected function items()
+    public function items()
     {
         return $this->hasMany(PurchaseReturnItem::class, 'purchase_return_id');
     }

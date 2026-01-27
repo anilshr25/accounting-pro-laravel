@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Tenant\Customer\Customer;
+use App\Models\Tenant\Invoice\Return\Item\InvoiceReturnItem;
 
 class InvoiceReturn extends Model
 {
@@ -30,10 +31,18 @@ class InvoiceReturn extends Model
         'return_miti' => 'date',
     ];
 
+    protected $hidden = ['customer'];
+
+    protected $appends = ['customer_name'];
 
     public function items()
     {
-        return $this->hasMany(\App\Models\Tenant\Invoice\Return\Item\InvoiceReturnItem::class, 'invoice_return_id');
+        return $this->hasMany(InvoiceReturnItem::class, 'invoice_return_id');
+    }
+
+    public function getCustomerNameAttribute()
+    {
+        return $this->customer?->name;
     }
 
     public function customer()
