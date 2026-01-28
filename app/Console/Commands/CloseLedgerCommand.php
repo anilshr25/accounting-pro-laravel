@@ -29,8 +29,8 @@ class CloseLedgerCommand extends Command
                 ->where('party_type', 'supplier')
                 ->where('party_id', $supplier->id)
                 ->whereDate('date', '<=', $endDate)
-                ->orderBy('date', 'DESC')
-                ->orderBy('id', 'DESC')
+                ->orderBy('date', 'ASC')
+                ->orderBy('id', 'ASC')
                 ->value('balance');
 
             $closingBalance = $lastBalance ?? $supplier->opening_balance ?? 0;

@@ -47,13 +47,20 @@ class InvoiceService
             ->orderBy('invoice_date', 'ASC')
             ->paginate($request->limit ?? $limit);
         return InvoiceResource::collection($invoice);
-
     }
 
     public function store($data)
     {
         try {
-            return $this->invoice->create($data);
+            $invoice = $this->invoice->create($data);
+
+            if (isset($data['items']) && is_array($data['items'])) {
+                $invoice->items()->createMany($data['items']);
+            }
+
+            $invoice->load('items');
+
+            return $invoice;
         } catch (\Exception $ex) {
             return false;
         }
@@ -61,7 +68,7 @@ class InvoiceService
 
     public function find($id, $resource = false)
     {
-        $invoice = $this->invoice->find($id);
+        $invoice = $this->invoice->with(['items'])->find($id);
         if (!$invoice) {
             return null;
         }

@@ -55,8 +55,7 @@ class LedgerService
                 fn($q) =>
                 $q->where('reference_id', $request->reference_id)
             )
-            ->orderBy('date')
-            ->orderBy('id')
+            ->orderBy('date', 'DESC' )
             ->paginate($request->integer('limit', $limit));
 
         return LedgerResource::collection($ledgers);
@@ -361,6 +360,121 @@ class LedgerService
         });
     }
 
+    public static function postPurchaseReturn($purchaseReturn)
+    {
+        DB::transaction(function () use ($purchaseReturn) {
+
+            $purchaseReturn->load('supplier');
+
+            $supplier = $purchaseReturn->supplier;
+
+            if (!$supplier) {
+                throw new \Exception('Supplier not found for Purchase Return');
+            }
+
+            $partyType = 'supplier';
+            $partyId   = $supplier->id;
+
+            $existing = Ledger::where('reference_type', 'purchase_return')
+                ->where('reference_id', $purchaseReturn->id)
+                ->first();
+
+            $lastBalanceQuery = Ledger::where('party_type', $partyType)
+                ->where('party_id', $partyId);
+
+            if ($existing) {
+                $lastBalanceQuery->where('id', '!=', $existing->id);
+            }
+
+            $lastBalance = $lastBalanceQuery
+                ->latest('date')
+                ->latest('id')
+                ->value('balance');
+
+            $openingBalance = $supplier->opening_balance ?? 0;
+            $baseBalance    = $lastBalance ?? $openingBalance;
+
+            $credit    = $purchaseReturn->total ?? 0;
+            $newBalance = $baseBalance - $credit;
+
+            $data = [
+                'date'           => $purchaseReturn->return_date,
+                'party_type'     => $partyType,
+                'party_id'       => $partyId,
+                'debit'          => 0,
+                'credit'         => $credit,
+                'reference_type' => 'purchase_return',
+                'reference_id'   => $purchaseReturn->id,
+                'remarks'        => 'Purchase Return',
+                'balance'        => $newBalance,
+            ];
+
+            if ($existing) {
+                $existing->update($data);
+            } else {
+                Ledger::create($data);
+            }
+        });
+    }
+
+
+    public static function postInvoiceReturn($invoiceReturn)
+    {
+        DB::transaction(function () use ($invoiceReturn) {
+
+            $invoiceReturn->load('customer');
+
+            $customer = $invoiceReturn->customer;
+
+            if (!$customer) {
+                throw new \Exception('Customer not found for Invoice');
+            }
+
+            $partyType = 'customer';
+            $partyId   = $customer->id;
+
+            $existing = Ledger::where('reference_type', 'invoice_return')
+                ->where('reference_id', $invoiceReturn->id)
+                ->first();
+
+            $lastBalanceQuery = Ledger::where('party_type', $partyType)
+                ->where('party_id', $partyId);
+
+            if ($existing) {
+                $lastBalanceQuery->where('id', '!=', $existing->id);
+            }
+
+            $lastBalance = $lastBalanceQuery
+                ->latest('date')
+                ->latest('id')
+                ->value('balance');
+
+            $openingBalance = $customer->credit_balance ?? 0;
+            $baseBalance    = $lastBalance ?? $openingBalance;
+
+            $debit      = $invoiceReturn->total ?? 0;
+            $newBalance = $baseBalance - $debit;
+
+            $data = [
+                'date'           => $invoiceReturn->return_date,
+                'party_type'     => $partyType,
+                'party_id'       => $partyId,
+                'debit'          => $debit,
+                'credit'         => 0,
+                'reference_type' => 'invoice_return',
+                'reference_id'   => $invoiceReturn->id,
+                'remarks'        => 'Invoice Return',
+                'balance'        => $newBalance,
+            ];
+
+            if ($existing) {
+                $existing->update($data);
+            } else {
+                Ledger::create($data);
+            }
+        });
+    }
+
     public static function postCredit($credit)
     {
         DB::transaction(function () use ($credit) {
@@ -450,5 +564,4 @@ class LedgerService
 
         return $base + ($credit - $debit);
     }
-
 }
