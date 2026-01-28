@@ -36,6 +36,15 @@ class PurchaseReturnService
             ->when($request->filled('supplier_id'), function ($query) use ($request) {
                 $query->where('supplier_id', $request->supplier_id);
             })
+            ->when($request->filled('info'), function ($query) use ($request) {
+                $info = $request->info;
+                $query->whereHas('supplier', function ($q) use ($info) {
+                    $q->where('name', 'like', "%{$info}%")
+                        ->orWhere('email', 'like', "%{$info}%")
+                        ->orWhere('phone', 'like', "%{$info}%")
+                        ->orWhere('pan', 'like', "%{$info}%");
+                });
+            })
             ->when($request->filled('returned_by'), fn($q) => $q->where('returned_by', 'like', "%{$request->returned_by}%"))
             ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
             ->when($request->filled('return_date'), fn($q) => $q->whereDate('return_date', $request->return_date))

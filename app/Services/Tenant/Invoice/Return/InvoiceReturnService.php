@@ -34,6 +34,14 @@ class InvoiceReturnService
                 )
             )
             ->when($request->filled('customer_id'), fn($q) => $q->where('customer_id', $request->customer_id))
+            ->when($request->filled('info'), function ($query) use ($request) {
+                $info = $request->info;
+                $query->whereHas('customer', function ($q) use ($info) {
+                    $q->where('name', 'like', "%{$info}%")
+                        ->orWhere('email', 'like', "%{$info}%")
+                        ->orWhere('phone', 'like', "%{$info}%");
+                });
+            })
             ->when($request->filled('return_date'), fn($q) => $q->whereDate('return_date', $request->return_date))
             ->orderBy('return_date', 'DESC')
             ->paginate($request->limit ?? $limit);
