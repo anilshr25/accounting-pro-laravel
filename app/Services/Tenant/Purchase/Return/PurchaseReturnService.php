@@ -23,6 +23,7 @@ class PurchaseReturnService
     public function paginate($request, $limit = 25)
     {
         $query = $this->purchase_return
+            ->with('items')
             ->when($request->filled('returned_by'), fn($q) => $q->where('returned_by', 'like', "%{$request->returned_by}%"))
             ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
             ->when($request->filled('return_date'), fn($q) => $q->whereDate('return_date', $request->return_date))

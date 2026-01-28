@@ -23,6 +23,7 @@ class InvoiceReturnService
     public function paginate($request, $limit = 25)
     {
         $query = $this->invoice_return
+            ->with('items')
             ->when($request->filled('customer_id'), fn($q) => $q->where('customer_id', $request->customer_id))
             ->when($request->filled('return_date'), fn($q) => $q->whereDate('return_date', $request->return_date))
             ->orderBy('return_date', 'DESC')
