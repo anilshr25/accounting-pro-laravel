@@ -24,6 +24,18 @@ class PurchaseReturnService
     {
         $query = $this->purchase_return
             ->with('items')
+            ->when(
+                $request->filled('purchase_return_number'),
+                fn($q) =>
+                $q->where(
+                    'purchase_return_number',
+                    'like',
+                    "%{$request->purchase_return_number}%"
+                )
+            )
+            ->when($request->filled('supplier_id'), function ($query) use ($request) {
+                $query->where('supplier_id', $request->supplier_id);
+            })
             ->when($request->filled('returned_by'), fn($q) => $q->where('returned_by', 'like', "%{$request->returned_by}%"))
             ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
             ->when($request->filled('return_date'), fn($q) => $q->whereDate('return_date', $request->return_date))
