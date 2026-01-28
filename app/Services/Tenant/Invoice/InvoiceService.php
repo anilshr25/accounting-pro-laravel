@@ -15,6 +15,7 @@ class InvoiceService
     public function paginate($request, $limit = 25)
     {
         $invoice = $this->invoice
+            ->with('items')
             ->when($request->filled('customer_id'), function ($query) use ($request) {
                 $query->where('customer_id', $request->customer_id);
             })
