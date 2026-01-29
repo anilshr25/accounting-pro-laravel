@@ -4,6 +4,7 @@ namespace App\Http\Resources\Tenant\Ledger;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Carbon\Carbon;
 
 class LedgerResource extends JsonResource
 {
@@ -17,14 +18,15 @@ class LedgerResource extends JsonResource
         return [
             'id' => $this->id,
             'date' => $this->date?->format('Y-m-d'),
+
             'miti' => match ($this->reference_type) {
-                'invoice_return'  => $this->reference?->return_miti,
-                'purchase_return' => $this->reference?->return_miti,
-                'invoice'         => $this->reference?->invoice_miti,
-                'purchase_order'        => $this->reference?->received_date_miti,
-                'cheque'          => $this->reference?->miti,
-                'credit'          => $this->reference?->miti,
-                'payment'         => $this->reference?->miti,
+                'invoice_return'  => $this->reference?->return_miti ? Carbon::parse($this->reference->return_miti)->format('Y-m-d') : null,
+                'purchase_return' => $this->reference?->return_miti ? Carbon::parse($this->reference->return_miti)->format('Y-m-d') : null,
+                'invoice'         => $this->reference?->invoice_miti ? Carbon::parse($this->reference->invoice_miti)->format('Y-m-d') : null,
+                'purchase_order'  => $this->reference?->received_date_miti ? Carbon::parse($this->reference->received_date_miti)->format('Y-m-d') : null,
+                'cheque'          => $this->reference?->miti ? Carbon::parse($this->reference->miti)->format('Y-m-d') : null,
+                'credit'          => $this->reference?->miti ? Carbon::parse($this->reference->miti)->format('Y-m-d') : null,
+                'payment'         => $this->reference?->miti ? Carbon::parse($this->reference->miti)->format('Y-m-d') : null,
                 default           => null,
             },
             'formated_date' => $this->date?->format('d M Y'),
