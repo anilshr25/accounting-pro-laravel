@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\Purchase\Return\PurchaseReturnRequest;
 use App\Services\Tenant\Purchase\Return\PurchaseReturnService;
+use App\Http\Resources\Tenant\Purchase\Return\PurchaseReturnResource;
 
 class PurchaseReturnController extends Controller
 {
@@ -18,7 +19,9 @@ class PurchaseReturnController extends Controller
 
     public function index(Request $request)
     {
-        return $this->purchase_return->paginate($request, 25);
+        $data = $this->purchase_return->paginate($request);
+
+        return PurchaseReturnResource::collection($data);
     }
 
     public function store(PurchaseReturnRequest $request)

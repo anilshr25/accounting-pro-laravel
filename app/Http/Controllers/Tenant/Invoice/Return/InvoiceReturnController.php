@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\Invoice\Return\InvoiceReturnRequest;
 use App\Services\Tenant\Invoice\Return\InvoiceReturnService;
+use App\Http\Resources\Tenant\Invoice\Return\InvoiceReturnResource;
 
 class InvoiceReturnController extends Controller
 {
@@ -18,7 +19,9 @@ class InvoiceReturnController extends Controller
 
     public function index(Request $request)
     {
-        return $this->invoice_return->paginate($request, 25);
+        $data = $this->invoice_return->paginate($request);
+
+        return InvoiceReturnResource::collection($data);
     }
 
     public function store(InvoiceReturnRequest $request)

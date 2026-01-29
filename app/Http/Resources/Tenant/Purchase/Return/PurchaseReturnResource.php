@@ -4,6 +4,7 @@ namespace App\Http\Resources\Tenant\Purchase\Return;
 
 use App\Http\Resources\Tenant\Purchase\Return\Item\PurchaseReturnItemResource;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Carbon\Carbon;
 
 class PurchaseReturnResource extends JsonResource
 {
@@ -13,9 +14,9 @@ class PurchaseReturnResource extends JsonResource
             'id' => $this->id,
             'purchase_return_number' => $this->purchase_return_number,
             'supplier' => $this->supplier?->name,
-            'return_date' => $this->return_date?->format('Y-m-d'),
-            'formatted_return_date' => $this->return_date?->format('d M Y'),
-            'return_date_miti' => $this->return_date_miti,
+            'return_date' => $this->return_date ? Carbon::parse($this->return_date)->format('Y-m-d') : null,
+            'return_miti' => $this->return_miti ? Carbon::parse($this->return_miti)->format('Y-m-d') : null,
+            'formatted_return_date' => $this->return_date ? Carbon::parse($this->return_date)->format('d M Y') : null,
             'tax' => $this->tax,
             'sub_total' => $this->sub_total,
             'total' => $this->total,
