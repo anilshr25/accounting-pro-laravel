@@ -44,8 +44,19 @@ class PurchaseOrder extends Model
         return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 
-    protected function items()
+    public function items()
     {
         return $this->hasMany(PurchaseOrderItem::class, 'purchase_order_id');
+    }
+
+    protected static function booted()
+    {
+        static::deleting(function ($purchaseOrder) {
+            $purchaseOrder->items()->delete();
+        });
+
+        static::restoring(function ($purchaseOrder) {
+            $purchaseOrder->items()->withTrashed()->restore();
+        });
     }
 }

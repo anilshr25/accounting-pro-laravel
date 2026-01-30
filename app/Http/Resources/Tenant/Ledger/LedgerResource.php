@@ -39,8 +39,13 @@ class LedgerResource extends JsonResource
                 'invoice_return'  => $this->reference?->sales_return_number,
                 'purchase_return' => $this->reference?->purchase_return_number,
                 'invoice'         => $this->reference?->invoice_no,
-                'purchase'        => $this->reference?->purchase_no,
-                'credit'          => $this->reference?->status,
+                'purchase_order'  => $this->reference?->purchase_invoice_number,
+                'credit'          => $this->reference?->invoice_no,
+                'cheque'          => $this->reference?->cheque_number,
+                'payment' => $this->reference?->transaction_id
+                    ?? $this->reference?->payment_method_text
+                    ?? $this->reference?->status_text
+                    ?? null,
                 default           => $this->reference?->status_text
                     ?? $this->reference?->payment_method_text
                     ?? null,

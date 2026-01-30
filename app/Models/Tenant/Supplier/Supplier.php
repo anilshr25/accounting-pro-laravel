@@ -32,10 +32,17 @@ class Supplier extends Model
 
     public function getClosingBalanceAttribute()
 {
-    $totalCredit = $this->ledgers()->sum('credit');
-    $totalDebit  = $this->ledgers()->sum('debit');
+    $lastLedger = $this->ledgers()
+        ->whereNull('deleted_at')   
+        ->latest('date')
+        ->latest('id')
+        ->first();
 
-    return $this->opening_balance + $totalDebit - $totalCredit;
+    if ($lastLedger) {
+        return $lastLedger->balance;
+    }
+
+    return $this->opening_balance;
 }
 
 }

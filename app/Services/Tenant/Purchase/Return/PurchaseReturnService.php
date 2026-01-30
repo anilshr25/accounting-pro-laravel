@@ -118,16 +118,26 @@ class PurchaseReturnService
     public function delete($id)
     {
         try {
-            $purchase_return = $this->purchase_return->find($id);
-            if (!$purchase_return) {
-                return false;
-            }
+            return DB::transaction(function () use ($id) {
 
-            return $purchase_return->delete();
+                $purchaseReturn = $this->purchase_return->find($id);
+
+                if (!$purchaseReturn) {
+                    return false;
+                }
+
+                LedgerService::deleteByReference(
+                    'purchase_return',
+                    $purchaseReturn->id
+                );
+
+                return $purchaseReturn->delete();
+            });
         } catch (\Exception $ex) {
             return false;
         }
     }
+
 
     protected function syncItems($purchaseReturnId, array $items)
     {

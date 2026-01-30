@@ -16,8 +16,7 @@ class PurchaseOrderService
     public function __construct(
         PurchaseOrder $purchase_order,
         PurchaseOrderItem $purchaseOrderItem
-    )
-    {
+    ) {
         $this->purchase_order = $purchase_order;
         $this->purchaseOrderItem = $purchaseOrderItem;
     }
@@ -51,7 +50,7 @@ class PurchaseOrderService
             ->when($request->filled('received_by'), function ($query) use ($request) {
                 $query->where('received_by', 'like', "%{$request->received_by}%");
             })
-             ->orderBy('order_date', 'ASC')
+            ->orderBy('order_date', 'ASC')
             ->paginate($request->limit ?? $limit);
         return PurchaseOrderResource::collection($purchase_order);
     }
@@ -111,15 +110,31 @@ class PurchaseOrderService
     public function delete($id)
     {
         try {
-            $purchase_order = $this->find($id);
-            if (!$purchase_order) {
-                return false;
-            }
-            return $purchase_order->delete();
+            DB::transaction(function () use ($id) {
+
+                $purchaseOrder = $this->find($id);
+
+                if (!$purchaseOrder) {
+                    throw new \Exception('Purchase order not found');
+                }
+
+                $purchaseOrder->items()->delete();
+
+                LedgerService::deleteByReference(
+                    'purchase_order',
+                    $purchaseOrder->id
+                );
+
+                $purchaseOrder->delete();
+            });
+
+            return true;
         } catch (\Exception $ex) {
             return false;
         }
     }
+
+
 
     protected function syncItems($purchaseOrderId, array $items)
     {

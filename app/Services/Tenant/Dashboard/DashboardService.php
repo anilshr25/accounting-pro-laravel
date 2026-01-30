@@ -40,10 +40,10 @@ class DashboardService
     {
         $date = $date ? Carbon::parse($date)->endOfDay() : Carbon::yesterday()->endOfDay();
 
-        $totalSales = $this->invoice->sum('total');
-        $salesReturns = $this->invoiceReturn->sum('total');
+        $totalSales = $this->invoice->whereDate('invoice_date', '<=', $date)->sum('total');
+        $salesReturns = $this->invoiceReturn->whereDate('return_date', '<=', $date)->sum('total');
 
-        $salesBreakdown = $this->invoice
+        $salesBreakdown = $this->invoice->whereDate('invoice_date', '<=', $date)
             ->selectRaw('payment_type, SUM(total) as total')
             ->groupBy('payment_type')
             ->get()
@@ -53,8 +53,8 @@ class DashboardService
                     'total' => $salesReturns,
                 ]
             ]);
-        $totalPurchases = $this->purchaseOrder->sum('total');
-        $purchaseReturns = $this->purchaseReturn->sum('total');
+        $totalPurchases = $this->purchaseOrder->whereDate('received_date', '<=', $date)->sum('total');
+        $purchaseReturns = $this->purchaseReturn->whereDate('return_date', '<=', $date)->sum('total');
         $purchaseBreakdown = collect([
             (object)[
                 'type' => 'purchase',

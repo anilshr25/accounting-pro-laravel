@@ -49,4 +49,15 @@ class InvoiceReturn extends Model
     {
         return $this->belongsTo(Customer::class, 'customer_id');
     }
+
+    protected static function booted()
+    {
+        static::deleting(function ($invoiceReturn) {
+            $invoiceReturn->items()->delete();
+        });
+
+        static::restoring(function ($invoiceReturn) {
+            $invoiceReturn->items()->withTrashed()->restore();
+        });
+    }
 }

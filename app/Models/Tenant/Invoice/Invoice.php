@@ -41,4 +41,15 @@ class Invoice extends Model
     {
         return $this->hasMany(InvoiceItem::class, 'invoice_id');
     }
+
+    protected static function booted()
+    {
+        static::deleting(function ($invoice) {
+            $invoice->items()->delete();
+        });
+
+        static::restoring(function ($invoice) {
+            $invoice->items()->withTrashed()->restore();
+        });
+    }
 }
