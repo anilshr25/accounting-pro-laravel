@@ -15,9 +15,19 @@ class LedgerService
         $this->ledger = $ledger;
     }
 
+    public static function deleteByReference(string $referenceType, int $referenceId): void
+    {
+        Ledger::withTrashed()
+            ->where('reference_type', $referenceType)
+            ->where('reference_id', $referenceId)
+            ->delete();
+    }
+
+
     public function paginate($request, $limit = 25)
     {
         $ledgers = $this->ledger
+            ->whereNull('deleted_at')
             ->when(
                 $request->filled('date'),
                 fn($q) =>
@@ -55,7 +65,7 @@ class LedgerService
                 fn($q) =>
                 $q->where('reference_id', $request->reference_id)
             )
-            ->orderBy('date', 'DESC' )
+            ->orderBy('date', 'DESC')
             ->paginate($request->integer('limit', $limit));
 
         return LedgerResource::collection($ledgers);
@@ -72,7 +82,7 @@ class LedgerService
 
     public function find($id)
     {
-        return $this->ledger->find($id);
+        return $this->ledger->withoutTrashed()->find($id);
     }
 
     public function update($id, $data)
@@ -267,7 +277,8 @@ class LedgerService
                 return;
             }
 
-            $existing = Ledger::where('reference_type', 'cheque')
+            $existing = Ledger::withTrashed()
+                ->where('reference_type', 'cheque')
                 ->where('reference_id', $cheque->id)
                 ->first();
 
@@ -323,9 +334,14 @@ class LedgerService
             $partyType = 'supplier';
             $partyId = $purchaseOrder->supplier_id;
 
-            $existing = Ledger::where('reference_type', 'purchase_order')
+            $existing = Ledger::withTrashed()
+                ->where('reference_type', 'purchase_order')
                 ->where('reference_id', $purchaseOrder->id)
                 ->first();
+
+            if ($existing && $existing->trashed()) {
+                return;
+            }
 
             $lastBalanceQuery = Ledger::where('party_type', $partyType)
                 ->where('party_id', $partyId);
@@ -375,9 +391,14 @@ class LedgerService
             $partyType = 'supplier';
             $partyId   = $supplier->id;
 
-            $existing = Ledger::where('reference_type', 'purchase_return')
+            $existing = Ledger::withTrashed()
+                ->where('reference_type', 'purchase_return')
                 ->where('reference_id', $purchaseReturn->id)
                 ->first();
+
+            if ($existing && $existing->trashed()) {
+                return;
+            }
 
             $lastBalanceQuery = Ledger::where('party_type', $partyType)
                 ->where('party_id', $partyId);
@@ -433,9 +454,14 @@ class LedgerService
             $partyType = 'customer';
             $partyId   = $customer->id;
 
-            $existing = Ledger::where('reference_type', 'invoice_return')
+            $existing = Ledger::withTrashed()
+                ->where('reference_type', 'invoice_return')
                 ->where('reference_id', $invoiceReturn->id)
                 ->first();
+
+            if ($existing && $existing->trashed()) {
+                return;
+            }
 
             $lastBalanceQuery = Ledger::where('party_type', $partyType)
                 ->where('party_id', $partyId);
@@ -485,9 +511,14 @@ class LedgerService
                 return;
             }
 
-            $existing = Ledger::where('reference_type', 'credit')
+            $existing = Ledger::withTrashed()
+                ->where('reference_type', 'credit')
                 ->where('reference_id', $credit->id)
                 ->first();
+
+            if ($existing && $existing->trashed()) {
+                return;
+            }
 
             $lastBalanceQuery = Ledger::where('party_type', $partyType)
                 ->where('party_id', $partyId);

@@ -5,6 +5,8 @@ namespace App\Services\Tenant\Credit;
 use App\Models\Tenant\Credit\Credit;
 use App\Http\Resources\Tenant\Credit\CreditResource;
 use App\Services\Tenant\Ledger\LedgerService;
+use Illuminate\Support\Facades\DB;
+
 
 class CreditService
 {
@@ -98,11 +100,23 @@ class CreditService
     public function delete($id)
     {
         try {
-            $credit = $this->find($id);
-            if (!$credit) {
-                return false;
-            }
-            return $credit->delete();
+            DB::transaction(function () use ($id) {
+
+                $credit = $this->find($id);
+
+                if (!$credit) {
+                    throw new \Exception('Credit not found');
+                }
+
+                LedgerService::deleteByReference(
+                    'credit',
+                    $credit->id
+                );
+
+                $credit->delete();
+            });
+
+            return true;
         } catch (\Exception $ex) {
             return false;
         }

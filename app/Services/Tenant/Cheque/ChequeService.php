@@ -142,11 +142,23 @@ class ChequeService
     public function delete($id)
     {
         try {
-            $cheque = $this->find($id);
-            if (!$cheque) {
-                return false;
-            }
-            return $cheque->delete();
+            DB::transaction(function () use ($id) {
+
+                $cheque = $this->find($id);
+
+                if (!$cheque) {
+                    throw new \Exception('Cheque not found');
+                }
+                
+                LedgerService::deleteByReference(
+                    'cheque',
+                    $cheque->id
+                );
+
+                $cheque->delete();
+            });
+
+            return true;
         } catch (\Exception $ex) {
             return false;
         }

@@ -33,7 +33,7 @@ class PurchaseReturn extends Model
     ];
 
     protected $hidden = ['supplier'];
-    
+
     protected $appends = ['status_text', 'supplier_name'];
 
     protected function getStatusTextAttribute()
@@ -54,5 +54,16 @@ class PurchaseReturn extends Model
     public function items()
     {
         return $this->hasMany(PurchaseReturnItem::class, 'purchase_return_id');
+    }
+
+    protected static function booted()
+    {
+        static::deleting(function ($purchaseReturn) {
+            $purchaseReturn->items()->delete();
+        });
+
+        static::restoring(function ($purchaseReturn) {
+            $purchaseReturn->items()->withTrashed()->restore();
+        });
     }
 }

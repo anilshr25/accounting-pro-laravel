@@ -100,7 +100,11 @@ class PaymentService
             if (!$payment) {
                 return false;
             }
-            return $payment->update($data);
+            $updated = $payment->update($data);
+            if ($updated) {
+                LedgerService::postPayment($payment);
+            }
+            return $updated;
         } catch (\Exception $ex) {
             return false;
         }
@@ -109,11 +113,23 @@ class PaymentService
     public function delete($id)
     {
         try {
-            $payment = $this->find($id);
-            if (!$payment) {
-                return false;
-            }
-            return $payment->delete();
+            DB::transaction(function () use ($id) {
+
+                $payment = $this->find($id);
+
+                if (!$payment) {
+                    throw new \Exception('Payment not found');
+                }
+
+                LedgerService::deleteByReference(
+                    'payment',
+                    $payment->id
+                );
+
+                $payment->delete();
+            });
+
+            return true;
         } catch (\Exception $ex) {
             return false;
         }

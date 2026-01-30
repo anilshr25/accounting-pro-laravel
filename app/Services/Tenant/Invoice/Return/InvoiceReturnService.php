@@ -113,12 +113,22 @@ class InvoiceReturnService
     public function delete($id)
     {
         try {
-            $invoice_return = $this->invoice_return->find($id);
-            if (!$invoice_return) {
-                return false;
-            }
+            DB::transaction(function () use ($id) {
 
-            return $invoice_return->delete();
+                $invoiceReturn = $this->invoice_return->find($id);
+
+                if (!$invoiceReturn) {
+                    throw new \Exception('Invoice return not found');
+                }
+                LedgerService::deleteByReference(
+                    'invoice_return',
+                    $invoiceReturn->id
+                );
+
+                $invoiceReturn->delete();
+            });
+
+            return true;
         } catch (\Exception $ex) {
             return false;
         }

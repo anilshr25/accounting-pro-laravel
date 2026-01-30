@@ -4,6 +4,7 @@ namespace App\Services\Tenant\BankAccount;
 
 use App\Models\Tenant\BankAccount\BankAccount;
 use App\Http\Resources\Tenant\BankAccount\BankAccountResource;
+use Illuminate\Support\Facades\DB;
 
 class BankAccountService
 {
@@ -12,19 +13,45 @@ class BankAccountService
     {
         $this->bank_account = $bank_account;
     }
+    private function balanceWithCheque()
+    {
+        return DB::raw('
+            balance + (
+                SELECT COALESCE(SUM(c.amount), 0)
+                FROM cheques c
+                WHERE c.type = "supplier"
+                  AND c.status = "pending"
+            ) as balance
+        ');
+    }
+
     public function paginate($request, $limit = 25)
     {
         $bank_account = $this->bank_account
-            ->when($request->filled('bank_name'), function ($query) use ($request) {
-                $query->where('bank_name', $request->bank_name);
-            })
-            ->when($request->filled('account_number'), function ($query) use ($request) {
-                $query->where('account_number', 'like', "%{$request->account_number}%");
-            })
-            ->when($request->filled('account_type'), function ($query) use ($request) {
-                $query->where('account_type', $request->account_type);
-            })
+            ->select(
+                'id',
+                'bank_name',
+                'account_number',
+                'account_type',
+                $this->balanceWithCheque()
+            )
+            ->when(
+                $request->filled('bank_name'),
+                fn($q) =>
+                $q->where('bank_name', $request->bank_name)
+            )
+            ->when(
+                $request->filled('account_number'),
+                fn($q) =>
+                $q->where('account_number', 'like', "%{$request->account_number}%")
+            )
+            ->when(
+                $request->filled('account_type'),
+                fn($q) =>
+                $q->where('account_type', $request->account_type)
+            )
             ->paginate($request->limit ?? $limit);
+
         return BankAccountResource::collection($bank_account);
     }
 
@@ -39,7 +66,16 @@ class BankAccountService
 
     public function find($id, $resource = false)
     {
-        $bank_account = $this->bank_account->find($id);
+        $bank_account = $this->bank_account
+            ->where('id', $id)
+            ->select(
+                'id',
+                'bank_name',
+                'account_number',
+                'account_type',
+                $this->balanceWithCheque()
+            )
+            ->first();
         if (!$bank_account) {
             return null;
         }
