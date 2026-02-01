@@ -36,26 +36,18 @@ class DashboardService
         $this->cheque = $cheque;
     }
 
-    public function getSummary(array $filters = [])
+    public function getSummary($date = null)
     {
-        $period = $filters['period'] ?? 'daily';
-        $endDate = isset($filters['end_date']) ? Carbon::parse($filters['end_date'])->endOfDay() : Carbon::yesterday()->endOfDay();
-        $startDate = isset($filters['start_date']) ? Carbon::parse($filters['start_date'])->startOfDay() : match ($period) {
-            'weekly' => $endDate->copy()->subWeek()->startOfDay(),
-            'monthly' => $endDate->copy()->subMonth()->startOfDay(),
-            default => $endDate->copy()->startOfDay(),
-        };
+        if (is_array($date)) {
+        $date = $date['date'] ?? null;
+    }
 
-        $totalSales = $this->invoice
-            ->whereBetween('invoice_date', [$startDate, $endDate])
-            ->sum('total');
+        $date = $date ? Carbon::parse($date)->toDateString() : Carbon::today()->toDateString();
 
-        $salesReturns = $this->invoiceReturn
-            ->whereBetween('return_date', [$startDate, $endDate])
-            ->sum('total');
+        $totalSales = $this->invoice->whereDate('invoice_date', '=', $date)->sum('total');
+        $salesReturns = $this->invoiceReturn->whereDate('return_date', '=', $date)->sum('total');
 
-        $salesBreakdown = $this->invoice
-            ->whereBetween('invoice_date', [$startDate, $endDate])
+        $salesBreakdown = $this->invoice->whereDate('invoice_date', '=', $date)
             ->selectRaw('payment_type, SUM(total) as total')
             ->groupBy('payment_type')
             ->get()
@@ -65,15 +57,8 @@ class DashboardService
                     'total' => $salesReturns,
                 ]
             ]);
-
-        $totalPurchases = $this->purchaseOrder
-            ->whereBetween('received_date', [$startDate, $endDate])
-            ->sum('total');
-
-        $purchaseReturns = $this->purchaseReturn
-            ->whereBetween('return_date', [$startDate, $endDate])
-            ->sum('total');
-
+        $totalPurchases = $this->purchaseOrder->whereDate('received_date', '=', $date)->sum('total');
+        $purchaseReturns = $this->purchaseReturn->whereDate('return_date', '=', $date)->sum('total');
         $purchaseBreakdown = collect([
             (object)[
                 'type' => 'purchase',
@@ -85,27 +70,24 @@ class DashboardService
             ]
         ]);
 
-        $credit = $this->credit
-            ->whereBetween('date', [$startDate, $endDate])
-            ->sum('amount');
+        $credit = $this->credit->whereDate('date', '=', $date)->sum('amount');
 
         $customerChequeAmount = $this->cheque
             ->where('type', 'customer')
             ->where('status', 'pending')
-            ->whereBetween('date', [$startDate, $endDate])
+            ->whereDate('date', '=', $date)
             ->sum('amount');
 
         $supplierChequeAmount = $this->cheque
             ->where('type', 'supplier')
             ->where('status', 'pending')
-            ->whereBetween('date', [$startDate, $endDate])
+            ->whereDate('date', '=', $date)
             ->sum('amount');
 
-        $chequeBalance = $supplierChequeAmount;
+        $chequeBalance =  $supplierChequeAmount;
+
 
         return [
-            'start_date' => $startDate->toDateString(),
-            'end_date' => $endDate->toDateString(),
             'total_sales' => $totalSales - $salesReturns,
             'sales_breakdown' => $salesBreakdown,
             'total_purchases' => $totalPurchases - $purchaseReturns,
