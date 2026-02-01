@@ -18,7 +18,14 @@ class DashboardController extends Controller
 
     public function index(DashboardRequest $request)
     {
-        $data = $this->dashboardService->getSummary($request->input('date'));
+        $filters = [
+            'start_date' => $request->input('start_date'),
+            'end_date' => $request->input('end_date'),
+            'period' => $request->input('period'),
+        ];
+
+        $data = $this->dashboardService->getSummary($filters);
+
         return new DashboardResource($data);
     }
 }
