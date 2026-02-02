@@ -23,7 +23,7 @@ class PurchaseReturnService
     public function paginate($request, $limit = 25)
     {
         $query = $this->purchase_return
-            ->with('items')
+            ->with(['items', 'supplier'])
             ->when(
                 $request->filled('purchase_return_number'),
                 fn($q) =>
@@ -79,7 +79,7 @@ class PurchaseReturnService
 
     public function find($id, $resource = false)
     {
-        $purchase_return = $this->purchase_return->with('items')->find($id);
+        $purchase_return = $this->purchase_return->with(['items', 'supplier'])->find($id);
 
         if (!$purchase_return) {
             return null;

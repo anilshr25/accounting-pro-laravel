@@ -36,18 +36,44 @@ class DashboardService
         $this->cheque = $cheque;
     }
 
-    public function getSummary($date = null)
+    public function getSummary(array $filters = [])
     {
-        if (is_array($date)) {
-        $date = $date['date'] ?? null;
-    }
+        $type = $filters['type'] ?? 'monthly';
 
-        $date = $date ? Carbon::parse($date)->toDateString() : Carbon::today()->toDateString();
+        $date  = null;
+        $month = null;
+        $year  = null;
 
-        $totalSales = $this->invoice->whereDate('invoice_date', '=', $date)->sum('total');
-        $salesReturns = $this->invoiceReturn->whereDate('return_date', '=', $date)->sum('total');
+        if ($type === 'daily') {
+            $date = $filters['date'] ?? Carbon::today()->toDateString();
 
-        $salesBreakdown = $this->invoice->whereDate('invoice_date', '=', $date)
+            $startDate = Carbon::parse($date)->startOfDay();
+            $endDate   = Carbon::parse($date)->endOfDay();
+        } elseif ($type === 'yearly') {
+            $year = $filters['year'] ?? Carbon::now()->year;
+
+            $startDate = Carbon::create($year)->startOfYear();
+            $endDate   = Carbon::create($year)->endOfYear();
+        } else {
+            $month = $filters['month'] ?? Carbon::now()->month;
+            $year  = $filters['year'] ?? Carbon::now()->year;
+
+            $startDate = Carbon::create($year, $month)->startOfMonth();
+            $endDate   = Carbon::create($year, $month)->endOfMonth();
+
+            $type = 'monthly';
+        }
+
+        $totalSales = $this->invoice
+            ->whereBetween('invoice_date', [$startDate, $endDate])
+            ->sum('total');
+
+        $salesReturns = $this->invoiceReturn
+            ->whereBetween('return_date', [$startDate, $endDate])
+            ->sum('total');
+
+        $salesBreakdown = $this->invoice
+            ->whereBetween('invoice_date', [$startDate, $endDate])
             ->selectRaw('payment_type, SUM(total) as total')
             ->groupBy('payment_type')
             ->get()
@@ -57,44 +83,49 @@ class DashboardService
                     'total' => $salesReturns,
                 ]
             ]);
-        $totalPurchases = $this->purchaseOrder->whereDate('received_date', '=', $date)->sum('total');
-        $purchaseReturns = $this->purchaseReturn->whereDate('return_date', '=', $date)->sum('total');
-        $purchaseBreakdown = collect([
-            (object)[
-                'type' => 'purchase',
-                'total' => $totalPurchases,
-            ],
-            (object)[
-                'type' => 'return',
-                'total' => $purchaseReturns,
-            ]
-        ]);
 
-        $credit = $this->credit->whereDate('date', '=', $date)->sum('amount');
+        $totalPurchases = $this->purchaseOrder
+            ->whereBetween('received_date', [$startDate, $endDate])
+            ->sum('total');
+
+        $purchaseReturns = $this->purchaseReturn
+            ->whereBetween('return_date', [$startDate, $endDate])
+            ->sum('total');
+
+        $purchaseBreakdown = collect([(object)['type' => 'purchase', 'total' => $totalPurchases,], (object)['type' => 'return', 'total' => $purchaseReturns,]]);
+
+        $credit = $this->credit
+            ->whereBetween('date', [$startDate, $endDate])
+            ->sum('amount');
 
         $customerChequeAmount = $this->cheque
             ->where('type', 'customer')
             ->where('status', 'pending')
-            ->whereDate('date', '=', $date)
+            ->whereBetween('date', [$startDate, $endDate])
             ->sum('amount');
 
         $supplierChequeAmount = $this->cheque
             ->where('type', 'supplier')
             ->where('status', 'pending')
-            ->whereDate('date', '=', $date)
+            ->whereBetween('date', [$startDate, $endDate])
             ->sum('amount');
 
-        $chequeBalance =  $supplierChequeAmount;
-
-
         return [
+            'filter_type' => $type,
+            'start_date' => $startDate->toDateString(),
+            'end_date' => $endDate->toDateString(),
             'total_sales' => $totalSales - $salesReturns,
             'sales_breakdown' => $salesBreakdown,
             'total_purchases' => $totalPurchases - $purchaseReturns,
             'purchase_breakdown' => $purchaseBreakdown,
             'outstanding_credit' => $credit,
-            'cheque_balance' => $chequeBalance,
+            'cheque_balance' => $supplierChequeAmount,
             'customer_cheque_balance' => $customerChequeAmount,
+
+            'type'  => $type,
+            'date'  => $date,
+            'month' => $month,
+            'year'  => $year,
         ];
     }
 }

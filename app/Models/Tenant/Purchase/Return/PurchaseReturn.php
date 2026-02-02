@@ -34,14 +34,14 @@ class PurchaseReturn extends Model
 
     protected $hidden = ['supplier'];
 
-    protected $appends = ['status_text', 'supplier_name'];
+    protected $appends = ['status_text', 'party'];
 
     protected function getStatusTextAttribute()
     {
         return $this->status ? ucfirst($this->status) : null;
     }
 
-    public function getSupplierNameAttribute()
+    public function getPartyAttribute()
     {
         return $this->supplier?->name;
     }
