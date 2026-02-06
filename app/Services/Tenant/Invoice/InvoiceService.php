@@ -3,14 +3,19 @@
 namespace App\Services\Tenant\Invoice;
 
 use App\Models\Tenant\Invoice\Invoice;
+use App\Models\Tenant\Invoice\Item\InvoiceItem;
 use App\Http\Resources\Tenant\Invoice\InvoiceResource;
+use Illuminate\Support\Facades\DB;
 
 class InvoiceService
 {
     protected $invoice;
-    public function __construct(Invoice $invoice)
+    protected $invoiceItem;
+
+    public function __construct(Invoice $invoice, InvoiceItem $invoiceItem)
     {
         $this->invoice = $invoice;
+        $this->invoiceItem = $invoiceItem;
     }
     public function paginate($request, $limit = 25)
     {
@@ -45,7 +50,7 @@ class InvoiceService
             ->when($request->filled('sale_return'), function ($query) use ($request) {
                 $query->where('sale_return', $request->sale_return);
             })
-            ->orderBy('invoice_date', 'ASC')
+            ->orderBy('invoice_date', 'DESC')
             ->paginate($request->limit ?? $limit);
         return InvoiceResource::collection($invoice);
     }
@@ -79,11 +84,21 @@ class InvoiceService
     public function update($id, $data)
     {
         try {
-            $invoice = $this->find($id);
-            if (!$invoice) {
-                return false;
-            }
-            return $invoice->update($data);
+            return DB::transaction(function () use ($id, $data){
+                $invoice = $this->find($id);
+                if (!$invoice) {
+                    return false;
+                }
+                $items = $data['items'] ?? [];
+                unset($data['items']);
+                $updated = $invoice->update($data);
+                if ($updated) {
+                    if (is_array($items)) {
+                        $this->syncItems($invoice->id, $items);
+                    }
+                }
+                return $updated;
+            });
         } catch (\Exception $ex) {
             return false;
         }
@@ -99,6 +114,22 @@ class InvoiceService
             return $invoice->delete();
         } catch (\Exception $ex) {
             return false;
+        }
+    }
+
+    protected function syncItems($invoiceId, array $items)
+    {
+        $this->invoiceItem->newQuery()
+            ->where('invoice_id', $invoiceId)
+            ->delete();
+
+        if (empty($items)) {
+            return;
+        }
+
+        foreach ($items as $item) {
+            $item['invoice_id'] = $invoiceId;
+            $this->invoiceItem->create($item);
         }
     }
 }

@@ -50,7 +50,7 @@ class PurchaseOrderService
             ->when($request->filled('received_by'), function ($query) use ($request) {
                 $query->where('received_by', 'like', "%{$request->received_by}%");
             })
-            ->orderBy('order_date', 'ASC')
+            ->orderBy('order_date', 'DESC')
             ->paginate($request->limit ?? $limit);
         return PurchaseOrderResource::collection($purchase_order);
     }

@@ -53,7 +53,7 @@ class CreditService
                         ->orWhere('phone', 'like', "%{$info}%");
                 });
             })
-            ->orderBy('date', 'ASC')
+            ->orderBy('date', 'DESC')
             ->paginate($request->limit ?? $limit);
         return CreditResource::collection($credit);
     }

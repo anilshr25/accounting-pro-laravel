@@ -59,7 +59,7 @@ class PaymentService
             ->when($request->filled('remarks'), function ($query) use ($request) {
                 $query->where('remarks', 'like', "%{$request->remarks}%");
             })
-            ->orderBy('date', 'ASC')
+            ->orderBy('date', 'DESC')
             ->paginate($request->limit ?? $limit);
         return PaymentResource::collection($payment);
     }
