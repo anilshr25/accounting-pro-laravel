@@ -9,6 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('purchase_order_items', function (Blueprint $table) {
+            $table->timestamps();
             $table->softDeletes();
         });
     }
@@ -17,6 +18,7 @@ return new class extends Migration
     {
         Schema::table('purchase_order_items', function (Blueprint $table) {
             $table->dropSoftDeletes();
+            $table->dropTimestamps();
         });
     }
 };
