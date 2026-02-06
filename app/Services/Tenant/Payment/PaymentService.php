@@ -66,23 +66,33 @@ class PaymentService
 
     public function store($data, $user)
     {
+        if (!$user) {
+            return false;
+        }
+
         try {
             return DB::transaction(function () use ($data, $user) {
 
-                $payment = new Payment($data);
+                $payment = new Payment(collect($data)->only((new Payment())->getFillable())->toArray());
 
                 $payment->party()->associate($user);
 
                 $payment->save();
 
-                LedgerService::postPayment($payment);
+                try {
+                    LedgerService::postPayment($payment);
+                } catch (\Exception $ex) {
+                    logger()->error('LedgerService postPayment failed: ' . $ex->getMessage());
+                }
 
                 return $payment;
             });
-        } catch (Exception $th) {
+        } catch (\Exception $th) {
+            logger()->error('Payment store failed: ' . $th->getMessage());
             return false;
         }
     }
+
 
     public function find($id, $resource = false)
     {
@@ -95,19 +105,21 @@ class PaymentService
 
     public function update($id, $data)
     {
+        $payment = $this->find($id);
+        if (!$payment) {
+            return false;
+        }
+        $fillableData = collect($data)->only($payment->getFillable())->toArray();
+
+        $updated = $payment->update($fillableData);
         try {
-            $payment = $this->find($id);
-            if (!$payment) {
-                return false;
-            }
-            $updated = $payment->update($data);
             if ($updated) {
                 LedgerService::postPayment($payment);
             }
-            return $updated;
         } catch (\Exception $ex) {
-            return false;
+            logger()->error('LedgerService postPayment error: ' . $ex->getMessage());
         }
+        return $updated;
     }
 
     public function delete($id)

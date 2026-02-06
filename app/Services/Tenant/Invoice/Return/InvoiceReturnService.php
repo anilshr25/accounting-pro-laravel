@@ -43,6 +43,7 @@ class InvoiceReturnService
                 });
             })
             ->when($request->filled('return_date'), fn($q) => $q->whereDate('return_date', $request->return_date))
+            ->when($request->filled('return_miti'), fn($q) => $q->whereDate('return_miti', $request->return_miti))
             ->orderBy('return_date', 'DESC')
             ->paginate($request->limit ?? $limit);
 

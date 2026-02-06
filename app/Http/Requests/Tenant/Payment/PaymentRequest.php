@@ -15,7 +15,7 @@ class PaymentRequest extends FormRequest
     {
         return [
             'type' => 'required',
-            'user_id' => 'required|integer',
+            'party_id' => 'required|integer',
             'date' => 'nullable|date',
             'miti' => 'nullable|string|max:255',
             'amount' => 'nullable|numeric',

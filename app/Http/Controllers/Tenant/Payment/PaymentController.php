@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\Payment\PaymentRequest;
 use App\Services\Tenant\Payment\PaymentService;
+use App\Http\Resources\Tenant\Payment\PaymentResource;
 
 class PaymentController extends Controller
 {
@@ -30,21 +31,32 @@ class PaymentController extends Controller
     public function store(PaymentRequest $request)
     {
         $data = $request->validated();
-        if (isset($data['type']) && isset($data['user_id'])) {
-            if ($data['type'] == 'supplier') {
-                $user = $this->supplier->find($request->user_id);
-            }
-            if ($data['type'] == 'customer') {
-                $user = $this->customer->find($request->user_id);
-            }
-            $payment = $this->payment->store($data, $user);
-            if ($payment)
-                return response(['status' => 'OK'], 200);
-            return response(['status' => 'ERROR'], 500);
-        } else {
+
+        if (!isset($data['type']) || !isset($data['party_id'])) {
             return response(['status' => 'Supplier or Customer not found.'], 500);
         }
+
+        if ($data['type'] == 'supplier') {
+            $user = $this->supplier->find($data['party_id']);
+        } elseif ($data['type'] == 'customer') {
+            $user = $this->customer->find($data['party_id']);
+        } else {
+            return response(['status' => 'Invalid type'], 500);
+        }
+
+        if (!$user) {
+            return response(['status' => 'Supplier or Customer not found.'], 500);
+        }
+
+        $payment = $this->payment->store($data, $user);
+
+        if ($payment) {
+            return response(['status' => 'OK', 'data' => new PaymentResource($payment)], 200);
+        }
+
+        return response(['status' => 'ERROR'], 500);
     }
+
 
     public function show($id)
     {
