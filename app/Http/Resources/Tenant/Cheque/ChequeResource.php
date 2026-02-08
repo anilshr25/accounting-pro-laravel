@@ -21,7 +21,6 @@ class ChequeResource extends JsonResource
             'miti' => $this->miti,
             'remarks' => $this->remarks,
             'status' => $this->status,
-            'bank_name' => $this->bank_name,
         ];
     }
 }

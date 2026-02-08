@@ -20,6 +20,7 @@ class PurchaseOrderService
         $this->purchase_order = $purchase_order;
         $this->purchaseOrderItem = $purchaseOrderItem;
     }
+
     public function paginate($request, $limit = 25)
     {
         $purchase_order = $this->purchase_order
@@ -44,13 +45,19 @@ class PurchaseOrderService
             ->when($request->filled('received_date'), function ($query) use ($request) {
                 $query->whereDate('received_date', $request->received_date);
             })
+            ->when($request->filled('order_date_miti'), function ($query) use ($request) {
+                $query->where('order_date_miti', $request->order_date_miti);
+            })
+            ->when($request->filled('received_date_miti'), function ($query) use ($request) {
+                $query->where('received_date_miti', $request->received_date_miti);
+            })
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->status);
             })
             ->when($request->filled('received_by'), function ($query) use ($request) {
                 $query->where('received_by', 'like', "%{$request->received_by}%");
             })
-            ->orderBy('order_date', 'ASC')
+            ->orderBy('order_date', 'DESC')
             ->paginate($request->limit ?? $limit);
         return PurchaseOrderResource::collection($purchase_order);
     }

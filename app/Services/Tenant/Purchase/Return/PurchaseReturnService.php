@@ -23,7 +23,7 @@ class PurchaseReturnService
     public function paginate($request, $limit = 25)
     {
         $query = $this->purchase_return
-            ->with('items')
+            ->with(['items', 'supplier'])
             ->when(
                 $request->filled('purchase_return_number'),
                 fn($q) =>
@@ -48,6 +48,7 @@ class PurchaseReturnService
             ->when($request->filled('returned_by'), fn($q) => $q->where('returned_by', 'like', "%{$request->returned_by}%"))
             ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
             ->when($request->filled('return_date'), fn($q) => $q->whereDate('return_date', $request->return_date))
+            ->when($request->filled('return_miti'), fn($q) => $q->whereDate('return_miti', $request->return_miti))
             ->orderBy('return_date', 'DESC')
             ->paginate($request->limit ?? $limit);
 
@@ -79,7 +80,7 @@ class PurchaseReturnService
 
     public function find($id, $resource = false)
     {
-        $purchase_return = $this->purchase_return->with('items')->find($id);
+        $purchase_return = $this->purchase_return->with(['items', 'supplier'])->find($id);
 
         if (!$purchase_return) {
             return null;

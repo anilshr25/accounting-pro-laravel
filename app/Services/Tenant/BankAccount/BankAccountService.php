@@ -19,7 +19,8 @@ class BankAccountService
             balance + (
                 SELECT COALESCE(SUM(c.amount), 0)
                 FROM cheques c
-                WHERE c.type = "supplier"
+                WHERE c.bank_account_id = bank_accounts.id
+                  AND c.type = "supplier"
                   AND c.status = "pending"
             ) as balance
         ');

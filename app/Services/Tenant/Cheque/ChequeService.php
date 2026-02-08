@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Tenant\Cheque\Cheque;
 use App\Services\Tenant\Ledger\LedgerService;
 use App\Http\Resources\Tenant\Cheque\ChequeResource;
+use Carbon\Carbon;
 
 class ChequeService
 {
@@ -14,11 +15,16 @@ class ChequeService
     {
         $this->cheque = $cheque;
     }
+
     public function paginate($request, $limit = 25)
     {
-        $cheque = $this->cheque
+        $chequeQuery = $this->cheque
             ->when($request->filled('bank_account_id'), function ($query) use ($request) {
-                $query->where('bank_account_id', $request->bank_account_id);
+                $bankIds = is_array($request->bank_account_id)
+                    ? $request->bank_account_id
+                    : [$request->bank_account_id];
+
+                $query->whereIn('bank_account_id', $bankIds);
             })
             ->when($request->filled('party_type'), function ($query) use ($request) {
                 $query->where('party_type', $request->party_type);
@@ -45,21 +51,48 @@ class ChequeService
             ->when($request->filled('amount'), function ($query) use ($request) {
                 $query->where('amount', $request->amount);
             })
-            ->when($request->filled('date'), function ($query) use ($request) {
-                $query->whereDate('date', $request->date);
+
+            ->when(
+                $request->filled('start_date') && $request->filled('end_date'),
+                function ($query) use ($request) {
+                    $query->whereBetween('date', [
+                        Carbon::parse($request->start_date)->startOfDay(),
+                        Carbon::parse($request->end_date)->endOfDay(),
+                    ]);
+                }
+            )
+            ->when($request->filled('miti_start') && $request->filled('miti_end'), function ($q) use ($request) {
+                $q->whereBetween('miti', [$request->miti_start, $request->miti_end]);
             })
+            ->when(
+                $request->filled('date') &&
+                    !$request->filled('start_date') &&
+                    !$request->filled('end_date'),
+                fn($q) => $q->whereDate('date', $request->date)
+            )
             ->when($request->filled('miti'), function ($query) use ($request) {
                 $query->where('miti', 'like', "%{$request->miti}%");
             })
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->status);
-            })
-            ->when($request->filled('bank_name'), function ($query) use ($request) {
-                $query->where('bank_name', $request->bank_name);
-            })
-            ->orderBy('date', 'ASC')
+            });
+        $totalAmount = (clone $chequeQuery)->sum('amount');
+
+        $cheques = $chequeQuery->orderBy('date', 'ASC')
             ->paginate($request->limit ?? $limit);
-        return ChequeResource::collection($cheque);
+        return [
+            'data' => ChequeResource::collection($cheques),
+            'total_amount' => $totalAmount,
+            'links' => $cheques->links(),
+            'meta' => [
+                'current_page' => $cheques->currentPage(),
+                'from' => $cheques->firstItem(),
+                'last_page' => $cheques->lastPage(),
+                'per_page' => $cheques->perPage(),
+                'to' => $cheques->lastItem(),
+                'total' => $cheques->total(),
+            ],
+        ];
     }
 
     public function store($data, $user)
@@ -149,7 +182,7 @@ class ChequeService
                 if (!$cheque) {
                     throw new \Exception('Cheque not found');
                 }
-                
+
                 LedgerService::deleteByReference(
                     'cheque',
                     $cheque->id

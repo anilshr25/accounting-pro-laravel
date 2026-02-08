@@ -15,7 +15,7 @@ class PurchaseReturnRequest extends FormRequest
     {
         return [
             'supplier_id' => 'required|exists:suppliers,id',
-            'purchase_return_number' => 'required|string|max:255',
+            'purchase_return_number' => 'required|string|max:255|unique:purchase_returns,purchase_return_number',
             'return_date' => 'required|date',
             'return_miti' => 'required|string|max:255',
             'tax' => 'nullable|numeric',
