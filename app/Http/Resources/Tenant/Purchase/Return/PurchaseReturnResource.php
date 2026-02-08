@@ -12,6 +12,7 @@ class PurchaseReturnResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'supplier_id' => $this->supplier_id,
             'purchase_return_number' => $this->purchase_return_number,
             'party' => $this->party,
             'return_date' => $this->return_date ? Carbon::parse($this->return_date)->format('Y-m-d') : null,

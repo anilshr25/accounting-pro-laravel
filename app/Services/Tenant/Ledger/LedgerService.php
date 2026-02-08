@@ -34,6 +34,11 @@ class LedgerService
                 $q->whereDate('date', $request->date)
             )
             ->when(
+                $request->filled('miti'),
+                fn($q) =>
+                $q->whereDate('miti', $request->miti)
+            )
+            ->when(
                 $request->filled('party_type'),
                 fn($q) =>
                 $q->where('party_type', $request->party_type)
