@@ -3,7 +3,14 @@
 namespace App\Services\Tenant\Daybook;
 
 use App\Models\Tenant\Daybook\Daybook;
+use App\Models\Tenant\Balance\Balance;
 use App\Http\Resources\Tenant\Daybook\DaybookResource;
+use App\Models\Tenant\Invoice\Return\InvoiceReturn;
+use App\Models\Tenant\Cheque\Cheque;
+use App\Models\Tenant\Credit\Credit;
+use App\Models\Tenant\Payment\Payment;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class DaybookService
 {
@@ -12,25 +19,86 @@ class DaybookService
     {
         $this->daybook = $daybook;
     }
-    public function paginate($request, $limit = 25)
+
+    public function paginate(Request $request, int $limit = 25)
     {
-        $daybook = $this->daybook
-            ->when($request->filled('date'), function ($query) use ($request) {
-                $query->whereDate('date', $request->date);
-            })
-            ->when($request->filled('name'), function ($query) use ($request) {
-                $query->where('name', 'like', "%{$request->name}%");
-            })
-            ->when($request->filled('amount'), function ($query) use ($request) {
-                $query->where('amount', $request->amount);
-            })
-            ->when($request->filled('type'), function ($query) use ($request) {
-                $query->where('type', $request->type);
-            })
-            ->orderBy('date', 'ASC')
+        if (!$request->filled('date')) {
+            throw new \Exception('Date is required');
+        }
+
+        $date = Carbon::parse($request->date);
+        $shift = $request->shift;
+
+        $start = $date->copy()->startOfDay();
+        $end   = $date->copy()->endOfDay();
+
+
+        $paymentsQuery = Payment::whereBetween('date', [$start, $end])
+            ->when($shift, fn($q) => $q->where('shift', $shift));
+
+        $cashSales = (clone $paymentsQuery)->where('payment_method', 'cash')->sum('amount');
+        $fonepaySales = (clone $paymentsQuery)->where('payment_method', 'fonepay')->sum('amount');
+        $cardpaySales = (clone $paymentsQuery)->where('payment_method', 'cardpay')->sum('amount');
+
+        $creditSales = Credit::whereBetween('date', [$start, $end])
+            ->when($shift, fn($q) => $q->where('shift', $shift))
+            ->sum('amount');
+
+        $chequeSales = Cheque::whereBetween('date', [$start, $end])
+            ->when($shift, fn($q) => $q->where('shift', $shift))
+            ->sum('amount');
+
+        $salesReturns = InvoiceReturn::whereBetween('return_date', [$start, $end])
+            ->when($shift, fn($q) => $q->where('shift', $shift))
+            ->sum('total');
+
+        $grossSales = $cashSales + $fonepaySales + $cardpaySales + $creditSales + $chequeSales;
+        $netSales = $grossSales - $salesReturns;
+
+
+        $openingBalance = Balance::whereDate('date', $date)
+            ->when($shift, fn($q) => $q->where('shift', $shift))
+            ->sum('opening_balance');
+
+        $closingBalance = Balance::whereDate('date', $date)
+            ->when($shift, fn($q) => $q->where('shift', $shift))
+            ->sum('closing_balance');
+
+        if ($closingBalance == 0) {
+            $closingBalance = $openingBalance + $netSales;
+        }
+
+        $daybooks = $this->daybook
+            ->whereBetween('date', [$start, $end])
+            ->when($shift, fn($q) => $q->where('shift', $shift))
+            ->orderBy('date', 'asc')
             ->paginate($request->limit ?? $limit);
-        return DaybookResource::collection($daybook);
+
+        return response()->json([
+            'date' => $request->date,
+            'shift' => $shift ?? 'all',
+            'summary' => [
+                'openingBalance'  => (float) $openingBalance,
+                'cashSales'       => (float) $cashSales,
+                'fonepaySales'    => (float) $fonepaySales,
+                'cardpaySales'    => (float) $cardpaySales,
+                'creditSales'     => (float) $creditSales,
+                'customerCheques' => (float) $chequeSales,
+                'salesReturns'    => (float) $salesReturns,
+                'grossSales'      => (float) $grossSales,
+                'totalProfit'     => (float) $netSales,
+                'closingBalance'  => (float) $closingBalance,
+            ],
+            'data' => DaybookResource::collection($daybooks),
+            'pagination' => [
+                'current_page' => $daybooks->currentPage(),
+                'last_page'    => $daybooks->lastPage(),
+                'per_page'     => $daybooks->perPage(),
+                'total'        => $daybooks->total(),
+            ],
+        ]);
     }
+
 
     public function store($data)
     {
