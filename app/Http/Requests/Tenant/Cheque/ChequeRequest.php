@@ -23,6 +23,7 @@ class ChequeRequest extends FormRequest
             'miti' => 'nullable|string|max:255',
             'remarks' => 'nullable|string|max:255',
             'status' => 'required|string|max:255',
+            'bank_name' => 'nullable|string|max:255'
         ];
     }
 }

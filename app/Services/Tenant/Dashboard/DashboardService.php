@@ -44,7 +44,11 @@ class DashboardService
         $month = null;
         $year  = null;
 
-        if ($type === 'daily') {
+         if ($type === 'custom') {
+            $startDate = Carbon::parse($filters['start_date'])->startOfDay();
+            $endDate   = Carbon::parse($filters['end_date'])->endOfDay();
+        }
+        elseif ($type === 'daily') {
             $date = $filters['date'] ?? Carbon::today()->toDateString();
 
             $startDate = Carbon::parse($date)->startOfDay();
@@ -52,14 +56,14 @@ class DashboardService
         } elseif ($type === 'yearly') {
             $year = $filters['year'] ?? Carbon::now()->year;
 
-            $startDate = Carbon::create($year)->startOfYear();
-            $endDate   = Carbon::create($year)->endOfYear();
+            $startDate = Carbon::parse("$year-01-01")->startOfYear();
+            $endDate   = Carbon::parse("$year-01-01")->endOfYear();
         } else {
             $month = $filters['month'] ?? Carbon::now()->month;
             $year  = $filters['year'] ?? Carbon::now()->year;
 
-            $startDate = Carbon::create($year, $month)->startOfMonth();
-            $endDate   = Carbon::create($year, $month)->endOfMonth();
+            $startDate = Carbon::parse("$year-$month-01")->startOfMonth();
+            $endDate   = Carbon::parse("$year-$month-01")->endOfMonth();
 
             $type = 'monthly';
         }
