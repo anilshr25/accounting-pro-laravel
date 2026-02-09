@@ -5,6 +5,7 @@ namespace App\Services\Tenant\BankAccount;
 use App\Models\Tenant\BankAccount\BankAccount;
 use App\Http\Resources\Tenant\BankAccount\BankAccountResource;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class BankAccountService
 {
@@ -15,15 +16,18 @@ class BankAccountService
     }
     private function balanceWithCheque()
     {
-        return DB::raw('
+        $today = Carbon::today()->toDateString();
+
+        return DB::raw("
             balance + (
                 SELECT COALESCE(SUM(c.amount), 0)
                 FROM cheques c
                 WHERE c.bank_account_id = bank_accounts.id
-                  AND c.type = "supplier"
-                  AND c.status = "pending"
+                  AND c.type = 'supplier'
+                  AND c.status = 'pending'
+                  ANd DATE(c.date) <= '{$today}'
             ) as balance
-        ');
+        ");
     }
 
     public function paginate($request, $limit = 25)
