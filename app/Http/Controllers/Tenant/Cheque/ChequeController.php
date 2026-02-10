@@ -83,7 +83,7 @@ class ChequeController extends Controller
         }
         return response(['status' => 'ERROR'], 500);
     }
-    public function chequeCancel($id)
+    public function chequeCancel(Request $request, $id)
     {
         $cheque = $this->cheque->find($id);
         if (!$cheque) {
@@ -92,7 +92,11 @@ class ChequeController extends Controller
         if ($cheque->status === 'cancelled') {
             return response(['status' => 'OK', 'message' => 'Cheque already cancelled'], 200);
         }
-        $updated = $this->cheque->chequeCancel($id, ['status' => 'cancelled']);
+        $data = [
+            'status' => 'cancelled',
+            'remarks' => $request->remarks ?? null,
+        ];
+        $updated = $this->cheque->chequeCancel($id, $data);
         if ($updated) {
             return response(['status' => 'OK'], 200);
         }

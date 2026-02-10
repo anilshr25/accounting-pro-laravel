@@ -30,10 +30,15 @@ class Customer extends Model
 
     public function getClosingBalanceAttribute()
     {
-        return $this->ledgers()
-            ->orderBy('id', 'desc')
-            ->value('balance')
-            ?? $this->credit_balance
-            ?? 0;
+        $latestLedger = $this->ledgers()
+            ->orderBy('date', 'desc') 
+            ->latest()
+            ->first();
+
+        if ($latestLedger) {
+            return $latestLedger->balance;
+        }
+
+        return $this->credit_balance ?? 0;
     }
 }
