@@ -26,6 +26,7 @@ use App\Http\Controllers\Tenant\Purchase\Return\Item\PurchaseReturnItemControlle
 use App\Http\Controllers\Tenant\Invoice\Return\InvoiceReturnController;
 use App\Http\Controllers\Tenant\Invoice\Return\Item\InvoiceReturnItemController;
 use App\Http\Controllers\Tenant\Dashboard\DashboardController;
+use App\Http\Controllers\Tenant\Procurement\ProcurementController;
 
 
 /*
@@ -176,7 +177,13 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->put('invoice-return-item/{id}', [InvoiceReturnItemController::class, 'update']);
     $route->delete('invoice-return-item/{id}', [InvoiceReturnItemController::class, 'destroy']);
 
+    $route->get('procurement', [ProcurementController::class, 'index']);
+    $route->post('procurement', [ProcurementController::class, 'store']);
+    $route->get('procurement/{id}', [ProcurementController::class, 'show']);
+    $route->put('procurement/{id}', [ProcurementController::class, 'update']);
+    $route->delete('procurement/{id}', [ProcurementController::class, 'destroy']);
+
     Route::get('dashboard', [DashboardController::class, 'index']);
-    
+
     $route->get('ledger', [LedgerController::class, 'index']);
 });
