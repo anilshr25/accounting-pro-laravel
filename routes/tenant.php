@@ -26,7 +26,9 @@ use App\Http\Controllers\Tenant\Purchase\Return\Item\PurchaseReturnItemControlle
 use App\Http\Controllers\Tenant\Invoice\Return\InvoiceReturnController;
 use App\Http\Controllers\Tenant\Invoice\Return\Item\InvoiceReturnItemController;
 use App\Http\Controllers\Tenant\Dashboard\DashboardController;
+use App\Http\Controllers\Tenant\Product\ProductController;
 use App\Http\Controllers\Tenant\Procurement\ProcurementController;
+use App\Http\Controllers\Tenant\Procurement\Item\ProcurementItemController;
 
 
 /*
@@ -177,11 +179,23 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->put('invoice-return-item/{id}', [InvoiceReturnItemController::class, 'update']);
     $route->delete('invoice-return-item/{id}', [InvoiceReturnItemController::class, 'destroy']);
 
+    $route->get('product', [ProductController::class, 'index']);
+    $route->post('product', [ProductController::class, 'store']);
+    $route->get('product/{id}', [ProductController::class, 'show']);
+    $route->put('product/{id}', [ProductController::class, 'update']);
+    $route->delete('product/{id}', [ProductController::class, 'destroy']);
+
     $route->get('procurement', [ProcurementController::class, 'index']);
     $route->post('procurement', [ProcurementController::class, 'store']);
     $route->get('procurement/{id}', [ProcurementController::class, 'show']);
     $route->put('procurement/{id}', [ProcurementController::class, 'update']);
     $route->delete('procurement/{id}', [ProcurementController::class, 'destroy']);
+
+    $route->get('procurement-item', [ProcurementItemController::class, 'index']);
+    $route->post('procurement-item', [ProcurementItemController::class, 'store']);
+    $route->get('procurement-item/{id}', [ProcurementItemController::class, 'show']);
+    $route->put('procurement-item/{id}', [ProcurementItemController::class, 'update']);
+    $route->delete('procurement-item/{id}', [ProcurementItemController::class, 'destroy']);
 
     Route::get('dashboard', [DashboardController::class, 'index']);
 
