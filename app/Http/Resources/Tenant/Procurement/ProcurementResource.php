@@ -3,7 +3,6 @@
 namespace App\Http\Resources\Tenant\Procurement;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\Tenant\Procurement\Item\ProcurementItemResource;
 
 class ProcurementResource extends JsonResource
 {
@@ -20,7 +19,15 @@ class ProcurementResource extends JsonResource
             'total_amount' => $this->total_amount,
             'status' => $this->status ?? 'ordered',
             'remarks' => $this->remarks,
-            'items' => ProcurementItemResource::collection($this->whenLoaded('items')),
+            'items' => $this->whenLoaded('items', function () {
+                return $this->items->map(function ($item) {
+                    return array_merge([
+                        'id' => $item->id,
+                        'quantity' => $item->quantity,
+                        'amount' => $item->amount,
+                    ], $item->product?->only(['product_name', 'rate', 'unit', 'category']) ?? []);
+                });
+            }),
         ];
     }
 }
