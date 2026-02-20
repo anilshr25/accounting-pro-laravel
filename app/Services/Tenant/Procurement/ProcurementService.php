@@ -54,6 +54,9 @@ class ProcurementService
                 $data['total_amount'] = collect($items)
                     ->sum('amount');
 
+                $lastId = $this->procurement->max('id') + 1;
+                $data['order_number'] = 'PR' . str_pad($lastId, 3, '0', STR_PAD_LEFT);
+
                 $procurement = $this->procurement->create($data);
 
                 if (!empty($items)) {

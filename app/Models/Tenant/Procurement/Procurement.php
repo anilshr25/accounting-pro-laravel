@@ -35,11 +35,11 @@ class Procurement extends Model
     }
 
     protected static function booted()
-{
-    static::creating(function ($model) {
-        if (is_null($model->order_time)) {
-            $model->order_time = now()->timezone('Asia/Kathmandu');
-        }
-    });
-}
+    {
+        static::creating(function ($model) {
+            if (is_null($model->order_time)) {
+                $model->order_time = now()->timezone('Asia/Kathmandu');
+            }
+        });
+    }
 }
