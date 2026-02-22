@@ -18,8 +18,8 @@ class ProductService
     public function paginate($request, $limit = 25)
     {
         $products = $this->product
-            ->when($request->filled('name'), function ($query) use ($request) {
-                $query->where('name', 'like', "%{$request->name}%");
+            ->when($request->filled('product_name'), function ($query) use ($request) {
+                $query->where('product_name', 'like', "%{$request->product_name}%");
             })
             ->when($request->filled('unit'), function ($query) use ($request) {
                 $query->where('unit', $request->unit);
@@ -27,8 +27,8 @@ class ProductService
             ->when($request->filled('category'), function ($query) use ($request) {
                 $query->where('category', $request->category);
             })
-            ->when($request->filled('status'), function ($query) use ($request) {
-                $query->where('status', $request->status);
+            ->when($request->filled('code'), function ($query) use ($request) {
+                $query->where('code', $request->code);
             })
             ->orderBy('created_at', 'ASC')
             ->paginate($request->limit ?? $limit);

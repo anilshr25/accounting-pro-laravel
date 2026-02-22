@@ -14,7 +14,7 @@ class ProcurementResource extends JsonResource
             'order_date' => $this->order_date?->format('Y-m-d'),
             'formatted_order_date' => $this->order_date?->format('d M Y'),
             'order_time' => $this->order_time?->timezone('Asia/Kathmandu')->format('H:i:s'),
-            'order_miti' => $this->order_miti,
+            'order_miti' => $this->order_miti?->format('Y-m-d'),
             'order_created_by' => $this->order_created_by,
             'total_amount' => $this->total_amount,
             'status' => $this->status ?? 'ordered',
@@ -25,7 +25,7 @@ class ProcurementResource extends JsonResource
                         'id' => $item->id,
                         'quantity' => $item->quantity,
                         'amount' => $item->amount,
-                    ], $item->product?->only(['product_name', 'rate', 'unit', 'category']) ?? []);
+                    ], $item->product?->only(['id', 'product_name', 'rate', 'unit', 'category']) ?? []);
                 });
             }),
         ];
