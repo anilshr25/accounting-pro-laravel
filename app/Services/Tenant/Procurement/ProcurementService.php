@@ -33,6 +33,9 @@ class ProcurementService
             ->when($request->filled('order_date'), function ($query) use ($request) {
                 $query->whereDate('order_date', $request->order_date);
             })
+            ->when($request->filled('order_miti'), function ($query) use ($request) {
+                $query->whereDate('order_miti', $request->order_miti);
+            })
             ->orderBy('order_date', 'DESC')
             ->paginate($request->limit ?? $limit);
 
