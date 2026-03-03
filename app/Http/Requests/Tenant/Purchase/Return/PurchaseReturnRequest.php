@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Tenant\Purchase\Return;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class PurchaseReturnRequest extends FormRequest
 {
@@ -13,9 +14,15 @@ class PurchaseReturnRequest extends FormRequest
 
     public function rules(): array
     {
+        $id = $this->route('id');
         return [
             'supplier_id' => 'required|exists:suppliers,id',
-            'purchase_return_number' => 'required|string|max:255|unique:purchase_returns,purchase_return_number',
+            'purchase_return_number' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('purchase_returns', 'purchase_return_number')->ignore($id),
+            ],
             'return_date' => 'required|date',
             'return_miti' => 'required|string|max:255',
             'tax' => 'nullable|numeric',

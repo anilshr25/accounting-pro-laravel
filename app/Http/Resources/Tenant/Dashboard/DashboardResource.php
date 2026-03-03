@@ -10,10 +10,10 @@ class DashboardResource extends JsonResource
     {
         return [
             'summary' => [
-                'total_sales'        => $this['total_sales'] ?? 0,
-                'total_purchases'    => $this['total_purchases'] ?? 0,
-                'outstanding_credit' => $this['outstanding_credit'] ?? 0,
-                'cheque_balance'     => $this['cheque_balance'] ?? 0,
+                'total_sales'        => number_format($this['total_sales'] ?? 0, 3, '.', ''),
+                'total_purchases'    => number_format($this['total_purchases'] ?? 0, 3, '.', ''),
+                'outstanding_credit' => number_format($this['outstanding_credit'] ?? 0, 3, '.', ''),
+                'cheque_balance'     => number_format($this['cheque_balance'] ?? 0, 3, '.', ''),
                 'customer_cheque_balance' => $this['customer_cheque_balance'] ?? 0,
             ],
 
