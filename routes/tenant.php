@@ -59,7 +59,6 @@ Route::group(['prefix' => 'api', 'middleware' => ['tenant', 'prevent_access_from
     $route->post('verify/email-verification-code', [MFAController::class, 'verifyEmailVerificationCode']);
 
     $route->post('request/verification-code', [MFAController::class, 'requestEmailVerificationCode']);
-
 });
 
 // Tenant API routes
@@ -200,4 +199,5 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     Route::get('dashboard', [DashboardController::class, 'index']);
 
     $route->get('ledger', [LedgerController::class, 'index']);
+    Route::get('/ledger/export/pdf', [LedgerController::class, 'exportPdf']);
 });

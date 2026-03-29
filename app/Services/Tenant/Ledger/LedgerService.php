@@ -600,4 +600,26 @@ class LedgerService
 
         return $base + ($credit - $debit);
     }
+
+    public function getLedger($request)
+    {
+        return $this->ledger
+            ->with(['party', 'reference'])
+            ->whereNull('deleted_at')
+            ->where('party_type', $request->party_type)
+            ->where('party_id', $request->party_id)
+
+            ->when(
+                !empty($request->date_from),
+                fn($q) => $q->whereDate('date', '>=', $request->date_from)
+            )
+            ->when(
+                !empty($request->date_to),
+                fn($q) => $q->whereDate('date', '<=', $request->date_to)
+            )
+
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->get();
+    }
 }
