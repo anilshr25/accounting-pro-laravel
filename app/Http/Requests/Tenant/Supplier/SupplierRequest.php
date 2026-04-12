@@ -20,6 +20,7 @@ class SupplierRequest extends FormRequest
             'address' => 'required|string|max:255',
             'opening_balance' => 'required|numeric',
             'pan' => 'required|string|max:255',
+            'payment_terms' => 'nullable|string|max:255',
         ];
     }
 }

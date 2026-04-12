@@ -14,6 +14,7 @@ class SupplierResource extends JsonResource
                 'name' => $this->name,
                 'email' => $this->email,
                 'phone' => $this->phone,
+                'payment_terms' => $this->payment_terms,
             ];
         }
 
@@ -26,6 +27,7 @@ class SupplierResource extends JsonResource
             'opening_balance' => $this->opening_balance,
             'closing_balance' => $this->closing_balance,
             'pan' => $this->pan,
+            'payment_terms' => $this->payment_terms,
 
         ];
     }

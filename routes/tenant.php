@@ -29,6 +29,11 @@ use App\Http\Controllers\Tenant\Dashboard\DashboardController;
 use App\Http\Controllers\Tenant\Product\ProductController;
 use App\Http\Controllers\Tenant\Procurement\ProcurementController;
 use App\Http\Controllers\Tenant\Procurement\Item\ProcurementItemController;
+use App\Http\Controllers\Tenant\Employee\EmployeeController;
+use App\Http\Controllers\Tenant\Attendance\AttendanceController;
+use App\Http\Controllers\Tenant\Salary\SalaryController;
+use App\Http\Controllers\Tenant\Scheme\SchemeController;
+use App\Http\Controllers\Tenant\Scheme\Payment\SchemePaymentController;
 
 
 /*
@@ -200,4 +205,35 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
 
     $route->get('ledger', [LedgerController::class, 'index']);
     Route::get('/ledger/export/pdf', [LedgerController::class, 'exportPdf']);
+
+    $route->get('employee', [EmployeeController::class, 'index']);
+    $route->post('employee', [EmployeeController::class, 'store']);
+    $route->get('employee/{id}', [EmployeeController::class, 'show']);
+    $route->put('employee/{id}', [EmployeeController::class, 'update']);
+    $route->delete('employee/{id}', [EmployeeController::class, 'destroy']);
+
+    $route->get('attendance', [AttendanceController::class, 'index']);
+    $route->post('attendance', [AttendanceController::class, 'store']);
+    $route->get('attendance/{id}', [AttendanceController::class, 'show']);
+    $route->put('attendance/{id}', [AttendanceController::class, 'update']);
+    $route->delete('attendance/{id}', [AttendanceController::class, 'destroy']);
+
+    $route->get('salary', [SalaryController::class, 'index']);
+    $route->post('salary', [SalaryController::class, 'store']);
+    $route->get('salary/{id}', [SalaryController::class, 'show']);
+    $route->put('salary/{id}', [SalaryController::class, 'update']);
+    $route->delete('salary/{id}', [SalaryController::class, 'destroy']);
+
+    $route->get('scheme', [SchemeController::class, 'index']);
+    $route->post('scheme', [SchemeController::class, 'store']);
+    $route->get('scheme/{id}', [SchemeController::class, 'show']);
+    $route->put('scheme/{id}', [SchemeController::class, 'update']);
+    $route->delete('scheme/{id}', [SchemeController::class, 'destroy']);
+
+    $route->get('scheme-payment', [SchemePaymentController::class, 'index']);
+    $route->post('scheme-payment', [SchemePaymentController::class, 'store']);
+    $route->get('scheme-payment/{id}', [SchemePaymentController::class, 'show']);
+    $route->put('scheme-payment/{id}', [SchemePaymentController::class, 'update']);
+    $route->delete('scheme-payment/{id}', [SchemePaymentController::class, 'destroy']);
+
 });
