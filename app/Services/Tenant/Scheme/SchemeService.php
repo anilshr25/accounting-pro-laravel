@@ -25,29 +25,36 @@ class SchemeService
             ->when($request->filled('scheme_type'), function ($query) use ($request) {
                 $query->where('scheme_type', $request->scheme_type);
             })
+            ->when($request->filled('start_date') && $request->filled('end_date'), function ($query) use ($request) {
+                $query->where(function ($q) use ($request) {
+                    $q->where('start_date', '<=', $request->end_date)
+                        ->where('end_date', '>=', $request->start_date);
+                });
+            })
+            ->when($request->filled('start_date') && !$request->filled('end_date'), function ($query) use ($request) {
+                $query->where('end_date', '>=', $request->start_date);
+            })
+            ->when(!$request->filled('start_date') && $request->filled('end_date'), function ($query) use ($request) {
+                $query->where('start_date', '<=', $request->end_date);
+            })
+            ->when($request->filled('start_miti') && $request->filled('end_miti'), function ($query) use ($request) {
+                $query->where(function ($q) use ($request) {
+                    $q->where('start_miti', '<=', $request->end_miti)
+                        ->where('end_miti', '>=', $request->start_miti);
+                });
+            })
+            ->when($request->filled('start_miti') && !$request->filled('end_miti'), function ($query) use ($request) {
+                $query->where('end_miti', '>=', $request->start_miti);
+            })
+            ->when(!$request->filled('start_miti') && $request->filled('end_miti'), function ($query) use ($request) {
+                $query->where('start_miti', '<=', $request->end_miti);
+            })
             ->orderBy('id', 'ASC')
             ->paginate($request->limit ?? $limit);
 
         return SchemeResource::collection($scheme);
     }
 
-    public function search($request, $limit = 10)
-    {
-        $scheme = $this->scheme
-            ->with('supplier')
-            ->when($request->filled('supplier_id'), function ($query) use ($request) {
-                $query->where('supplier_id', $request->supplier_id);
-            })
-            ->when(
-                $request->filled('status'),
-                fn($q) =>
-                $q->where('status', 'like', "%{$request->status}%")
-            )
-            ->latest()
-            ->limit($limit)
-            ->get();
-        return SchemeResource::collection($scheme);
-    }
 
     public function store($data)
     {

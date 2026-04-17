@@ -34,6 +34,7 @@ use App\Http\Controllers\Tenant\Attendance\AttendanceController;
 use App\Http\Controllers\Tenant\Salary\SalaryController;
 use App\Http\Controllers\Tenant\Scheme\SchemeController;
 use App\Http\Controllers\Tenant\Scheme\Payment\SchemePaymentController;
+use App\Http\Controllers\Tenant\BankAccount\Loan\LoanController;
 
 
 /*
@@ -202,6 +203,7 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->delete('procurement-item/{id}', [ProcurementItemController::class, 'destroy']);
 
     Route::get('dashboard', [DashboardController::class, 'index']);
+    Route::get('/dashboard/graph', [DashboardController::class, 'graph']);
 
     $route->get('ledger', [LedgerController::class, 'index']);
     Route::get('/ledger/export/pdf', [LedgerController::class, 'exportPdf']);
@@ -236,4 +238,9 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->put('scheme-payment/{id}', [SchemePaymentController::class, 'update']);
     $route->delete('scheme-payment/{id}', [SchemePaymentController::class, 'destroy']);
 
+    $route->get('loan', [LoanController::class, 'index']);
+    $route->post('loan', [LoanController::class, 'store']);
+    $route->get('loan/{id}', [LoanController::class, 'show']);
+    $route->put('loan/{id}', [LoanController::class, 'update']);
+    $route->delete('loan/{id}', [LoanController::class, 'destroy']);
 });

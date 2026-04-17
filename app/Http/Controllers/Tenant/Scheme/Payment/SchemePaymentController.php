@@ -21,11 +21,6 @@ class SchemePaymentController extends Controller
         return $this->schemepayment->paginate($request, 25);
     }
 
-    public function search(Request $request)
-    {
-        return $this->schemepayment->search($request, 10);
-    }
-
     public function store(SchemePaymentRequest $request)
     {
         $schemepayment = $this->schemepayment->store($request->validated());

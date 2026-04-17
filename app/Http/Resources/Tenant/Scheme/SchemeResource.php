@@ -12,6 +12,7 @@ class SchemeResource extends JsonResource
             'id' => $this->id,
             'supplier_id' => $this->supplier_id,
             'supplier_name' => $this->supplier->name,
+            'scheme_name' => $this->scheme_name,
             'start_date' => $this->start_date?->format('Y-m-d'),
             'end_date' => $this->end_date?->format('Y-m-d'),
             'start_miti' => $this->start_miti,

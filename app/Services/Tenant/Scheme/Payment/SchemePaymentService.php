@@ -21,26 +21,15 @@ class SchemePaymentService
             ->when($request->filled('date'), function ($query) use ($request) {
                 $query->where('date', $request->date);
             })
+            ->when($request->filled('miti'), function ($query) use ($request) {
+                $query->where('miti', $request->miti);
+            })
             ->latest()
             ->paginate($request->limit ?? $limit);
 
         return SchemePaymentResource::collection($schemepayment);
     }
 
-    public function search($request, $limit = 10)
-    {
-        $schemepayment = $this->schemepayment
-            ->when($request->filled('scheme_id'), function ($query) use ($request) {
-                $query->where('scheme_id', $request->scheme_id);
-            })
-            ->when($request->filled('date'), function ($query) use ($request) {
-                $query->where('date', $request->date);
-            })
-            ->orderBy('id', 'DESC')
-            ->limit($limit)
-            ->get();
-        return SchemePaymentResource::collection($schemepayment);
-    }
 
     public function store($data)
     {
@@ -67,7 +56,13 @@ class SchemePaymentService
             if (!$schemepayment) {
                 return false;
             }
-            return $schemepayment->update($data);
+            $data = array_filter($data, function ($value) {
+                return !is_null($value);
+            });
+
+            $schemepayment->update($data);
+
+            return $schemepayment->fresh();
         } catch (\Exception $ex) {
             return false;
         }

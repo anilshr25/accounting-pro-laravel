@@ -15,6 +15,7 @@ class Scheme extends Model
     protected $table = 'schemes';
     protected $fillable = [
         'supplier_id',
+        'scheme_name',
         'start_date',
         'start_miti',
         'end_date',

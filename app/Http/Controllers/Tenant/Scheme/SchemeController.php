@@ -22,11 +22,6 @@ class SchemeController extends Controller
         return $this->scheme->paginate($request, 25);
     }
 
-    public function search(Request $request)
-    {
-        return $this->scheme->search($request, 10);
-    }
-
     public function store(SchemeRequest $request)
     {
         $data = $request->validated();
