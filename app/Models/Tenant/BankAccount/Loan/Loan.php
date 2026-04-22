@@ -41,6 +41,8 @@ class Loan extends Model
     protected $casts = [
         'start_date' => 'datetime',
         'end_date' => 'datetime',
+        'last_paid_date' => 'datetime',
+        'next_due_date' => 'datetime',
     ];
 
     public function bank_account()

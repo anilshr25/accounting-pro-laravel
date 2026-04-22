@@ -6,8 +6,7 @@ use App\Models\Tenant\BankAccount\Loan\Loan;
 use App\Http\Resources\Tenant\BankAccount\Loan\LoanResource;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\Mail\LoanReminderMail;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Database\QueryException;
 
 class LoanService
 {
@@ -165,9 +164,26 @@ class LoanService
             DB::commit();
 
             return $loan;
+        } catch (QueryException $ex) {
+            DB::rollBack();
+            if ($ex->errorInfo[1] == 1062) {
+                return [
+                    'error' => true,
+                    'message' => 'Loan number already exists. Please use a different loan number.'
+                ];
+            }
+
+            return [
+                'error' => true,
+                'message' => 'Database error occurred.'
+            ];
         } catch (\Exception $ex) {
             DB::rollBack();
-            dd($ex->getMessage());
+
+            return [
+                'error' => true,
+                'message' => 'Something went wrong.'
+            ];
         }
     }
 

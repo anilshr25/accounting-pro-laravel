@@ -24,9 +24,26 @@ class LoanController extends Controller
     public function store(LoanRequest $request)
     {
         $loan = $this->loan->store($request->validated());
-        if ($loan)
-            return response(['status' => 'OK'], 200);
-        return response(['status' => 'ERROR'], 500);
+
+        if (is_array($loan) && isset($loan['error'])) {
+            return response([
+                'status' => 'ERROR',
+                'message' => $loan['message']
+            ], 400);
+        }
+
+        if (!$loan) {
+            return response([
+                'status' => 'ERROR',
+                'message' => 'Failed to create loan'
+            ], 500);
+        }
+
+        return response([
+            'status' => 'OK',
+            'message' => 'Loan created successfully',
+            'data' => $loan
+        ], 201);
     }
 
     public function show($id)
