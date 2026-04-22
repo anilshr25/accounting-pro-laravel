@@ -29,6 +29,8 @@ class LoanRequest extends FormRequest
             'emi_amount' => 'nullable|numeric',
             'total_amount' => 'nullable|numeric',
             'remaining_amount' => 'nullable|numeric',
+            'paid_amount' => 'nullable|numeric',
+            'current_month' => 'nullable|integer|min:1',
             'collateral' => 'nullable|string|max:255',
             'repayment_schedule' => 'nullable|string|max:255',
             'late_payment_charge' => 'nullable|numeric',

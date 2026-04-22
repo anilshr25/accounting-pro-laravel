@@ -5,6 +5,9 @@ namespace App\Services\Tenant\BankAccount\Loan;
 use App\Models\Tenant\BankAccount\Loan\Loan;
 use App\Http\Resources\Tenant\BankAccount\Loan\LoanResource;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use App\Mail\LoanReminderMail;
+use Illuminate\Support\Facades\Mail;
 
 class LoanService
 {
@@ -13,6 +16,54 @@ class LoanService
     public function __construct(Loan $loan)
     {
         $this->loan = $loan;
+    }
+
+    public function payLoan($id, $amount)
+    {
+        DB::beginTransaction();
+
+        try {
+            $loan = $this->loan->find($id);
+
+            if (!$loan) return false;
+
+            if ($loan->status === 'closed') {
+                return [
+                    'error' => true,
+                    'message' => 'Loan is already closed. Payment not allowed.'
+                ];
+            }
+
+            if ($amount > $loan->remaining_amount) {
+                return [
+                    'error' => true,
+                    'message' => 'Payment exceeds remaining amount.'
+                ];
+            }
+
+            $loan->paid_amount += $amount;
+            $loan->remaining_amount -= $amount;
+            $loan->last_paid_date = now();
+
+            if ($loan->remaining_amount <= 0) {
+                $loan->remaining_amount = 0;
+                $loan->status = 'closed';
+            } else {
+                $loan->next_due_date = Carbon::parse($loan->next_due_date)
+                    ->addMonthNoOverflow();
+
+                $loan->current_month += 1;
+            }
+
+            $loan->save();
+
+            DB::commit();
+
+            return $loan;
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            return false;
+        }
     }
 
     private function fields()
@@ -29,6 +80,10 @@ class LoanService
             'emi_amount',
             'total_amount',
             'remaining_amount',
+            'paid_amount',
+            'current_month',
+            'next_due_date',
+            'last_paid_date',
             'collateral',
             'repayment_schedule',
             'late_payment_charge',
@@ -99,6 +154,12 @@ class LoanService
             $data['total_amount'] = $calc['total_amount'];
             $data['remaining_amount'] = $calc['total_amount'];
 
+            $data['paid_amount'] = 0;
+            $data['current_month'] = 1;
+
+            $data['next_due_date'] = isset($data['start_date'])
+                ? Carbon::parse($data['start_date'])->addMonth()
+                : null;
             $loan = $this->loan->create($data);
 
             DB::commit();

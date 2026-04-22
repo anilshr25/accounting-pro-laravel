@@ -24,6 +24,7 @@ class SchemeResource extends JsonResource
             'image' => $this->image
                 ? url($this->image)
                 : null,
+            'balance_left' => max(0, (float)$this->issued_amount - ($this->total_paid ?? 0)),
         ];
     }
 }

@@ -23,10 +23,27 @@ class SchemePaymentController extends Controller
 
     public function store(SchemePaymentRequest $request)
     {
-        $schemepayment = $this->schemepayment->store($request->validated());
-        if ($schemepayment)
-            return response(['status' => 'OK'], 200);
-        return response(['status' => 'ERROR'], 500);
+        $result = $this->schemepayment->store($request->validated());
+
+        if (!$result) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Payment failed'
+            ], 500);
+        }
+
+        if (isset($result['success']) && $result['success'] === false) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => $result['message'] ?? 'Payment not allowed'
+            ], 422);
+        }
+
+        return response()->json([
+            'status' => 'OK',
+            'message' => 'Payment created successfully',
+            'data' => $result['data'] ?? $result
+        ], 200);
     }
 
     public function show($id)

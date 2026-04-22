@@ -11,7 +11,6 @@ class SchemePaymentResource extends JsonResource
         return [
             'id' => $this->id,
             'scheme_id' => $this->scheme_id,
-            'scheme_type' => $this->scheme->scheme_type,
             'date' => $this->date?->format('Y-m-d'),
             'miti' => $this->miti,
             'amount' => $this->amount,

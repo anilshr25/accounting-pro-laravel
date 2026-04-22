@@ -16,6 +16,7 @@ class SchemeService
     {
         $scheme = $this->scheme
             ->with('supplier')
+            ->withSum('payments as total_paid', 'amount')
             ->when($request->filled('supplier_id'), function ($query) use ($request) {
                 $query->where('supplier_id', $request->supplier_id);
             })

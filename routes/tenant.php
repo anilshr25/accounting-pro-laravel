@@ -243,4 +243,5 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->get('loan/{id}', [LoanController::class, 'show']);
     $route->put('loan/{id}', [LoanController::class, 'update']);
     $route->delete('loan/{id}', [LoanController::class, 'destroy']);
+    $route->post('loan/{id}/pay', [LoanController::class, 'payLoan']);
 });

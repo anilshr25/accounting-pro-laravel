@@ -6,6 +6,7 @@ use App\Services\Traits\Auditable;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Tenant\Supplier\Supplier;
+use App\Models\Tenant\Scheme\Payment\SchemePayment;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -29,10 +30,16 @@ class Scheme extends Model
     protected $casts = [
         'start_date' => 'datetime',
         'end_date' => 'datetime',
+        'issued_amount' => 'float',
     ];
 
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(SchemePayment::class, 'scheme_id');
     }
 }
