@@ -10,11 +10,11 @@ class LoanReminderMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $loan;
+    public $payment;
 
-    public function __construct($loan)
+    public function __construct($payment)
     {
-        $this->loan = $loan;
+        $this->payment = $payment;
     }
 
     public function build()
@@ -22,7 +22,8 @@ class LoanReminderMail extends Mailable
         return $this->subject('Loan Payment Reminder')
             ->view('emails.loan_reminder')
             ->with([
-                'loan' => $this->loan
+                'payment' => $this->payment,
+                'loan' => $this->payment->loan
             ]);
     }
 }

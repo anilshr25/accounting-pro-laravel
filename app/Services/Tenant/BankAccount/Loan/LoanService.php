@@ -3,6 +3,7 @@
 namespace App\Services\Tenant\BankAccount\Loan;
 
 use App\Models\Tenant\BankAccount\Loan\Loan;
+use App\Models\Tenant\BankAccount\Loan\Payment\LoanPayment;
 use App\Http\Resources\Tenant\BankAccount\Loan\LoanResource;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -17,53 +18,6 @@ class LoanService
         $this->loan = $loan;
     }
 
-    public function payLoan($id, $amount)
-    {
-        DB::beginTransaction();
-
-        try {
-            $loan = $this->loan->find($id);
-
-            if (!$loan) return false;
-
-            if ($loan->status === 'closed') {
-                return [
-                    'error' => true,
-                    'message' => 'Loan is already closed. Payment not allowed.'
-                ];
-            }
-
-            if ($amount > $loan->remaining_amount) {
-                return [
-                    'error' => true,
-                    'message' => 'Payment exceeds remaining amount.'
-                ];
-            }
-
-            $loan->paid_amount += $amount;
-            $loan->remaining_amount -= $amount;
-            $loan->last_paid_date = now();
-
-            if ($loan->remaining_amount <= 0) {
-                $loan->remaining_amount = 0;
-                $loan->status = 'closed';
-            } else {
-                $loan->next_due_date = Carbon::parse($loan->next_due_date)
-                    ->addMonthNoOverflow();
-
-                $loan->current_month += 1;
-            }
-
-            $loan->save();
-
-            DB::commit();
-
-            return $loan;
-        } catch (\Exception $ex) {
-            DB::rollBack();
-            return false;
-        }
-    }
 
     private function fields()
     {
@@ -74,18 +28,13 @@ class LoanService
             'principal_amount',
             'premium_rate',
             'base_rate',
-            'duration_months',
+            'duration',
+            'payment_type',
             'loan_type',
             'emi_amount',
             'total_amount',
             'remaining_amount',
-            'paid_amount',
-            'current_month',
-            'next_due_date',
-            'last_paid_date',
             'collateral',
-            'repayment_schedule',
-            'late_payment_charge',
             'start_date',
             'start_miti',
             'end_date',
@@ -95,24 +44,19 @@ class LoanService
         ];
     }
 
-    private function calculateLoan($principal, $annualRate, $months)
+    private function calculateLoan($principal, $base_rate, $premium_rate, $months)
     {
+        $annualRate = $base_rate + $premium_rate;
         $monthlyRate = ($annualRate / 12) / 100;
 
-        if ($monthlyRate == 0) {
-            $emi = $principal / $months;
-        } else {
-            $emi = ($principal * $monthlyRate * pow(1 + $monthlyRate, $months))
-                / (pow(1 + $monthlyRate, $months) - 1);
-        }
-
-        $totalAmount = $emi * $months;
-        $totalInterest = $totalAmount - $principal;
+        $emi = $monthlyRate == 0
+            ? $principal / $months
+            : ($principal * $monthlyRate * pow(1 + $monthlyRate, $months))
+            / (pow(1 + $monthlyRate, $months) - 1);
 
         return [
             'emi' => round($emi, 2),
-            'total_amount' => round($totalAmount, 2),
-            'total_interest' => round($totalInterest, 2),
+            'total_amount' => round($emi * $months, 2),
         ];
     }
 
@@ -145,20 +89,15 @@ class LoanService
         try {
             $calc = $this->calculateLoan(
                 $data['principal_amount'],
+                $data['base_rate'],
                 $data['premium_rate'],
-                $data['duration_months']
+                $data['duration']
             );
 
             $data['emi_amount'] = $calc['emi'];
             $data['total_amount'] = $calc['total_amount'];
             $data['remaining_amount'] = $calc['total_amount'];
 
-            $data['paid_amount'] = 0;
-            $data['current_month'] = 1;
-
-            $data['next_due_date'] = isset($data['start_date'])
-                ? Carbon::parse($data['start_date'])->addMonth()
-                : null;
             $loan = $this->loan->create($data);
 
             DB::commit();
@@ -166,23 +105,16 @@ class LoanService
             return $loan;
         } catch (QueryException $ex) {
             DB::rollBack();
-            if ($ex->errorInfo[1] == 1062) {
-                return [
-                    'error' => true,
-                    'message' => 'Loan number already exists. Please use a different loan number.'
-                ];
-            }
-
             return [
                 'error' => true,
-                'message' => 'Database error occurred.'
+                'message' => $ex->getMessage(),
             ];
         } catch (\Exception $ex) {
             DB::rollBack();
 
             return [
                 'error' => true,
-                'message' => 'Something went wrong.'
+                'message' => 'Something went wrong'
             ];
         }
     }
@@ -200,13 +132,6 @@ class LoanService
         return $resource ? new LoanResource($loan) : $loan;
     }
 
-    public function show($id)
-    {
-        $loan = $this->find($id);
-
-        return $loan ? new LoanResource($loan) : null;
-    }
-
     public function update($id, $data)
     {
         DB::beginTransaction();
@@ -219,19 +144,21 @@ class LoanService
             }
 
             $principal = $data['principal_amount'] ?? $loan->principal_amount;
-            $rate = $data['premium_rate'] ?? $loan->premium_rate;
-            $months = $data['duration_months'] ?? $loan->duration_months;
+            $baseRate = $data['base_rate'] ?? $loan->base_rate;
+            $premiumRate = $data['premium_rate'] ?? $loan->premium_rate;
+            $months = $data['duration'] ?? $loan->duration;
 
             if (
                 isset($data['principal_amount']) ||
+                isset($data['base_rate']) ||
                 isset($data['premium_rate']) ||
-                isset($data['duration_months'])
+                isset($data['duration'])
             ) {
                 if ($months <= 0) {
                     throw new \Exception('Duration must be greater than 0');
                 }
 
-                $calc = $this->calculateLoan($principal, $rate, $months);
+                $calc = $this->calculateLoan($principal, $baseRate, $premiumRate, $months);
 
                 $data['emi_amount'] = $calc['emi'];
                 $data['total_amount'] = $calc['total_amount'];

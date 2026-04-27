@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Tenant\BankAccount\BankAccount;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Tenant\BankAccount\Loan\Payment\LoanPayment;
 
 class Loan extends Model
 {
@@ -19,18 +20,13 @@ class Loan extends Model
         'principal_amount',
         'premium_rate',
         'base_rate',
-        'duration_months',
+        'duration',
         'loan_type',
         'emi_amount',
         'total_amount',
         'remaining_amount',
-        'paid_amount',
-        'current_month',
-        'last_paid_date',
-        'next_due_date',
+        'payment_type',
         'collateral',
-        'repayment_schedule',
-        'late_payment_charge',
         'start_date',
         'start_miti',
         'end_date',
@@ -39,14 +35,17 @@ class Loan extends Model
         'remarks',
     ];
     protected $casts = [
-        'start_date' => 'datetime',
-        'end_date' => 'datetime',
-        'last_paid_date' => 'datetime',
-        'next_due_date' => 'datetime',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     public function bank_account()
     {
         return $this->belongsTo(BankAccount::class, 'bank_account_id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(LoanPayment::class, 'loan_id');
     }
 }

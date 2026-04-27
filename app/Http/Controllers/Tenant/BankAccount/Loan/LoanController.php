@@ -42,7 +42,6 @@ class LoanController extends Controller
         return response([
             'status' => 'OK',
             'message' => 'Loan created successfully',
-            'data' => $loan
         ], 201);
     }
 
@@ -65,34 +64,5 @@ class LoanController extends Controller
         if ($this->loan->delete($id))
             return response(['status' => 'OK'], 200);
         return response(['status' => 'ERROR'], 500);
-    }
-
-    public function payLoan(Request $request, $id)
-    {
-        $request->validate([
-            'amount' => 'required|numeric|min:1',
-        ]);
-
-        $loan = $this->loan->payLoan($id, $request->amount);
-
-        if (!$loan) {
-            return response([
-                'status' => 'ERROR',
-                'message' => 'Loan not found'
-            ], 404);
-        }
-
-        if (is_array($loan) && isset($loan['error']) && $loan['error'] === true) {
-            return response([
-                'status' => 'ERROR',
-                'message' => $loan['message']
-            ], 400);
-        }
-
-        return response([
-            'status' => 'OK',
-            'message' => 'Payment successful',
-            'data' => $loan
-        ], 200);
     }
 }

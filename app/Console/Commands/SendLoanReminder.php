@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\LoanReminderMail;
-use App\Models\Tenant\BankAccount\Loan\Loan;
+use App\Models\Tenant\BankAccount\Loan\Payment\LoanPayment;
 
 class SendLoanReminder extends Command
 {
@@ -16,8 +16,7 @@ class SendLoanReminder extends Command
 
     public function handle()
     {
-        $today = Carbon::today();
-        $targetDate = $today->copy()->addDays(3);
+        $targetDate = Carbon::today()->addDays(3)->toDateString();
 
         $tenants = DB::table('tenants')->get();
 
@@ -35,11 +34,21 @@ class SendLoanReminder extends Command
             DB::purge('mysql');
             DB::reconnect('mysql');
 
-            $loans = Loan::whereDate('next_due_date', $targetDate)
-                ->where('status', 'active')
+            $payments = LoanPayment::with('loan')
+                ->whereDate('due_date', $targetDate)
+                ->whereNull('paid_date')
                 ->get();
 
-            foreach ($loans as $loan) {
+            if ($payments->isEmpty()) {
+                $this->info("No payments found for {$dbName}");
+                continue;
+            }
+
+            foreach ($payments as $payment) {
+
+                if ($payment->paid_date) {
+                    continue;
+                }
 
                 $email = config('loan.reminder_email') ?? config('mail.from.address');
 
@@ -48,9 +57,17 @@ class SendLoanReminder extends Command
                     continue;
                 }
 
-                Mail::to($email)->send(new LoanReminderMail($loan));
+                try {
+                    Mail::to($email)->send(new LoanReminderMail($payment));
 
-                $this->info("Tenant {$dbName} - Loan ID {$loan->id} sent to {$email}");
+                    $this->info(
+                        "Tenant {$dbName} - Payment ID {$payment->id} sent to {$email}"
+                    );
+                } catch (\Exception $e) {
+                    $this->error(
+                        "Mail failed for Payment ID {$payment->id}: " . $e->getMessage()
+                    );
+                }
             }
         }
 

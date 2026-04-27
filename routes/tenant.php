@@ -35,6 +35,7 @@ use App\Http\Controllers\Tenant\Salary\SalaryController;
 use App\Http\Controllers\Tenant\Scheme\SchemeController;
 use App\Http\Controllers\Tenant\Scheme\Payment\SchemePaymentController;
 use App\Http\Controllers\Tenant\BankAccount\Loan\LoanController;
+use App\Http\Controllers\Tenant\BankAccount\Loan\Payment\LoanPaymentController;
 
 
 /*
@@ -244,4 +245,11 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->put('loan/{id}', [LoanController::class, 'update']);
     $route->delete('loan/{id}', [LoanController::class, 'destroy']);
     $route->post('loan/{id}/pay', [LoanController::class, 'payLoan']);
+
+    $route->get('loan-payment', [LoanPaymentController::class, 'index']);
+    $route->post('loan-payment', [LoanPaymentController::class, 'store']);
+    $route->get('loan-payment/{id}', [LoanPaymentController::class, 'show']);
+    $route->put('loan-payment/{id}', [LoanPaymentController::class, 'update']);
+    $route->delete('loan-payment/{id}', [LoanPaymentController::class, 'destroy']);
+    $route->post('loan-payment/{id}/pay', [LoanPaymentController::class, 'payLoan']);
 });
