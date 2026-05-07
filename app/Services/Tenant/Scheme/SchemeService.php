@@ -81,7 +81,7 @@ class SchemeService
 
     public function find($id, $resource = false)
     {
-        $scheme = $this->scheme->with('supplier')->find($id);
+        $scheme = $this->scheme->with('supplier')->withSum('payments as total_paid', 'amount')->find($id);
         if (!$scheme) {
             return null;
         }
