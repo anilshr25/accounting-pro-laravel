@@ -39,6 +39,22 @@ class LoanPaymentService
     {
         return $this->model
             ->when($request->filled('loan_id'), fn($q) => $q->where('loan_id', $request->loan_id))
+            ->when(
+                $request->filled('due_date'),
+                fn($q) => $q->whereDate('due_date', $request->due_date)
+            )
+            ->when(
+                $request->filled('paid_miti'),
+                fn($q) => $q->where('paid_miti', $request->paid_miti)
+            )
+            ->when(
+                $request->filled('paid_date'),
+                fn($q) => $q->whereDate('paid_date', $request->paid_date)
+            )
+            ->when(
+                $request->filled('status'),
+                fn($q) => $q->where('status', $request->status)
+            )
             ->latest()
             ->paginate($request->limit ?? $limit);
     }

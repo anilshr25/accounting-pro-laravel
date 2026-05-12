@@ -30,6 +30,7 @@ class LoanPaymentRequest extends FormRequest
                 : 'nullable|date',
 
             'paid_date' => 'nullable|date',
+            'paid_miti' => 'nullable|string',
 
             'late_payment_charge' => 'nullable|numeric|min:0',
 

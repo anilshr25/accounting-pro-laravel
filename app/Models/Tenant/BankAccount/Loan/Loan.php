@@ -48,4 +48,10 @@ class Loan extends Model
     {
         return $this->hasMany(LoanPayment::class, 'loan_id');
     }
+
+    public function nextPayment()
+    {
+        return $this->hasOne(LoanPayment::class, 'loan_id')
+            ->orderBy('due_date', 'asc');
+    }
 }

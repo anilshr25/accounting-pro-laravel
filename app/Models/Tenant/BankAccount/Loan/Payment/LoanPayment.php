@@ -18,6 +18,7 @@ class LoanPayment extends Model
         'amount',
         'due_date',
         'paid_date',
+        'paid_miti',
         'late_payment_charge',
         'status'
     ];

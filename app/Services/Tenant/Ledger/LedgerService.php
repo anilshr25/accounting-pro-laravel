@@ -175,52 +175,55 @@ class LedgerService
     public static function postPayment($payment)
     {
         DB::transaction(function () use ($payment) {
-            // Prevent double posting
-            if ($payment->is_posted) {
-                throw new \Exception('Payment already posted to ledger.');
-            }
 
-            // Get last balance for this party
-            $lastBalance = Ledger::where('party_type', $payment->party_type)
-                ->where('party_id', $payment->party_id)
-                ->latest('date')
-                ->latest('id')
-                ->value('balance');
+            $ledger = Ledger::where('reference_type', 'payment')
+                ->where('reference_id', $payment->id)
+                ->first();
 
             $debit = 0;
             $credit = 0;
 
-            // Accounting logic
             if ($payment->party_type === 'customer') {
                 $debit = $payment->amount;
-                $openingBalance = $payment->party?->credit_balance ?? 0;
-                $baseBalance = $lastBalance ?? $openingBalance;
-                $newBalance = $baseBalance - $debit;
             } elseif ($payment->party_type === 'supplier') {
                 $credit = $payment->amount;
-                $openingBalance = $payment->party?->opening_balance ?? 0;
-                $baseBalance = $lastBalance ?? $openingBalance;
-                $newBalance = $baseBalance - $credit;
-            } else {
-                throw new \Exception('Unsupported party type');
             }
 
-            // Create ledger entry
-            $ledger = new Ledger([
+            $lastBalance = Ledger::where('party_type', $payment->party_type)
+                ->where('party_id', $payment->party_id)
+                ->where('id', '!=', optional($ledger)->id)
+                ->latest('date')
+                ->latest('id')
+                ->value('balance');
+
+            $baseBalance = $lastBalance ?? ($payment->party?->credit_balance ?? 0);
+
+            $newBalance = $payment->party_type === 'customer'
+                ? $baseBalance - $debit
+                : $baseBalance - $credit;
+
+            $data = [
                 'date' => $payment->date,
+                'party_type' => $payment->party_type,
+                'party_id' => $payment->party_id,
                 'debit' => $debit,
                 'credit' => $credit,
                 'balance' => $newBalance,
                 'remarks' => 'Payment',
-            ]);
+            ];
 
-            $ledger->party()->associate($payment->party);
-            $ledger->reference()->associate($payment);
-            $ledger->save();
+            if ($ledger) {
+                $ledger->update($data);
+            } else {
+                $ledger = new Ledger($data);
+                $ledger->reference()->associate($payment);
+                $ledger->save();
+            }
 
             $payment->update(['is_posted' => true]);
         });
     }
+
     public static function postCheaque($cheque)
     {
         DB::transaction(function () use ($cheque) {

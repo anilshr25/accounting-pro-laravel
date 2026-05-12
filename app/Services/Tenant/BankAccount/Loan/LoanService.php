@@ -64,9 +64,14 @@ class LoanService
     {
         $loan = $this->loan
             ->select($this->fields())
+            ->with('nextPayment:id,loan_id,due_date')
             ->when(
                 $request->filled('loan_number'),
                 fn($q) => $q->where('loan_number', $request->loan_number)
+            )
+            ->when(
+                $request->filled('bank_account_id'),
+                fn($q) => $q->where('bank_account_id', $request->bank_account_id)
             )
             ->when(
                 $request->filled('status'),
@@ -75,6 +80,22 @@ class LoanService
             ->when(
                 $request->filled('loan_type'),
                 fn($q) => $q->where('loan_type', $request->loan_type)
+            )
+            ->when(
+                $request->filled('start_date'),
+                fn($q) => $q->whereDate('start_date', $request->start_date)
+            )
+            ->when(
+                $request->filled('end_date'),
+                fn($q) => $q->whereDate('end_date', $request->end_date)
+            )
+            ->when(
+                $request->filled('start_miti'),
+                fn($q) => $q->where('start_miti', $request->start_miti)
+            )
+            ->when(
+                $request->filled('end_miti'),
+                fn($q) => $q->where('end_miti', $request->end_miti)
             )
             ->latest()
             ->paginate($request->limit ?? $limit);
@@ -123,6 +144,7 @@ class LoanService
     {
         $loan = $this->loan
             ->select($this->fields())
+            ->with('nextPayment:id,loan_id,due_date')
             ->find($id);
 
         if (!$loan) {

@@ -14,6 +14,7 @@ class LoanPaymentResource extends JsonResource
             'amount' => $this->amount,
             'due_date' => $this->due_date?->format('Y-m-d'),
             'paid_date' => $this->paid_date?->format('Y-m-d'),
+            'paid_miti' => $this->paid_miti,
             'late_payment_charge' => $this->late_payment_charge,
             'status' => $this->status,
         ];
