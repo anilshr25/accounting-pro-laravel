@@ -27,10 +27,18 @@ class LoanPaymentService
             ->where('status', 'paid')
             ->sum('amount');
 
-        $loan->remaining_amount = max(
+        $remaining = max(
             0,
             $loan->total_amount - $paidTotal
         );
+
+        $loan->remaining_amount = $remaining;
+
+        if ($remaining <= 0) {
+            $loan->status = 'closed';
+        } else {
+            $loan->status = 'active';
+        }
 
         $loan->save();
     }
@@ -114,7 +122,7 @@ class LoanPaymentService
 
             return [
                 'error' => true,
-                'message' => 'Failed to create payment',
+                'message' => dd($e->getMessage()),
             ];
         }
     }
@@ -130,17 +138,11 @@ class LoanPaymentService
                 return null;
             }
 
-            $oldStatus = $payment->status;
+            $loanId = $payment->loan_id;
 
             $payment->update($data);
 
-            if (
-                isset($data['status']) &&
-                $data['status'] === 'paid' &&
-                $oldStatus !== 'paid'
-            ) {
-                $this->updateLoanRemainingAmount($payment->loan_id);
-            }
+            $this->updateLoanRemainingAmount($loanId);
 
             DB::commit();
 
