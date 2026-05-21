@@ -29,6 +29,13 @@ use App\Http\Controllers\Tenant\Dashboard\DashboardController;
 use App\Http\Controllers\Tenant\Product\ProductController;
 use App\Http\Controllers\Tenant\Procurement\ProcurementController;
 use App\Http\Controllers\Tenant\Procurement\Item\ProcurementItemController;
+use App\Http\Controllers\Tenant\Employee\EmployeeController;
+use App\Http\Controllers\Tenant\Attendance\AttendanceController;
+use App\Http\Controllers\Tenant\Salary\SalaryController;
+use App\Http\Controllers\Tenant\Scheme\SchemeController;
+use App\Http\Controllers\Tenant\Scheme\Payment\SchemePaymentController;
+use App\Http\Controllers\Tenant\BankAccount\Loan\LoanController;
+use App\Http\Controllers\Tenant\BankAccount\Loan\Payment\LoanPaymentController;
 
 
 /*
@@ -197,7 +204,52 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->delete('procurement-item/{id}', [ProcurementItemController::class, 'destroy']);
 
     Route::get('dashboard', [DashboardController::class, 'index']);
+    Route::get('/dashboard/graph', [DashboardController::class, 'graph']);
 
     $route->get('ledger', [LedgerController::class, 'index']);
     Route::get('/ledger/export/pdf', [LedgerController::class, 'exportPdf']);
+
+    $route->get('employee', [EmployeeController::class, 'index']);
+    $route->post('employee', [EmployeeController::class, 'store']);
+    $route->get('employee/{id}', [EmployeeController::class, 'show']);
+    $route->put('employee/{id}', [EmployeeController::class, 'update']);
+    $route->delete('employee/{id}', [EmployeeController::class, 'destroy']);
+
+    $route->get('attendance', [AttendanceController::class, 'index']);
+    $route->post('attendance', [AttendanceController::class, 'store']);
+    $route->get('attendance/{id}', [AttendanceController::class, 'show']);
+    $route->put('attendance/{id}', [AttendanceController::class, 'update']);
+    $route->delete('attendance/{id}', [AttendanceController::class, 'destroy']);
+
+    $route->get('salary', [SalaryController::class, 'index']);
+    $route->post('salary', [SalaryController::class, 'store']);
+    $route->get('salary/{id}', [SalaryController::class, 'show']);
+    $route->put('salary/{id}', [SalaryController::class, 'update']);
+    $route->delete('salary/{id}', [SalaryController::class, 'destroy']);
+
+    $route->get('scheme', [SchemeController::class, 'index']);
+    $route->post('scheme', [SchemeController::class, 'store']);
+    $route->get('scheme/{id}', [SchemeController::class, 'show']);
+    $route->put('scheme/{id}', [SchemeController::class, 'update']);
+    $route->delete('scheme/{id}', [SchemeController::class, 'destroy']);
+
+    $route->get('scheme-payment', [SchemePaymentController::class, 'index']);
+    $route->post('scheme-payment', [SchemePaymentController::class, 'store']);
+    $route->get('scheme-payment/{id}', [SchemePaymentController::class, 'show']);
+    $route->put('scheme-payment/{id}', [SchemePaymentController::class, 'update']);
+    $route->delete('scheme-payment/{id}', [SchemePaymentController::class, 'destroy']);
+
+    $route->get('loan', [LoanController::class, 'index']);
+    $route->post('loan', [LoanController::class, 'store']);
+    $route->get('loan/{id}', [LoanController::class, 'show']);
+    $route->put('loan/{id}', [LoanController::class, 'update']);
+    $route->delete('loan/{id}', [LoanController::class, 'destroy']);
+    $route->post('loan/{id}/pay', [LoanController::class, 'payLoan']);
+
+    $route->get('loan-payment', [LoanPaymentController::class, 'index']);
+    $route->post('loan-payment', [LoanPaymentController::class, 'store']);
+    $route->get('loan-payment/{id}', [LoanPaymentController::class, 'show']);
+    $route->put('loan-payment/{id}', [LoanPaymentController::class, 'update']);
+    $route->delete('loan-payment/{id}', [LoanPaymentController::class, 'destroy']);
+    $route->post('loan-payment/{id}/pay', [LoanPaymentController::class, 'payLoan']);
 });

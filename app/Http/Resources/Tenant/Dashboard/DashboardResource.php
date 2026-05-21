@@ -8,6 +8,21 @@ class DashboardResource extends JsonResource
 {
     public function toArray($request)
     {
+
+        if (isset($this['graph'])) {
+            return [
+                'meta' => [
+                    'type' => $this['filter_type'],
+                    'start_date' => $this['start_date'],
+                    'end_date' => $this['end_date'],
+                ],
+
+                'labels' => collect($this['graph'])->pluck('label'),
+                'sales' => collect($this['graph'])->pluck('sales'),
+                'purchases' => collect($this['graph'])->pluck('purchases'),
+            ];
+        }
+
         return [
             'summary' => [
                 'total_sales'        => number_format($this['total_sales'] ?? 0, 3, '.', ''),

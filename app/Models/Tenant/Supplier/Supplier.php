@@ -21,6 +21,7 @@ class Supplier extends Model
         'opening_balance',
         'closing_balance',
         'pan',
+        'payment_terms',
     ];
 
     protected $appends = ['closing_balance'];
@@ -33,7 +34,7 @@ class Supplier extends Model
     public function getClosingBalanceAttribute()
 {
     $lastLedger = $this->ledgers()
-        ->whereNull('deleted_at')   
+        ->whereNull('deleted_at')
         ->latest('date')
         ->latest('id')
         ->first();

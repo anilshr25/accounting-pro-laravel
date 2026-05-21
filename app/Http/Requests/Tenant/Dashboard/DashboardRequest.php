@@ -14,7 +14,15 @@ class DashboardRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'date' => 'nullable|date',
+            'type' => 'nullable|in:daily,monthly,yearly,custom',
+
+            'date' => 'required_if:type,daily|date',
+
+            'month' => 'required_if:type,monthly|integer|min:1|max:12',
+            'year'  => 'nullable|integer',
+
+            'start_date' => 'required_if:type,custom|date',
+            'end_date'   => 'required_if:type,custom|date|after_or_equal:start_date',
         ];
     }
 }

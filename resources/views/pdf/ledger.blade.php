@@ -11,11 +11,53 @@
 
         h2 {
             text-align: center;
+            margin-bottom: 2px;
+        }
+
+        .company-name {
+            text-align: center;
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+
+        .info-table {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .info-table td {
+            border: none;
+            padding: 2px 0;
+            vertical-align: top;
+        }
+
+        .left {
+            text-align: left;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .closing {
+            width: 100%;
+            margin-top: 5px;
+            margin-bottom: 10px;
+        }
+
+        .closing td {
+            border: none;
+        }
+
+        hr {
+            margin: 10px 0;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed;
         }
 
         th,
@@ -23,13 +65,39 @@
             border: 1px solid #000;
             padding: 6px;
             text-align: center;
+            word-wrap: break-word;
         }
 
         th {
             background: #f2f2f2;
         }
 
-        .text-left {
+        .sn {
+            width: 40px;
+        }
+
+        .date {
+            width: 90px;
+        }
+
+        .miti {
+            width: 90px;
+        }
+
+        .status {
+            width: 120px;
+        }
+
+        .amt {
+            width: 80px;
+        }
+
+        .balance {
+            width: 100px;
+        }
+
+        .remark {
+            width: auto;
             text-align: left;
         }
     </style>
@@ -39,44 +107,79 @@
 
     <h2>Ledger Report</h2>
 
-    <p><strong>Name:</strong> {{ $party->name ?? '-' }}</p>
-    <p><strong>Email:</strong> {{ $party->email ?? '-' }}</p>
-    <p><strong>Mobile:</strong> {{ $party->phone ?? '-' }}</p>
-    <p><strong>Closing Balance:</strong>
-        @if ($ledgers->last()?->balance >= 0)
-            Cr. {{ number_format($ledgers->first()->balance, 2) }}
-        @else
-            Dr. {{ number_format(abs($ledgers->first()->balance), 2) }}
-        @endif
-    </p>
+    <div class="company-name">
+        {{ $party->name ?? '-' }}
+    </div>
 
-    @if ($dateFrom || $dateTo)
-        <p>
-            <strong>Period:</strong>
-            {{ $dateFrom ?? 'Start' }} to {{ $dateTo ?? 'End' }}
-        </p>
-    @endif
+    <table class="info-table">
+        <tr>
+            <td class="left">
+                <strong>Email:</strong> {{ $party->email ?? '-' }}<br>
+                <strong>Mobile:</strong> {{ $party->phone ?? '-' }}
+            </td>
+
+            <td class="right">
+                <strong>PAN:</strong> {{ $party->pan ?? '-' }}<br>
+                <strong>Report Date:</strong>
+                {{ $dateFrom ?? 'Start' }} to {{ $dateTo ?? 'End' }}
+            </td>
+        </tr>
+    </table>
+
+    @php
+        $closingBalance = $ledgers->first()?->balance ?? 0;
+    @endphp
+
+    <table class="closing">
+        <tr>
+            <td></td>
+            <td class="right">
+                <strong>Closing Balance:</strong>
+                @if ($closingBalance >= 0)
+                    Cr. {{ number_format($closingBalance, 2) }}
+                @else
+                    Dr. {{ number_format(abs($closingBalance), 2) }}
+                @endif
+            </td>
+        </tr>
+    </table>
 
     <hr>
 
     <table>
         <thead>
             <tr>
-                <th>SN</th>
-                <th>Date</th>
-                <th>Status/Invoice</th>
-                <th>Debit</th>
-                <th>Credit</th>
-                <th>Balance</th>
-                <th>Remark</th>
+                <th class="sn">SN</th>
+                <th class="date">Date</th>
+                <th class="miti">Miti</th>
+                <th class="status">Status/Invoice</th>
+                <th class="amt">Debit</th>
+                <th class="amt">Credit</th>
+                <th class="balance">Balance</th>
+                <th class="remark">Remark</th>
             </tr>
         </thead>
+
         <tbody>
             @foreach ($ledgers as $index => $ledger)
                 <tr>
+
                     <td>{{ $index + 1 }}</td>
 
-                    <td>{{ $ledger->date->format('Y-m-d') }}</td>
+                    <td>{{ $ledger->date?->format('Y-m-d') }}</td>
+
+                    <td>
+                        {{ match ($ledger->reference_type) {
+                            'invoice_return' => $ledger->reference?->return_miti,
+                            'purchase_return' => $ledger->reference?->return_miti,
+                            'invoice' => $ledger->reference?->invoice_miti,
+                            'purchase_order' => $ledger->reference?->received_date_miti,
+                            'cheque' => $ledger->reference?->miti,
+                            'credit' => $ledger->reference?->miti,
+                            'payment' => $ledger->reference?->miti,
+                            default => null,
+                        } ?? '-' }}
+                    </td>
 
                     <td>
                         {{ optional($ledger->reference)->sales_return_number ??
@@ -99,16 +202,17 @@
                         @endif
                     </td>
 
-                    <td class="text-left">
+                    <td class="remark">
                         {{ $ledger->remarks ?? '-' }}
                     </td>
+
                 </tr>
             @endforeach
         </tbody>
 
         <tfoot>
             <tr>
-                <td colspan="3"><strong>Total</strong></td>
+                <td colspan="4"><strong>Total</strong></td>
                 <td>{{ number_format($ledgers->sum('debit'), 2) }}</td>
                 <td>{{ number_format($ledgers->sum('credit'), 2) }}</td>
                 <td></td>

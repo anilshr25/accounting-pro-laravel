@@ -44,11 +44,10 @@ class DashboardService
         $month = null;
         $year  = null;
 
-         if ($type === 'custom') {
+        if ($type === 'custom') {
             $startDate = Carbon::parse($filters['start_date'])->startOfDay();
             $endDate   = Carbon::parse($filters['end_date'])->endOfDay();
-        }
-        elseif ($type === 'daily') {
+        } elseif ($type === 'daily') {
             $date = $filters['date'] ?? Carbon::today()->toDateString();
 
             $startDate = Carbon::parse($date)->startOfDay();
@@ -130,6 +129,74 @@ class DashboardService
             'date'  => $date,
             'month' => $month,
             'year'  => $year,
+        ];
+    }
+
+    public function getGraphData(array $filters = [])
+    {
+        $type = $filters['type'] ?? 'monthly';
+
+        if ($type === 'custom') {
+            $startDate = Carbon::parse($filters['start_date'])->startOfDay();
+            $endDate   = Carbon::parse($filters['end_date'])->endOfDay();
+        } elseif ($type === 'daily') {
+            $date = $filters['date'] ?? Carbon::today()->toDateString();
+
+            $startDate = Carbon::parse($date)->startOfDay();
+            $endDate   = Carbon::parse($date)->endOfDay();
+        } elseif ($type === 'yearly') {
+            $year = $filters['year'] ?? Carbon::now()->year;
+
+            $startDate = Carbon::parse("$year-01-01")->startOfYear();
+            $endDate   = Carbon::parse("$year-01-01")->endOfYear();
+        } else {
+            $month = $filters['month'] ?? Carbon::now()->month;
+            $year  = $filters['year'] ?? Carbon::now()->year;
+
+            $startDate = Carbon::parse("$year-$month-01")->startOfMonth();
+            $endDate   = Carbon::parse("$year-$month-01")->endOfMonth();
+
+            $type = 'monthly';
+        }
+
+        if ($type === 'yearly') {
+            $format = '%Y-%m';
+        } elseif ($type === 'daily') {
+            $format = '%H:00';
+        } else {
+            $format = '%Y-%m-%d';
+        }
+
+        $sales = $this->invoice
+            ->whereBetween('invoice_date', [$startDate, $endDate])
+            ->selectRaw("DATE_FORMAT(invoice_date, '$format') as label, SUM(total) as total")
+            ->groupBy('label')
+            ->pluck('total', 'label');
+
+        $purchases = $this->purchaseOrder
+            ->whereBetween('received_date', [$startDate, $endDate])
+            ->selectRaw("DATE_FORMAT(received_date, '$format') as label, SUM(total) as total")
+            ->groupBy('label')
+            ->pluck('total', 'label');
+
+        $labels = collect($sales->keys())
+            ->merge($purchases->keys())
+            ->unique()
+            ->sort();
+
+        $data = $labels->map(function ($label) use ($sales, $purchases) {
+            return [
+                'label' => $label,
+                'sales' => (float) ($sales[$label] ?? 0),
+                'purchases' => (float) ($purchases[$label] ?? 0),
+            ];
+        })->values();
+
+        return [
+            'filter_type' => $type,
+            'start_date' => $startDate->toDateString(),
+            'end_date' => $endDate->toDateString(),
+            'graph' => $data,
         ];
     }
 }

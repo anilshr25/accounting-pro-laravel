@@ -31,4 +31,20 @@ class DashboardController extends Controller
 
         return new DashboardResource($data);
     }
+
+    public function graph(DashboardRequest $request)
+    {
+        $filters = $request->only([
+            'type',
+            'date',
+            'month',
+            'year',
+            'start_date',
+            'end_date'
+        ]);
+
+        $data = $this->dashboardService->getGraphData($filters);
+
+        return new DashboardResource($data);
+    }
 }
