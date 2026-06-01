@@ -49,6 +49,25 @@ class LedgerService
                 $q->where('party_id', $request->party_id)
             )
             ->when(
+                $request->filled('remarks'),
+                fn($q) =>
+                $q->where('remarks', 'like', "%{$request->remarks}%")
+            )
+            ->when(
+                $request->filled('invoice_number'),
+                fn($q) =>
+                $q->where('invoice_number', $request->invoice_number)
+            )
+            ->when(
+                $request->filled('amount'),
+                fn($q) =>
+                $q->where(function ($query) use ($request) {
+                    $amount = $request->amount;
+                    $query->where('debit', $amount)
+                        ->orWhere('credit', $amount);
+                })
+            )
+            ->when(
                 $request->filled('party_info'),
                 fn($q) =>
                 $q->whereHasMorph('party', ['supplier', 'customer'], function ($query, $type) use ($request) {
@@ -70,7 +89,8 @@ class LedgerService
                 fn($q) =>
                 $q->where('reference_id', $request->reference_id)
             )
-            ->orderBy('date', 'DESC')
+            ->orderByDesc('date')
+            ->orderByDesc('id')
             ->paginate($request->integer('limit', $limit));
 
         return LedgerResource::collection($ledgers);
@@ -220,6 +240,12 @@ class LedgerService
                 $ledger->save();
             }
 
+            self::recalculateLedger(
+                $payment->party_type,
+                $payment->party_id,
+                $payment->date
+            );
+
             $payment->update(['is_posted' => true]);
         });
     }
@@ -270,6 +296,12 @@ class LedgerService
             $ledger->party()->associate($cheque->party);
             $ledger->reference()->associate($cheque);
             $ledger->save();
+
+            self::recalculateLedger(
+                $cheque->party_type,
+                $cheque->party_id,
+                $cheque->date
+            );
 
             $cheque->update(['is_posted' => true]);
         });
@@ -331,8 +363,14 @@ class LedgerService
             if ($existing) {
                 $existing->update($data);
             } else {
-                Ledger::create($data);
+                $existing = Ledger::create($data);
             }
+
+            self::recalculateLedger(
+                $partyType,
+                $partyId,
+                $data['date']
+            );
         });
     }
 
@@ -379,8 +417,14 @@ class LedgerService
             if ($existing) {
                 $existing->update($data);
             } else {
-                Ledger::create($data);
+                $existing = Ledger::create($data);
             }
+
+            self::recalculateLedger(
+                $partyType,
+                $partyId,
+                $data['date']
+            );
         });
     }
 
@@ -441,8 +485,14 @@ class LedgerService
             if ($existing) {
                 $existing->update($data);
             } else {
-                Ledger::create($data);
+                $existing = Ledger::create($data);
             }
+
+            self::recalculateLedger(
+                $partyType,
+                $partyId,
+                $data['date']
+            );
         });
     }
 
@@ -504,8 +554,14 @@ class LedgerService
             if ($existing) {
                 $existing->update($data);
             } else {
-                Ledger::create($data);
+                $existing = Ledger::create($data);
             }
+
+            self::recalculateLedger(
+                $partyType,
+                $partyId,
+                $data['date']
+            );
         });
     }
 
@@ -556,17 +612,40 @@ class LedgerService
             if ($existing) {
                 $existing->update($data);
             } else {
-                Ledger::create($data);
+                $existing = Ledger::create($data);
             }
+
+            self::recalculateLedger(
+                $partyType,
+                $partyId,
+                $data['date']
+            );
         });
     }
+
     public static function deleteCheque($chequeId)
     {
         DB::transaction(function () use ($chequeId) {
-            Ledger::query()
-                ->where('reference_type', 'cheque')
+
+            $ledger = Ledger::where('reference_type', 'cheque')
                 ->where('reference_id', $chequeId)
-                ->delete();
+                ->first();
+
+            if (!$ledger) {
+                return;
+            }
+
+            $partyType = $ledger->party_type;
+            $partyId   = $ledger->party_id;
+            $date      = $ledger->date;
+
+            $ledger->delete();
+
+            self::recalculateLedger(
+                $partyType,
+                $partyId,
+                $date
+            );
         });
     }
 
@@ -611,7 +690,6 @@ class LedgerService
             ->whereNull('deleted_at')
             ->where('party_type', $request->party_type)
             ->where('party_id', $request->party_id)
-
             ->when(
                 !empty($request->date_from),
                 fn($q) => $q->whereDate('date', '>=', $request->date_from)
@@ -620,9 +698,20 @@ class LedgerService
                 !empty($request->date_to),
                 fn($q) => $q->whereDate('date', '<=', $request->date_to)
             )
-
-            ->orderBy('date', 'desc')
-            ->orderBy('id', 'desc')
+            ->orderByDesc('date')
+            ->orderByDesc('id')
             ->get();
+    }
+
+    protected static function recalculateLedger(
+        string $partyType,
+        int $partyId,
+        string $date
+    ): void {
+        app(self::class)->adjustBalances(
+            $partyType,
+            $partyId,
+            $date
+        );
     }
 }
