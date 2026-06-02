@@ -36,6 +36,9 @@ use App\Http\Controllers\Tenant\Scheme\SchemeController;
 use App\Http\Controllers\Tenant\Scheme\Payment\SchemePaymentController;
 use App\Http\Controllers\Tenant\BankAccount\Loan\LoanController;
 use App\Http\Controllers\Tenant\BankAccount\Loan\Payment\LoanPaymentController;
+use App\Http\Controllers\Tenant\Expenses\ExpensesController;
+use App\Models\Tenant\Notification\Notification;
+use App\Http\Controllers\Tenant\Kye\KyeController;
 
 
 /*
@@ -244,12 +247,28 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->get('loan/{id}', [LoanController::class, 'show']);
     $route->put('loan/{id}', [LoanController::class, 'update']);
     $route->delete('loan/{id}', [LoanController::class, 'destroy']);
-    $route->post('loan/{id}/pay', [LoanController::class, 'payLoan']);
 
     $route->get('loan-payment', [LoanPaymentController::class, 'index']);
     $route->post('loan-payment', [LoanPaymentController::class, 'store']);
     $route->get('loan-payment/{id}', [LoanPaymentController::class, 'show']);
     $route->put('loan-payment/{id}', [LoanPaymentController::class, 'update']);
     $route->delete('loan-payment/{id}', [LoanPaymentController::class, 'destroy']);
-    $route->post('loan-payment/{id}/pay', [LoanPaymentController::class, 'payLoan']);
+
+    $route->get('expenses', [ExpensesController::class, 'index']);
+    $route->post('expenses', [ExpensesController::class, 'store']);
+    $route->get('expenses/{id}', [ExpensesController::class, 'show']);
+    $route->put('expenses/{id}', [ExpensesController::class, 'update']);
+    $route->delete('expenses/{id}', [ExpensesController::class, 'destroy']);
+
+    $route->get('kye', [KyeController::class, 'index']);
+    $route->post('kye', [KyeController::class, 'store']);
+    $route->get('kye/{id}', [KyeController::class, 'show']);
+    $route->put('kye/{id}', [KyeController::class, 'update']);
+    $route->delete('kye/{id}', [KyeController::class, 'destroy']);
+
+    Route::get('/notifications', function () {
+    return Notification::latest()->get();
 });
+});
+
+

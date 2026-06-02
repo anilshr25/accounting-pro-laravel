@@ -112,6 +112,10 @@ class LoanPaymentService
 
             $payment = $this->model->create($data);
 
+            if ($payment->status === 'paid') {
+                $this->createNextInstallment($payment);
+            }
+
             $this->updateLoanRemainingAmount($data['loan_id']);
 
             DB::commit();
@@ -140,7 +144,18 @@ class LoanPaymentService
 
             $loanId = $payment->loan_id;
 
+            if (!empty($data['paid_date'])) {
+                $data['status'] = 'paid';
+            }
+
             $payment->update($data);
+
+            $payment->refresh();
+
+            if ($payment->status === 'paid') {
+
+                $this->createNextInstallment($payment);
+            }
 
             $this->updateLoanRemainingAmount($loanId);
 
@@ -187,5 +202,45 @@ class LoanPaymentService
 
             return false;
         }
+    }
+
+    private function createNextInstallment($payment)
+    {
+        $loan = $payment->loan;
+
+        if (!$loan) {
+            return;
+        }
+
+        if ($loan->remaining_amount <= 0) {
+            return;
+        }
+
+        $monthsToAdd = match ($loan->payment_type) {
+            'monthly' => 1,
+            'quarterly' => 3,
+            'yearly' => 12,
+            default => 1,
+        };
+
+        $nextDueDate = Carbon::parse($payment->due_date)
+            ->addMonthsNoOverflow($monthsToAdd)
+            ->toDateString();
+
+        $exists = $this->model
+            ->where('loan_id', $loan->id)
+            ->whereDate('due_date', $nextDueDate)
+            ->exists();
+
+        if ($exists) {
+            return;
+        }
+
+        $this->model->create([
+            'loan_id' => $loan->id,
+            'amount' => $loan->emi_amount,
+            'due_date' => $nextDueDate,
+            'status' => 'pending',
+        ]);
     }
 }

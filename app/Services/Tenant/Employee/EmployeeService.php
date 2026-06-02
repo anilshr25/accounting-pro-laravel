@@ -4,6 +4,7 @@ namespace App\Services\Tenant\Employee;
 
 use App\Models\Tenant\Employee\Employee;
 use App\Http\Resources\Tenant\Employee\EmployeeResource;
+use Illuminate\Support\Facades\Storage;
 
 class EmployeeService
 {
@@ -27,9 +28,6 @@ class EmployeeService
             ->when($request->filled('address'), function ($query) use ($request) {
                 $query->where('address', 'like', "%{$request->address}%");
             })
-            ->when($request->filled('employment_type'), function ($query) use ($request) {
-                $query->where('employment_type', $request->employment_type);
-            })
             ->when($request->filled('designation'), function ($query) use ($request) {
                 $query->where('designation', 'like', "%{$request->designation}%");
             })
@@ -40,26 +38,24 @@ class EmployeeService
         return EmployeeResource::collection($employee);
     }
 
-    public function search($request, $limit = 10)
-    {
-        $employee = $this->employee
-            ->when($request->filled('info'), function ($query) use ($request) {
-                $query->where(function ($sub) use ($request) {
-                    $info = $request->info;
-                    $sub->where('name', 'like', "%{$info}%")
-                        ->orWhere('email', 'like', "%{$info}%")
-                        ->orWhere('phone', 'like', "%{$info}%");
-                });
-            })
-            ->orderBy('id', 'DESC')
-            ->limit($limit)
-            ->get();
-        return EmployeeResource::collection($employee);
-    }
-
     public function store($data)
     {
         try {
+            if (isset($data['image'])) {
+                $file = $data['image'];
+
+                $filename = time() . '_' . $file->getClientOriginalName();
+
+                $destinationPath = public_path('uploads/employee/');
+
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0777, true);
+                }
+
+                $file->move($destinationPath, $filename);
+
+                $data['image'] = 'uploads/employee/' . $filename;
+            }
             return $this->employee->create($data);
         } catch (\Exception $ex) {
             return false;
@@ -81,6 +77,22 @@ class EmployeeService
             $employee = $this->find($id);
             if (!$employee) {
                 return false;
+            }
+
+            if (isset($data['image'])) {
+
+                if ($employee->image && file_exists(public_path($employee->image))) {
+                    unlink(public_path($employee->image));
+                }
+
+                $file = $data['image'];
+                $filename = time() . '_' . $file->getClientOriginalName();
+
+                $destinationPath = public_path('uploads/employee/');
+
+                $file->move($destinationPath, $filename);
+
+                $data['image'] = 'uploads/employee/' . $filename;
             }
             return $employee->update($data);
         } catch (\Exception $ex) {

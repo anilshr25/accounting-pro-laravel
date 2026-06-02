@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'notification' => [
+        'url' => env('NOTIFICATION_API_URL'),
+    ],
+
 ];
