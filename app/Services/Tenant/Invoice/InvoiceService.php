@@ -24,19 +24,47 @@ class InvoiceService
             ->when($request->filled('customer_id'), function ($query) use ($request) {
                 $query->where('customer_id', $request->customer_id);
             })
-            ->when($request->filled('info'), function ($query) use ($request) {
-                $info = $request->info;
-                $query->whereHas('customer', function ($q) use ($info) {
-                    $q->where('name', 'like', "%{$info}%")
-                        ->orWhere('email', 'like', "%{$info}%")
-                        ->orWhere('phone', 'like', "%{$info}%");
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+
+                    $q->orWhere('payment_type', 'like', "%{$search}%")
+                        ->orWhere('status', 'like', "%{$search}%")
+                        ->orWhere('shift', 'like', "%{$search}%");
+
+                    if (is_numeric($search)) {
+                        $q->orWhere('total', $search)
+                            ->orWhere('sub_total', $search);
+                    }
+
+                    $q->orWhereHas('customer', function ($customer) use ($search) {
+                        $customer->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
+
+                    $q->orWhereHas('items', function ($item) use ($search) {
+                        $item->where('description', 'like', "%{$search}%");
+
+                        if (is_numeric($search)) {
+                            $item->orWhere('quantity', $search)
+                                ->orWhere('rate', $search)
+                                ->orWhere('amount', $search);
+                        }
+                    });
                 });
             })
-            ->when($request->filled('invoice_miti'), function ($query) use ($request) {
-                $query->where('invoice_miti', 'like', "%{$request->invoice_miti}%");
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('invoice_date', '>=', $request->date_from);
             })
-            ->when($request->filled('invoice_date'), function ($query) use ($request) {
-                $query->whereDate('invoice_date', $request->invoice_date);
+            ->when($request->filled('date_upto'), function ($query) use ($request) {
+                $query->whereDate('invoice_date', '<=', $request->date_upto);
+            })
+            ->when($request->filled('miti_from'), function ($query) use ($request) {
+                $query->where('invoice_miti', '>=', $request->miti_from);
+            })
+            ->when($request->filled('miti_upto'), function ($query) use ($request) {
+                $query->where('invoice_miti', '<=', $request->miti_upto);
             })
             ->when($request->filled('payment_type'), function ($query) use ($request) {
                 $query->where('payment_type', $request->payment_type);
@@ -84,7 +112,7 @@ class InvoiceService
     public function update($id, $data)
     {
         try {
-            return DB::transaction(function () use ($id, $data){
+            return DB::transaction(function () use ($id, $data) {
                 $invoice = $this->find($id);
                 if (!$invoice) {
                     return false;

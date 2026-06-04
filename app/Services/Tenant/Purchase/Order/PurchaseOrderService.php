@@ -23,20 +23,48 @@ class PurchaseOrderService
 
     public function paginate($request, $limit = 25)
     {
-        $purchase_order = $this->purchase_order
+        $purchaseOrder = $this->purchase_order
+
             ->when($request->filled('supplier_id'), function ($query) use ($request) {
                 $query->where('supplier_id', $request->supplier_id);
             })
+
             ->when($request->filled('purchase_invoice_number'), function ($query) use ($request) {
                 $query->where('purchase_invoice_number', 'like', "%{$request->purchase_invoice_number}%");
             })
-            ->when($request->filled('info'), function ($query) use ($request) {
-                $info = $request->info;
-                $query->whereHas('supplier', function ($q) use ($info) {
-                    $q->where('name', 'like', "%{$info}%")
-                        ->orWhere('email', 'like', "%{$info}%")
-                        ->orWhere('phone', 'like', "%{$info}%")
-                        ->orWhere('pan', 'like', "%{$info}%");
+
+            ->when($request->filled('search'), function ($query) use ($request) {
+
+                $search = trim($request->search);
+
+                $query->where(function ($q) use ($search) {
+
+                    $q->where('purchase_invoice_number', 'like', "%{$search}%")
+                        ->orWhere('status', 'like', "%{$search}%")
+                        ->orWhere('received_by', 'like', "%{$search}%");
+
+                    $q->orWhereHas('supplier', function ($supplier) use ($search) {
+                        $supplier->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%")
+                            ->orWhere('pan', 'like', "%{$search}%");
+                    });
+
+                    $q->orWhereHas('items', function ($item) use ($search) {
+                        $item->where('description', 'like', "%{$search}%");
+                    });
+
+                    if (is_numeric($search)) {
+
+                        $q->orWhere('total', $search)
+                            ->orWhere('sub_total', $search);
+
+                        $q->orWhereHas('items', function ($item) use ($search) {
+                            $item->where('quantity', $search)
+                                ->orWhere('rate', $search)
+                                ->orWhere('amount', $search);
+                        });
+                    }
                 });
             })
             ->when($request->filled('order_date'), function ($query) use ($request) {
@@ -57,9 +85,23 @@ class PurchaseOrderService
             ->when($request->filled('received_by'), function ($query) use ($request) {
                 $query->where('received_by', 'like', "%{$request->received_by}%");
             })
-            ->orderBy('order_date', 'DESC')
+             ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('received_date', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_upto'), function ($query) use ($request) {
+                $query->whereDate('received_date', '<=', $request->date_upto);
+            })
+            ->when($request->filled('miti_from'), function ($query) use ($request) {
+                $query->where('received_date_miti', '>=', $request->miti_from);
+            })
+            ->when($request->filled('miti_upto'), function ($query) use ($request) {
+                $query->where('received_date_miti', '<=', $request->miti_upto);
+            })
+
+            ->orderByDesc('order_date')
             ->paginate($request->limit ?? $limit);
-        return PurchaseOrderResource::collection($purchase_order);
+
+        return PurchaseOrderResource::collection($purchaseOrder);
     }
 
     public function store($data)

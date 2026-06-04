@@ -25,13 +25,28 @@ class PaymentService
             ->when($request->filled('party_id'), function ($query) use ($request) {
                 $query->where('party_id', $request->party_id);
             })
-            ->when($request->filled('party_info'), function ($query) use ($request) {
-                $info = $request->party_info;
-                $query->whereHasMorph('party', ['supplier', 'customer'], function ($q, $type) use ($info) {
-                    $q->where('name', 'like', "%{$info}%")
-                        ->orWhere('email', 'like', "%{$info}%");
-                    if ($type === 'supplier') {
-                        $q->orWhere('pan', 'like', "%{$info}%");
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->search;
+
+                $query->where(function ($q) use ($search) {
+
+                    $q->whereHasMorph('party', ['supplier', 'customer'], function ($morph, $type) use ($search) {
+
+                        $morph->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+
+                        if ($type === 'supplier') {
+                            $morph->orWhere('pan', 'like', "%{$search}%");
+                        }
+                    })
+
+                        ->orWhere('payment_method', 'like', "%{$search}%")
+                        ->orWhere('transaction_id', 'like', "%{$search}%")
+                        ->orWhere('remarks', 'like', "%{$search}%")
+                        ->orWhere('shift', 'like', "%{$search}%");
+
+                    if (is_numeric($search)) {
+                        $q->orWhere('amount', $search);
                     }
                 });
             })
@@ -53,12 +68,29 @@ class PaymentService
             ->when($request->filled('transaction_id'), function ($query) use ($request) {
                 $query->where('transaction_id', $request->transaction_id);
             })
-            ->when($request->filled('is_posted'), function ($query) use ($request) {
-                $query->where('is_posted', 'like', "%{$request->is_posted}%");
-            })
             ->when($request->filled('remarks'), function ($query) use ($request) {
                 $query->where('remarks', 'like', "%{$request->remarks}%");
             })
+            ->when(
+                $request->filled('date_from'),
+                fn($q) =>
+                $q->whereDate('date', '>=', $request->date_from)
+            )
+            ->when(
+                $request->filled('date_upto'),
+                fn($q) =>
+                $q->whereDate('date', '<=', $request->date_upto)
+            )
+            ->when(
+                $request->filled('miti_from'),
+                fn($q) =>
+                $q->where('miti', '>=', $request->miti_from)
+            )
+            ->when(
+                $request->filled('miti_upto'),
+                fn($q) =>
+                $q->where('miti', '<=', $request->miti_upto)
+            )
             ->orderBy('date', 'DESC')
             ->paginate($request->limit ?? $limit);
         return PaymentResource::collection($payment);

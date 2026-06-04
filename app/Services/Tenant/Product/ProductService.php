@@ -18,6 +18,18 @@ class ProductService
     public function paginate($request, $limit = 25)
     {
         $products = $this->product
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->orWhere('product_name', 'like', "%{$search}%")
+                        ->orWhere('unit', 'like', "%{$search}%")
+                        ->orWhere('category', 'like', "%{$search}%")
+                        ->orWhere('code', 'like', "%{$search}%");
+                    if (is_numeric($search)) {
+                        $q->orWhere('rate', $search);
+                    }
+                });
+            })
             ->when($request->filled('product_name'), function ($query) use ($request) {
                 $query->where('product_name', 'like', "%{$request->product_name}%");
             })

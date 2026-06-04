@@ -16,13 +16,19 @@ class EmployeeService
     public function paginate($request, $limit = 25)
     {
         $employee = $this->employee
-            ->when($request->filled('info'), function ($query) use ($request) {
+            ->when($request->filled('search'), function ($query) use ($request) {
                 $query->where(function ($sub) use ($request) {
-                    $info = $request->info;
+                    $info = $request->search;
                     $sub->where('first_name', 'like', "%{$info}%")
                         ->orWhere('last_name', 'like', "%{$info}%")
                         ->orWhere('email', 'like', "%{$info}%")
-                        ->orWhere('phone', 'like', "%{$info}%");
+                        ->orWhere('phone', 'like', "%{$info}%")
+                        ->orWhere('address', 'like', "%{$info}%")
+                        ->orWhere('designation', 'like', "%{$info}%")
+                        ->orWhere('pan_no', 'like', "%{$info}%")
+                        ->orWhere('license_no', 'like', "%{$info}%")
+                        ->orWhere('bank_name', 'like', "%{$info}%")
+                        ->orWhere('status', 'like', "%{$info}%");
                 });
             })
             ->when($request->filled('address'), function ($query) use ($request) {
@@ -33,6 +39,12 @@ class EmployeeService
             })
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->status);
+            })
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->where('joining_date', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_upto'), function ($query) use ($request) {
+                $query->where('joining_date', '<=', $request->date_upto);
             })
             ->paginate($request->limit ?? $limit);
         return EmployeeResource::collection($employee);

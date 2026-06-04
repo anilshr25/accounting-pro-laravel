@@ -28,6 +28,33 @@ class LedgerService
     {
         $ledgers = $this->ledger
             ->whereNull('deleted_at')
+
+            ->when($request->filled('search'), function ($query) use ($request) {
+
+                $search = $request->search;
+
+                $query->where(function ($q) use ($search) {
+
+                    $q->orWhere('remarks', 'like', "%{$search}%")
+                        ->orWhere('reference_type', 'like', "%{$search}%");
+
+                    if (is_numeric($search)) {
+                        $q->orWhere('debit', $search)
+                            ->orWhere('credit', $search)
+                            ->orWhere('balance', $search);
+                    }
+
+                    $q->orWhereHasMorph(
+                        'party',
+                        ['supplier', 'customer'],
+                        function ($party) use ($search) {
+                            $party->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%")
+                                ->orWhere('phone', 'like', "%{$search}%");
+                        }
+                    );
+                });
+            })
             ->when(
                 $request->filled('date'),
                 fn($q) =>
@@ -38,6 +65,18 @@ class LedgerService
                 fn($q) =>
                 $q->whereDate('miti', $request->miti)
             )
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('date', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_upto'), function ($query) use ($request) {
+                $query->whereDate('date', '<=', $request->date_upto);
+            })
+            ->when($request->filled('miti_from'), function ($query) use ($request) {
+                $query->where('miti', '>=', $request->miti_from);
+            })
+            ->when($request->filled('miti_upto'), function ($query) use ($request) {
+                $query->where('miti', '<=', $request->miti_upto);
+            })
             ->when(
                 $request->filled('party_type'),
                 fn($q) =>

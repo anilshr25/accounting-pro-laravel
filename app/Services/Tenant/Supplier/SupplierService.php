@@ -15,12 +15,14 @@ class SupplierService
     public function paginate($request, $limit = 25)
     {
         $supplier = $this->supplier
-            ->when($request->filled('info'), function ($query) use ($request) {
+            ->when($request->filled('search'), function ($query) use ($request) {
                 $query->where(function ($sub) use ($request) {
-                    $info = $request->info;
+                    $info = $request->search;
                     $sub->where('name', 'like', "%{$info}%")
                         ->orWhere('email', 'like', "%{$info}%")
-                        ->orWhere('phone', 'like', "%{$info}%");
+                        ->orWhere('phone', 'like', "%{$info}%")
+                        ->orWhere('address', 'like', "%{$info}%")
+                        ->orWhere('pan', 'like', "%{$info}%");
                 });
             })
             ->when($request->filled('address'), function ($query) use ($request) {

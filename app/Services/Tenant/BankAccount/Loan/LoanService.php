@@ -65,6 +65,30 @@ class LoanService
         $loan = $this->loan
             ->select($this->fields())
             ->with('nextPayment:id,loan_id,due_date')
+
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->search;
+
+                $q->where(function ($query) use ($search) {
+
+                    $query->where('loan_number', 'like', "%{$search}%")
+                        ->orWhere('status', 'like', "%{$search}%")
+                        ->orWhere('loan_type', 'like', "%{$search}%")
+                        ->orWhere('remarks', 'like', "%{$search}%")
+                        ->orWhere('duration', 'like', "%{$search}%")
+                        ->orWhere('payment_type', 'like', "%{$search}%")
+                        ->orWhere('collateral', 'like', "%{$search}%");
+
+                    if (is_numeric($search)) {
+                        $query->orWhere('total_amount', $search)
+                            ->orWhere('base_rate', $search)
+                            ->orWhere('premium_rate', $search)
+                            ->orWhere('emi_amount', $search)
+                            ->orWhere('principal_amount', $search);
+                    }
+                });
+            })
+
             ->when(
                 $request->filled('loan_number'),
                 fn($q) => $q->where('loan_number', $request->loan_number)

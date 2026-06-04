@@ -22,7 +22,11 @@ class ExpensesService
 
                 $query->where(function ($sub) use ($search) {
                     $sub->where('title', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('amount', 'like', "%{$search}%")
+                        ->orWhere('expense_type', 'like', "%{$search}%")
+                        ->orWhere('payment_method', 'like', "%{$search}%")
+                        ->orWhere('status', 'like', "%{$search}%");
                 });
             })
 
@@ -38,12 +42,19 @@ class ExpensesService
                 $query->where('status', $request->status);
             })
 
-            ->when($request->filled('from_date'), function ($query) use ($request) {
-                $query->whereDate('expense_date', '>=', $request->from_date);
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('expense_date', '>=', $request->date_from);
             })
 
-            ->when($request->filled('to_date'), function ($query) use ($request) {
-                $query->whereDate('expense_date', '<=', $request->to_date);
+            ->when($request->filled('date_upto'), function ($query) use ($request) {
+                $query->whereDate('expense_date', '<=', $request->date_upto);
+            })
+
+            ->when($request->filled('miti_from'), function ($query) use ($request) {
+                $query->where('expense_miti', '>=', $request->miti_from);
+            })
+            ->when($request->filled('miti_upto'), function ($query) use ($request) {
+                $query->where('expense_miti', '<=', $request->miti_upto);
             })
 
             ->latest()

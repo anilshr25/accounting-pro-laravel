@@ -4,6 +4,7 @@ namespace App\Services\Tenant\Invoice\Return;
 
 use App\Models\Tenant\Invoice\Return\InvoiceReturn;
 use App\Models\Tenant\Invoice\Return\Item\InvoiceReturnItem;
+use App\Http\Resources\Tenant\Invoice\Return\InvoiceReturnResource;
 use App\Services\Tenant\Ledger\LedgerService;
 use Illuminate\Support\Facades\DB;
 
@@ -22,32 +23,57 @@ class InvoiceReturnService
 
     public function paginate($request, $limit = 25)
     {
-        $query = $this->invoice_return
+        $invoice = $this->invoice_return
             ->with('items')
-            ->when(
-                $request->filled('sales_return_number'),
-                fn($q) =>
-                $q->where(
-                    'sales_return_number',
-                    'like',
-                    "%{$request->sales_return_number}%"
-                )
-            )
-            ->when($request->filled('customer_id'), fn($q) => $q->where('customer_id', $request->customer_id))
-            ->when($request->filled('info'), function ($query) use ($request) {
-                $info = $request->info;
-                $query->whereHas('customer', function ($q) use ($info) {
-                    $q->where('name', 'like', "%{$info}%")
-                        ->orWhere('email', 'like', "%{$info}%")
-                        ->orWhere('phone', 'like', "%{$info}%");
+            ->when($request->filled('customer_id'), function ($query) use ($request) {
+                $query->where('customer_id', $request->customer_id);
+            })
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+
+                    $q->orWhere('sales_return_number', 'like', "%{$search}%")
+                        ->orWhere('remarks', 'like', "%{$search}%")
+                        ->orWhere('shift', 'like', "%{$search}%");
+
+                    if (is_numeric($search)) {
+                        $q->orWhere('total', $search)
+                            ->orWhere('sub_total', $search);
+                    }
+
+                    $q->orWhereHas('customer', function ($customer) use ($search) {
+                        $customer->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
+
+                    $q->orWhereHas('items', function ($item) use ($search) {
+                        $item->where('description', 'like', "%{$search}%");
+
+                        if (is_numeric($search)) {
+                            $item->orWhere('quantity', $search)
+                                ->orWhere('rate', $search)
+                                ->orWhere('amount', $search);
+                        }
+                    });
                 });
             })
-            ->when($request->filled('return_date'), fn($q) => $q->whereDate('return_date', $request->return_date))
-            ->when($request->filled('return_miti'), fn($q) => $q->whereDate('return_miti', $request->return_miti))
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('return_date', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_upto'), function ($query) use ($request) {
+                $query->whereDate('return_date', '<=', $request->date_upto);
+            })
+            ->when($request->filled('miti_from'), function ($query) use ($request) {
+                $query->where('return_miti', '>=', $request->miti_from);
+            })
+            ->when($request->filled('miti_upto'), function ($query) use ($request) {
+                $query->where('return_miti', '<=', $request->miti_upto);
+            })
             ->orderBy('return_date', 'DESC')
             ->paginate($request->limit ?? $limit);
 
-        return $query;
+        return InvoiceReturnResource::collection($invoice);
     }
 
     public function store($data)

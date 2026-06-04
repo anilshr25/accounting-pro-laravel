@@ -16,9 +16,9 @@ class UserService
     public function paginate($request, $limit = 25)
     {
         $user = $this->user
-        ->when($request->filled('info'), function ($query) use ($request) {
+        ->when($request->filled('search'), function ($query) use ($request) {
             $query->where(function ($sub) use ($request) {
-                $info = $request->info;
+                $info = $request->search;
                 $sub->where('first_name', 'like', "%{$info}%")
                     ->orWhere('last_name', 'like', "%{$info}%")
                     ->orWhere('email', 'like', "%{$info}%")

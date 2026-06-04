@@ -19,6 +19,29 @@ class SchemePaymentService
             ->when($request->filled('scheme_id'), function ($query) use ($request) {
                 $query->where('scheme_id', $request->scheme_id);
             })
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+
+                    $q->orWhere('remarks', 'like', "%{$search}%");
+
+                    if (is_numeric($search)) {
+                        $q->orWhere('amount', $search);
+                    }
+                });
+            })
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('date', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_upto'), function ($query) use ($request) {
+                $query->whereDate('date', '<=', $request->date_upto);
+            })
+            ->when($request->filled('miti_from'), function ($query) use ($request) {
+                $query->where('miti', '>=', $request->miti_from);
+            })
+            ->when($request->filled('miti_upto'), function ($query) use ($request) {
+                $query->where('miti', '<=', $request->miti_upto);
+            })
             ->when($request->filled('date'), function ($query) use ($request) {
                 $query->where('date', $request->date);
             })

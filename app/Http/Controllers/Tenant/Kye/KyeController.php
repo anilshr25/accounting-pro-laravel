@@ -19,21 +19,7 @@ class KyeController extends Controller
 
     public function index(Request $request)
     {
-        $perPage = $request->per_page ?? 10;
-
-        $kyes = $this->service->paginate($perPage);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'KYE list retrieved successfully',
-            'data' => KyeResource::collection($kyes),
-            'meta' => [
-                'current_page' => $kyes->currentPage(),
-                'last_page' => $kyes->lastPage(),
-                'per_page' => $kyes->perPage(),
-                'total' => $kyes->total(),
-            ]
-        ]);
+        return $this->service->paginate($request, 25);
     }
 
     public function store(KyeRequest $request)
