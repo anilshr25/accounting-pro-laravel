@@ -6,6 +6,7 @@ use App\Models\Tenant\Invoice\Invoice;
 use App\Models\Tenant\Invoice\Item\InvoiceItem;
 use App\Http\Resources\Tenant\Invoice\InvoiceResource;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class InvoiceService
 {
@@ -159,5 +160,42 @@ class InvoiceService
             $item['invoice_id'] = $invoiceId;
             $this->invoiceItem->create($item);
         }
+    }
+
+    public function dateWiseSummary($request)
+    {
+        $invoices = $this->invoice
+            ->with('items')
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('invoice_date', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_upto'), function ($query) use ($request) {
+                $query->whereDate('invoice_date', '<=', $request->date_upto);
+            })
+            ->orderBy('invoice_date', 'DESC')
+            ->get()
+            ->map(function ($item) {
+                $item->invoice_date_only = $item->invoice_date
+                    ? \Carbon\Carbon::parse($item->invoice_date)->format('Y-m-d')
+                    : null;
+
+                return $item;
+            });
+
+        return $invoices
+            ->groupBy('invoice_date_only')
+            ->map(function ($group, $date) {
+
+                return [
+                    'invoice_date' => $date,
+                    'formatted_invoice_date' => Carbon::parse($date)->format('d M Y'),
+                    'invoice_miti' => Carbon::parse($group->first()->invoice_miti)->format('Y-m-d'),
+                    'invoice_count' => $group->count(),
+                    'sub_total' => number_format($group->sum('sub_total'), 2, '.', ''),
+                    'total' => number_format($group->sum('total'), 2, '.', ''),
+                    'invoices' => InvoiceResource::collection($group)->resolve(),
+                ];
+            })
+            ->values();
     }
 }

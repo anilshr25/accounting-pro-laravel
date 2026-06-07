@@ -123,6 +123,7 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->delete('daybook/{id}', [DaybookController::class, 'destroy']);
 
     $route->get('invoice', [InvoiceController::class, 'index']);
+    $route->get('invoice/date-wise-summary', [InvoiceController::class, 'dateWiseSummary']);
     $route->post('invoice', [InvoiceController::class, 'store']);
     $route->get('invoice/{id}', [InvoiceController::class, 'show']);
     $route->put('invoice/{id}', [InvoiceController::class, 'update']);
@@ -182,6 +183,7 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->delete('purchase-return-item/{id}', [PurchaseReturnItemController::class, 'destroy']);
 
     $route->get('invoice-return', [InvoiceReturnController::class, 'index']);
+      $route->get('invoice-return/date-wise-summary', [InvoiceReturnController::class, 'dateWiseSummary']);
     $route->post('invoice-return', [InvoiceReturnController::class, 'store']);
     $route->get('invoice-return/{id}', [InvoiceReturnController::class, 'show']);
     $route->put('invoice-return/{id}', [InvoiceReturnController::class, 'update']);

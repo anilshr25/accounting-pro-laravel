@@ -7,6 +7,7 @@ use App\Models\Tenant\Invoice\Return\Item\InvoiceReturnItem;
 use App\Http\Resources\Tenant\Invoice\Return\InvoiceReturnResource;
 use App\Services\Tenant\Ledger\LedgerService;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class InvoiceReturnService
 {
@@ -175,5 +176,42 @@ class InvoiceReturnService
             $item['invoice_return_id'] = $InvoiceReturnId;
             $this->InvoiceReturnItem->create($item);
         }
+    }
+
+    public function dateWiseSummary($request)
+    {
+        $invoice_returns = $this->invoice_return
+            ->with('items')
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('return_date', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_upto'), function ($query) use ($request) {
+                $query->whereDate('return_date', '<=', $request->date_upto);
+            })
+            ->orderBy('return_date', 'DESC')
+            ->get()
+            ->map(function ($item) {
+                $item->return_date_only = $item->return_date
+                    ? \Carbon\Carbon::parse($item->return_date)->format('Y-m-d')
+                    : null;
+
+                return $item;
+            });
+
+        return $invoice_returns
+            ->groupBy('return_date_only')
+            ->map(function ($group, $date) {
+
+                return [
+                    'return_date' => $date,
+                    'formatted_return_date' => Carbon::parse($date)->format('d M Y'),
+                    'return_miti' => Carbon::parse($group->first()->return_miti)->format('Y-m-d'),
+                    'invoice_count' => $group->count(),
+                    'sub_total' => number_format($group->sum('sub_total'), 2, '.', ''),
+                    'total' => number_format($group->sum('total'), 2, '.', ''),
+                    'invoices' => InvoiceReturnResource::collection($group)->resolve(),
+                ];
+            })
+            ->values();
     }
 }

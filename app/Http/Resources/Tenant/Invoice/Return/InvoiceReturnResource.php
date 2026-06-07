@@ -18,12 +18,7 @@ class InvoiceReturnResource extends JsonResource
             'return_date' => $this->return_date ? Carbon::parse($this->return_date)->format('Y-m-d') : null,
             'return_miti' => $this->return_miti ? Carbon::parse($this->return_miti)->format('Y-m-d') : null,
             'formatted_return_date' => $this->return_date ? Carbon::parse($this->return_date)->format('d M Y') : null,
-            'sales_return_number' => [
-                'required',
-                'string',
-                Rule::unique('invoice_returns', 'sales_return_number')
-                    ->ignore($this->route('invoice_return')),
-            ],
+            'sales_return_number' => $this->sales_return_number,
             'tax' => $this->tax,
             'sub_total' => $this->sub_total,
             'total' => $this->total,
