@@ -4,9 +4,7 @@ namespace App\Http\Controllers\Tenant\Expenses;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\Expenses\ExpensesRequest;
-use App\Http\Resources\Tenant\Expenses\ExpensesResource;
 use App\Services\Tenant\Expenses\ExpensesService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ExpensesController extends Controller
@@ -18,85 +16,37 @@ class ExpensesController extends Controller
         $this->expenseService = $expenseService;
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
-        $expenses = $this->expenseService->paginate($request);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Expenses fetched successfully.',
-            'data' => $expenses,
-        ]);
+        return $this->expenseService->paginate($request, 25);
     }
 
-    public function store(ExpensesRequest $request): JsonResponse
+    public function store(ExpensesRequest $request)
     {
         $expense = $this->expenseService->store($request->validated());
-
-        if (!$expense) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create expense.',
-            ], 500);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Expense created successfully.',
-            'data' => new ExpensesResource($expense),
-        ], 201);
+        if ($expense)
+            return response(['status' => 'OK'], 200);
+        return response(['status' => 'ERROR'], 500);
     }
 
-    public function show($id): JsonResponse
+    public function show($id)
     {
         $expense = $this->expenseService->find($id, true);
-
-        if (!$expense) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Expense not found.',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Expense fetched successfully.',
-            'data' => $expense,
-        ]);
+        return response(['data' => $expense], 200);
     }
 
-    public function update(ExpensesRequest $request, $id): JsonResponse
+    public function update(ExpensesRequest $request, $id)
     {
         $expense = $this->expenseService->update($id, $request->validated());
-
-        if (!$expense) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update expense.',
-            ], 500);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Expense updated successfully.',
-            'data' => new ExpensesResource($expense),
-        ]);
+        if ($expense)
+            return response(['status' => 'OK'], 200);
+        return response(['status' => 'ERROR'], 500);
     }
 
-    public function destroy($id): JsonResponse
+    public function destroy($id)
     {
-        $deleted = $this->expenseService->delete($id);
-
-        if (!$deleted) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Expense not found or could not be deleted.',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Expense deleted successfully.',
-        ]);
+        if ($this->expenseService->delete($id))
+            return response(['status' => 'OK'], 200);
+        return response(['status' => 'ERROR'], 500);
     }
 }

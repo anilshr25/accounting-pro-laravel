@@ -10,6 +10,7 @@ class KyeAddressResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'kye_id' => $this->kye_id,
             'type' => $this->type,
             'zone' => $this->zone,
             'district' => $this->district,

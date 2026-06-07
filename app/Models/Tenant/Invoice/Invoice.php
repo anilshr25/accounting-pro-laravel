@@ -25,11 +25,10 @@ class Invoice extends Model
         'status',
         'remarks',
         'shift',
-        'sale_return',
+        'type',
     ];
     protected $casts = [
         'invoice_date' => 'datetime',
-        'sale_return' => 'boolean',
     ];
 
     public function customer()

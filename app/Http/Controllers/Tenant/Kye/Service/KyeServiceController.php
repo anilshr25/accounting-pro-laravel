@@ -1,18 +1,17 @@
 <?php
 
-namespace App\Http\Controllers\Tenant\Kye;
+namespace App\Http\Controllers\Tenant\Kye\Service;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Tenant\Kye\KyeRequest;
-use App\Http\Resources\Tenant\Kye\KyeResource;
-use App\Services\Tenant\Kye\KyeService;
+use App\Http\Requests\Tenant\Kye\Service\KyeServiceRequest;
+use App\Services\Tenant\Kye\Service\KyeServicesService;
 use Illuminate\Http\Request;
 
-class KyeController extends Controller
+class KyeServiceController extends Controller
 {
     protected $service;
 
-    public function __construct(KyeService $service)
+    public function __construct(KyeServicesService $service)
     {
         $this->service = $service;
     }
@@ -22,7 +21,7 @@ class KyeController extends Controller
         return $this->service->paginate($request, 25);
     }
 
-    public function store(KyeRequest $request)
+    public function store(KyeServiceRequest $request)
     {
         $service = $this->service->store($request->validated());
         if ($service)
@@ -36,7 +35,7 @@ class KyeController extends Controller
         return response(['data' => $service], 200);
     }
 
-    public function update(KyeRequest $request, $id)
+    public function update(KyeServiceRequest $request, $id)
     {
         $service = $this->service->update($id, $request->validated());
         if ($service)

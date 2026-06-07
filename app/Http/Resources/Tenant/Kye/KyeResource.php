@@ -16,36 +16,41 @@ class KyeResource extends JsonResource
     {
         return [
             'id' => $this->id,
-
             'full_name' => $this->full_name,
-            'date_of_birth_ad' => $this->date_of_birth_ad->format('Y-m-d'),
-            'date_of_birth_bs' => $this->date_of_birth_bs->format('Y-m-d'),
+            'date_of_birth_ad' => $this->date_of_birth_ad ? $this->date_of_birth_ad->format('Y-m-d') : null,
+            'date_of_birth_bs' => $this->date_of_birth_bs ? $this->date_of_birth_bs->format('Y-m-d') : null,
             'marital_status' => $this->marital_status,
             'gender' => $this->gender,
             'blood_group' => $this->blood_group,
             'citizenship_number' => $this->citizenship_number,
-            'issue_date' => $this->issue_date->format('Y-m-d'),
+            'issue_date' => $this->issue_date ? $this->issue_date->format('Y-m-d') : null,
             'issue_district' => $this->issue_district,
+            'front_image' => $this->front_image
+                ? url($this->front_image)
+                : null,
+            'back_image' => $this->back_image
+                ? url($this->back_image)
+                : null,
 
             'addresses' => KyeAddressResource::collection(
-                $this->whenLoaded('addresses')
+                $this->addresses ?? collect()
             ),
 
-            'educations' => KyeEducationResource::collection(
-                $this->whenLoaded('educations')
-            ),
+            'education' => $this->educations
+                ? new KyeEducationResource($this->educations)
+                : null,
 
             'experiences' => KyeExperienceResource::collection(
-                $this->whenLoaded('experiences')
+                $this->experiences ?? collect()
             ),
 
             'services' => KyeServiceResource::collection(
-                $this->whenLoaded('services')
+                $this->services ?? collect()
             ),
 
-            'emergency_contact' => new KyeEmergencyContactResource(
-                $this->whenLoaded('emergencyContact')
-            ),
+            'emergency_contact' => $this->emergencyContact
+                ? new KyeEmergencyContactResource($this->emergencyContact)
+                : null,
         ];
     }
 }

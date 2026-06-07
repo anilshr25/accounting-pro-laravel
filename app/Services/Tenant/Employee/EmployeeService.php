@@ -86,27 +86,38 @@ class EmployeeService
     public function update($id, $data)
     {
         try {
-            $employee = $this->find($id);
+            $employee = $this->employee->find($id);
+
             if (!$employee) {
                 return false;
             }
 
-            if (isset($data['image'])) {
+            $data = array_filter($data, fn($v) => $v !== null);
+
+            if (request()->hasFile('image')) {
 
                 if ($employee->image && file_exists(public_path($employee->image))) {
                     unlink(public_path($employee->image));
                 }
 
-                $file = $data['image'];
+                $file = request()->file('image');
                 $filename = time() . '_' . $file->getClientOriginalName();
 
                 $destinationPath = public_path('uploads/employee/');
+
+                if (!file_exists($destinationPath)) {
+                    mkdir($destinationPath, 0777, true);
+                }
 
                 $file->move($destinationPath, $filename);
 
                 $data['image'] = 'uploads/employee/' . $filename;
             }
-            return $employee->update($data);
+
+            $employee->fill($data);
+            $employee->save();
+
+            return true;
         } catch (\Exception $ex) {
             return false;
         }

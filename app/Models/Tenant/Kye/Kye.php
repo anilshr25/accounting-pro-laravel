@@ -3,7 +3,6 @@
 namespace App\Models\Tenant\Kye;
 
 use App\Services\Traits\Auditable;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -27,6 +26,8 @@ class Kye extends Model
         'citizenship_number',
         'issue_date',
         'issue_district',
+        'front_image',
+        'back_image',
     ];
     protected $casts = [
         'date_of_birth_ad' => 'date',
@@ -41,7 +42,7 @@ class Kye extends Model
 
     public function educations()
     {
-        return $this->hasMany(KyeEducation::class);
+        return $this->hasOne(KyeEducation::class);
     }
 
     public function experiences()

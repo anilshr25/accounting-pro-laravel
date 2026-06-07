@@ -10,6 +10,7 @@ class KyeEducationResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'kye_id' => $this->kye_id,
             'degree' => $this->degree,
             'university' => $this->university,
             'from_date' => $this->from_date->format('Y-m-d'),

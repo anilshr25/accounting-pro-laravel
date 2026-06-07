@@ -3,7 +3,6 @@
 namespace App\Models\Tenant\Kye\Education;
 
 use App\Services\Traits\Auditable;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;

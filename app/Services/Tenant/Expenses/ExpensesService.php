@@ -57,7 +57,7 @@ class ExpensesService
                 $query->where('expense_miti', '<=', $request->miti_upto);
             })
 
-            ->latest()
+            ->orderBy('id', 'asc')
             ->paginate($request->limit ?? $limit);
 
         return ExpensesResource::collection($expenses);

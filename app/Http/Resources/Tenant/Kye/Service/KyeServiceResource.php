@@ -10,6 +10,7 @@ class KyeServiceResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'kye_id' => $this->kye_id,
             'department' => $this->department,
             'position' => $this->position,
             'shift' => $this->shift,

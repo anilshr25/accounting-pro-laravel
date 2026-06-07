@@ -39,6 +39,11 @@ use App\Http\Controllers\Tenant\BankAccount\Loan\Payment\LoanPaymentController;
 use App\Http\Controllers\Tenant\Expenses\ExpensesController;
 use App\Models\Tenant\Notification\Notification;
 use App\Http\Controllers\Tenant\Kye\KyeController;
+use App\Http\Controllers\Tenant\Kye\Address\KyeAddressController;
+use App\Http\Controllers\Tenant\Kye\Education\KyeEducationController;
+use App\Http\Controllers\Tenant\Kye\EmergencyContact\KyeEmergencyContactController;
+use App\Http\Controllers\Tenant\Kye\Experience\KyeExperienceController;
+use App\Http\Controllers\Tenant\Kye\Service\KyeServiceController;
 
 
 /*
@@ -265,6 +270,36 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->get('kye/{id}', [KyeController::class, 'show']);
     $route->put('kye/{id}', [KyeController::class, 'update']);
     $route->delete('kye/{id}', [KyeController::class, 'destroy']);
+
+    $route->get('kye-address', [KyeAddressController::class, 'index']);
+    $route->post('kye-address', [KyeAddressController::class, 'store']);
+    $route->get('kye-address/{id}', [KyeAddressController::class, 'show']);
+    $route->put('kye-address/{id}', [KyeAddressController::class, 'update']);
+    $route->delete('kye-address/{id}', [KyeAddressController::class, 'destroy']);
+
+    $route->get('kye-education', [KyeEducationController::class, 'index']);
+    $route->post('kye-education', [KyeEducationController::class, 'store']);
+    $route->get('kye-education/{id}', [KyeEducationController::class, 'show']);
+    $route->put('kye-education/{id}', [KyeEducationController::class, 'update']);
+    $route->delete('kye-education/{id}', [KyeEducationController::class, 'destroy']);
+
+    $route->get('kye-emergency-contact', [KyeEmergencyContactController::class, 'index']);
+    $route->post('kye-emergency-contact', [KyeEmergencyContactController::class, 'store']);
+    $route->get('kye-emergency-contact/{id}', [KyeEmergencyContactController::class, 'show']);
+    $route->put('kye-emergency-contact/{id}', [KyeEmergencyContactController::class, 'update']);
+    $route->delete('kye-emergency-contact/{id}', [KyeEmergencyContactController::class, 'destroy']);
+
+    $route->get('kye-experience', [KyeExperienceController::class, 'index']);
+    $route->post('kye-experience', [KyeExperienceController::class, 'store']);
+    $route->get('kye-experience/{id}', [KyeExperienceController::class, 'show']);
+    $route->put('kye-experience/{id}', [KyeExperienceController::class, 'update']);
+    $route->delete('kye-experience/{id}', [KyeExperienceController::class, 'destroy']);
+
+    $route->get('kye-service', [KyeServiceController::class, 'index']);
+    $route->post('kye-service', [KyeServiceController::class, 'store']);
+    $route->get('kye-service/{id}', [KyeServiceController::class, 'show']);
+    $route->put('kye-service/{id}', [KyeServiceController::class, 'update']);
+    $route->delete('kye-service/{id}', [KyeServiceController::class, 'destroy']);
 
     Route::get('/notifications', function () {
     return Notification::latest()->get();
