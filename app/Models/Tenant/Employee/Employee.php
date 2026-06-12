@@ -7,6 +7,7 @@ use App\Services\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Tenant\Kye\Kye;
 
 class Employee extends Model
 {
@@ -28,4 +29,9 @@ class Employee extends Model
         'bank_account_number',
         'status'
     ];
+
+    public function kye()
+{
+    return $this->hasOne(Kye::class, 'employee_id');
+}
 }

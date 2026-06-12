@@ -18,6 +18,7 @@ class KyeRequest extends FormRequest
         $kyeId = $this->route('id');
 
         return [
+            'employee_id' => $isUpdate ? 'sometimes|exists:employees,id' : 'required|exists:employees,id',
             'full_name' => $isUpdate ? 'sometimes|string|max:255' : 'required|string|max:255',
             'date_of_birth_ad' => $isUpdate ? 'sometimes|date' : 'required|date',
             'date_of_birth_bs' => $isUpdate ? 'sometimes|date' : 'required|date',

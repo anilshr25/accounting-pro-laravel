@@ -11,12 +11,14 @@ use App\Models\Tenant\Kye\Education\KyeEducation;
 use App\Models\Tenant\Kye\Experience\KyeExperience;
 use App\Models\Tenant\Kye\EmergencyContact\KyeEmergencyContact;
 use App\Models\Tenant\Kye\Service\KyeService;
+use App\Models\Tenant\Employee\Employee;
 
 class Kye extends Model
 {
     use HasFactory, SoftDeletes, Auditable;
     protected $table = 'kyes';
     protected $fillable = [
+        'employee_id',
         'full_name',
         'date_of_birth_ad',
         'date_of_birth_bs',
@@ -59,4 +61,9 @@ class Kye extends Model
     {
         return $this->hasMany(KyeService::class);
     }
+
+    public function employee()
+{
+    return $this->belongsTo(Employee::class, 'employee_id');
+}
 }

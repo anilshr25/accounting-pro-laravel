@@ -16,6 +16,7 @@ class KyeResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'employee_id'=>$this->employee_id,
             'full_name' => $this->full_name,
             'date_of_birth_ad' => $this->date_of_birth_ad ? $this->date_of_birth_ad->format('Y-m-d') : null,
             'date_of_birth_bs' => $this->date_of_birth_bs ? $this->date_of_birth_bs->format('Y-m-d') : null,
