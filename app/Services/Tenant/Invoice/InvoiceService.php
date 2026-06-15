@@ -7,6 +7,7 @@ use App\Models\Tenant\Invoice\Item\InvoiceItem;
 use App\Http\Resources\Tenant\Invoice\InvoiceResource;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+// use App\Helpers\IdHelper;
 
 class InvoiceService
 {
@@ -103,6 +104,7 @@ class InvoiceService
 
     public function find($id, $resource = false)
     {
+        // $id = IdHelper::decode($id);
         $invoice = $this->invoice->with(['items'])->find($id);
         if (!$invoice) {
             return null;
@@ -114,6 +116,7 @@ class InvoiceService
     {
         try {
             return DB::transaction(function () use ($id, $data) {
+                // $id = IdHelper::decode($id);
                 $invoice = $this->find($id);
                 if (!$invoice) {
                     return false;
@@ -136,6 +139,7 @@ class InvoiceService
     public function delete($id)
     {
         try {
+            // $id = IdHelper::decode($id);
             $invoice = $this->find($id);
             if (!$invoice) {
                 return false;
@@ -148,6 +152,7 @@ class InvoiceService
 
     protected function syncItems($invoiceId, array $items)
     {
+        // $invoiceId = IdHelper::decode($invoiceId);
         $this->invoiceItem->newQuery()
             ->where('invoice_id', $invoiceId)
             ->delete();
@@ -162,40 +167,66 @@ class InvoiceService
         }
     }
 
-    public function dateWiseSummary($request)
+    public function dateWiseSummary($request, $limit = 25)
     {
+        $datesPaginator = $this->invoice
+            ->selectRaw('DATE(invoice_date) as invoice_date_only')
+            ->when($request->filled('date_from'), function ($q) use ($request) {
+                $q->whereDate('invoice_date', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_upto'), function ($q) use ($request) {
+                $q->whereDate('invoice_date', '<=', $request->date_upto);
+            })
+            ->groupBy('invoice_date_only')
+            ->orderByDesc('invoice_date_only')
+            ->paginate($request->limit ?? $limit);
+
+        $dates = collect($datesPaginator->items())
+            ->pluck('invoice_date_only')
+            ->toArray();
+
         $invoices = $this->invoice
             ->with('items')
-            ->when($request->filled('date_from'), function ($query) use ($request) {
-                $query->whereDate('invoice_date', '>=', $request->date_from);
-            })
-            ->when($request->filled('date_upto'), function ($query) use ($request) {
-                $query->whereDate('invoice_date', '<=', $request->date_upto);
-            })
-            ->orderBy('invoice_date', 'DESC')
+            ->whereIn(DB::raw('DATE(invoice_date)'), $dates)
+            ->orderByDesc('invoice_date')
             ->get()
             ->map(function ($item) {
-                $item->invoice_date_only = $item->invoice_date
-                    ? \Carbon\Carbon::parse($item->invoice_date)->format('Y-m-d')
-                    : null;
+                $item->invoice_date_only = Carbon::parse($item->invoice_date)->format('Y-m-d');
 
                 return $item;
-            });
-
-        return $invoices
-            ->groupBy('invoice_date_only')
-            ->map(function ($group, $date) {
-
-                return [
-                    'invoice_date' => $date,
-                    'formatted_invoice_date' => Carbon::parse($date)->format('d M Y'),
-                    'invoice_miti' => Carbon::parse($group->first()->invoice_miti)->format('Y-m-d'),
-                    'invoice_count' => $group->count(),
-                    'sub_total' => number_format($group->sum('sub_total'), 2, '.', ''),
-                    'total' => number_format($group->sum('total'), 2, '.', ''),
-                    'invoices' => InvoiceResource::collection($group)->resolve(),
-                ];
             })
-            ->values();
+            ->groupBy('invoice_date_only');
+
+        $data = $invoices->map(function ($group, $date) {
+            return [
+                'invoice_date' => $date,
+                'formatted_invoice_date' => Carbon::parse($date)->format('d M Y'),
+                'invoice_miti' => Carbon::parse($group->first()->invoice_miti)->format('Y-m-d'),
+                'invoice_count' => $group->count(),
+                'sub_total' => number_format($group->sum('sub_total'), 2, '.', ''),
+                'total' => number_format($group->sum('total'), 2, '.', ''),
+                'invoices' => InvoiceResource::collection($group)->resolve(),
+            ];
+        })->values();
+
+        return [
+            'data' => $data,
+            'links' => [
+                'first' => $datesPaginator->url(1),
+                'last' => $datesPaginator->url($datesPaginator->lastPage()),
+                'prev' => $datesPaginator->previousPageUrl(),
+                'next' => $datesPaginator->nextPageUrl(),
+            ],
+            'meta' => [
+                'current_page' => $datesPaginator->currentPage(),
+                'from' => $datesPaginator->firstItem(),
+                'last_page' => $datesPaginator->lastPage(),
+                'links' => $datesPaginator->linkCollection(),
+                'path' => $datesPaginator->path(),
+                'per_page' => $datesPaginator->perPage(),
+                'to' => $datesPaginator->lastItem(),
+                'total' => $datesPaginator->total(),
+            ],
+        ];
     }
 }

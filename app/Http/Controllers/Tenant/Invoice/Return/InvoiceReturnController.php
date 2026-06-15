@@ -55,8 +55,6 @@ class InvoiceReturnController extends Controller
 
     public function dateWiseSummary(Request $request)
     {
-        return response()->json([
-            'data' => $this->invoice_return->dateWiseSummary($request)
-        ]);
+        return $this->invoice_return->dateWiseSummary($request, 25);
     }
 }

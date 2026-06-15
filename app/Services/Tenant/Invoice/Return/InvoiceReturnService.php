@@ -178,40 +178,66 @@ class InvoiceReturnService
         }
     }
 
-    public function dateWiseSummary($request)
+    public function dateWiseSummary($request, $limit = 25)
     {
-        $invoice_returns = $this->invoice_return
+        $datesPaginator = $this->invoice_return
+            ->selectRaw('DATE(return_date) as return_date_only')
+            ->when($request->filled('date_from'), function ($q) use ($request) {
+                $q->whereDate('return_date', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_upto'), function ($q) use ($request) {
+                $q->whereDate('return_date', '<=', $request->date_upto);
+            })
+            ->groupBy('return_date_only')
+            ->orderByDesc('return_date_only')
+            ->paginate($request->limit ?? $limit);
+
+        $dates = collect($datesPaginator->items())
+            ->pluck('return_date_only')
+            ->toArray();
+
+        $invoiceReturns = $this->invoice_return
             ->with('items')
-            ->when($request->filled('date_from'), function ($query) use ($request) {
-                $query->whereDate('return_date', '>=', $request->date_from);
-            })
-            ->when($request->filled('date_upto'), function ($query) use ($request) {
-                $query->whereDate('return_date', '<=', $request->date_upto);
-            })
-            ->orderBy('return_date', 'DESC')
+            ->whereIn(DB::raw('DATE(return_date)'), $dates)
+            ->orderByDesc('return_date')
             ->get()
             ->map(function ($item) {
-                $item->return_date_only = $item->return_date
-                    ? \Carbon\Carbon::parse($item->return_date)->format('Y-m-d')
-                    : null;
+                $item->return_date_only = Carbon::parse($item->return_date)->format('Y-m-d');
 
                 return $item;
-            });
-
-        return $invoice_returns
-            ->groupBy('return_date_only')
-            ->map(function ($group, $date) {
-
-                return [
-                    'return_date' => $date,
-                    'formatted_return_date' => Carbon::parse($date)->format('d M Y'),
-                    'return_miti' => Carbon::parse($group->first()->return_miti)->format('Y-m-d'),
-                    'invoice_count' => $group->count(),
-                    'sub_total' => number_format($group->sum('sub_total'), 2, '.', ''),
-                    'total' => number_format($group->sum('total'), 2, '.', ''),
-                    'invoices' => InvoiceReturnResource::collection($group)->resolve(),
-                ];
             })
-            ->values();
+            ->groupBy('return_date_only');
+
+        $data = $invoiceReturns->map(function ($group, $date) {
+            return [
+                'return_date' => $date,
+                'formatted_return_date' => Carbon::parse($date)->format('d M Y'),
+                'return_miti' => Carbon::parse($group->first()->return_miti)->format('Y-m-d'),
+                'invoice_count' => $group->count(),
+                'sub_total' => number_format($group->sum('sub_total'), 2, '.', ''),
+                'total' => number_format($group->sum('total'), 2, '.', ''),
+                'invoices' => InvoiceReturnResource::collection($group)->resolve(),
+            ];
+        })->values();
+
+        return [
+            'data' => $data,
+            'links' => [
+                'first' => $datesPaginator->url(1),
+                'last' => $datesPaginator->url($datesPaginator->lastPage()),
+                'prev' => $datesPaginator->previousPageUrl(),
+                'next' => $datesPaginator->nextPageUrl(),
+            ],
+            'meta' => [
+                'current_page' => $datesPaginator->currentPage(),
+                'from' => $datesPaginator->firstItem(),
+                'last_page' => $datesPaginator->lastPage(),
+                'links' => $datesPaginator->linkCollection(),
+                'path' => $datesPaginator->path(),
+                'per_page' => $datesPaginator->perPage(),
+                'to' => $datesPaginator->lastItem(),
+                'total' => $datesPaginator->total(),
+            ]
+        ];
     }
 }
