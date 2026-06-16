@@ -24,6 +24,33 @@ class ProcurementService
     {
         $procurements = $this->procurement
             ->with(['items.product'])
+
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+
+                    $q->orWhere('order_number', 'like', "%{$search}%")
+                        ->orWhere('status', 'like', "%{$search}%")
+                        ->orWhere('remarks', 'like', "%{$search}%")
+                        ->orWhere('order_created_by', 'like', "%{$search}%");
+
+                    if (is_numeric($search)) {
+                        $q->orWhere('total_amount', $search);
+                    }
+
+                    $q->orWhereHas('items.product', function ($item) use ($search) {
+                        $item->where('product_name', 'like', "%{$search}%")
+                            ->orWhere('unit', 'like', "%{$search}%")
+                            ->orWhere('category', 'like', "%{$search}%");
+
+                        if (is_numeric($search)) {
+                            $item->orWhere('quantity', $search)
+                                ->orWhere('rate', $search)
+                                ->orWhere('amount', $search);
+                        }
+                    });
+                });
+            })
             ->when($request->filled('order_number'), function ($query) use ($request) {
                 $query->where('order_number', $request->order_number);
             })
@@ -35,6 +62,18 @@ class ProcurementService
             })
             ->when($request->filled('order_miti'), function ($query) use ($request) {
                 $query->whereDate('order_miti', $request->order_miti);
+            })
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('order_date', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_upto'), function ($query) use ($request) {
+                $query->whereDate('order_date', '<=', $request->date_upto);
+            })
+            ->when($request->filled('miti_from'), function ($query) use ($request) {
+                $query->where('order_miti', '>=', $request->miti_from);
+            })
+            ->when($request->filled('miti_upto'), function ($query) use ($request) {
+                $query->where('order_miti', '<=', $request->miti_upto);
             })
             ->orderBy('order_date', 'DESC')
             ->paginate($request->limit ?? $limit);

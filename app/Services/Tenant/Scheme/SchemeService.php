@@ -20,6 +20,27 @@ class SchemeService
             ->when($request->filled('supplier_id'), function ($query) use ($request) {
                 $query->where('supplier_id', $request->supplier_id);
             })
+
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+
+                    $q->orWhere('scheme_name', 'like', "%{$search}%")
+                        ->orWhere('scheme_type', 'like', "%{$search}%")
+                        ->orWhere('status', 'like', "%{$search}%");
+
+                    if (is_numeric($search)) {
+                        $q->orWhere('issued_amount', $search)
+                            ->orWhere('percentage', $search);
+                    }
+
+                    $q->orWhereHas('supplier', function ($supplier) use ($search) {
+                        $supplier->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
+                });
+            })
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->status);
             })
@@ -48,6 +69,18 @@ class SchemeService
             })
             ->when(!$request->filled('start_miti') && $request->filled('end_miti'), function ($query) use ($request) {
                 $query->where('start_miti', '<=', $request->end_miti);
+            })
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('start_date', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_upto'), function ($query) use ($request) {
+                $query->whereDate('start_date', '<=', $request->date_upto);
+            })
+            ->when($request->filled('miti_from'), function ($query) use ($request) {
+                $query->where('start_miti', '>=', $request->miti_from);
+            })
+            ->when($request->filled('miti_upto'), function ($query) use ($request) {
+                $query->where('start_miti', '<=', $request->miti_upto);
             })
             ->orderBy('id', 'ASC')
             ->paginate($request->limit ?? $limit);

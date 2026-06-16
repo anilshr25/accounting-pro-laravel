@@ -15,13 +15,14 @@ class InvoiceReturnRequest extends FormRequest
     {
         return [
             'customer_id' => 'required|integer|exists:customers,id',
-            'sales_return_number' => 'required|string|max:255',
+            'sales_return_number' => 'required|string|max:255|unique:invoice_returns,sales_return_number',
             'return_date' => 'required|date',
             'return_miti' => 'required|string|max:255',
             'shift' => 'required|string|max:255',
             'tax' => 'nullable|numeric',
             'sub_total' => 'required|numeric',
             'total' => 'required|numeric',
+            'type' => 'nullable|in:single,bulk',
             'remarks' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string',

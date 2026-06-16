@@ -5,14 +5,13 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\LoanReminderMail;
 use App\Models\Tenant\BankAccount\Loan\Payment\LoanPayment;
+use App\Models\Tenant\Notification\Notification;
 
 class SendLoanReminder extends Command
 {
     protected $signature = 'loan:reminder';
-    protected $description = 'Send loan reminder emails before 3 days of due date';
+    protected $description = 'Send loan payment reminders before due date';
 
     public function handle()
     {
@@ -26,7 +25,7 @@ class SendLoanReminder extends Command
             $dbName = $data['tenancy_db_name'] ?? null;
 
             if (!$dbName) {
-                $this->error("No DB found for tenant ID {$tenant->id}");
+                $this->error("No database for tenant {$tenant->id}");
                 continue;
             }
 
@@ -34,43 +33,22 @@ class SendLoanReminder extends Command
             DB::purge('mysql');
             DB::reconnect('mysql');
 
-            $payments = LoanPayment::with('loan')
-                ->whereDate('due_date', $targetDate)
-                ->whereNull('paid_date')
-                ->get();
-
-            if ($payments->isEmpty()) {
-                $this->info("No payments found for {$dbName}");
-                continue;
-            }
+            $payments = LoanPayment::whereDate('due_date', $targetDate)->get();
 
             foreach ($payments as $payment) {
 
-                if ($payment->paid_date) {
-                    continue;
-                }
+                Notification::create([
+                    'title' => 'Loan Payment Reminder',
+                    'message' => "Your loan payment is due on {$payment->due_date}",
+                    'loan_id' => $payment->loan_id,
+                    'payment_id' => $payment->id,
+                    'is_read' => false,
+                ]);
 
-                $email = config('loan.reminder_email') ?? config('mail.from.address');
-
-                if (!$email) {
-                    $this->error("No email configured for tenant {$dbName}");
-                    continue;
-                }
-
-                try {
-                    Mail::to($email)->send(new LoanReminderMail($payment));
-
-                    $this->info(
-                        "Tenant {$dbName} - Payment ID {$payment->id} sent to {$email}"
-                    );
-                } catch (\Exception $e) {
-                    $this->error(
-                        "Mail failed for Payment ID {$payment->id}: " . $e->getMessage()
-                    );
-                }
+                $this->info("Notification created for payment {$payment->id}");
             }
         }
 
         return Command::SUCCESS;
     }
-}
+};

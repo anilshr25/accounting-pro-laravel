@@ -30,11 +30,17 @@ class CreditService
             ->when($request->filled('description'), function ($query) use ($request) {
                 $query->where('description', 'like', "%{$request->description}%");
             })
-            ->when($request->filled('date'), function ($query) use ($request) {
-                $query->whereDate('date', $request->date);
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('date', '>=', $request->date_from);
             })
-            ->when($request->filled('miti'), function ($query) use ($request) {
-                $query->where('miti', 'like', "%{$request->miti}%");
+            ->when($request->filled('date_upto'), function ($query) use ($request) {
+                $query->whereDate('date', '<=', $request->date_upto);
+            })
+            ->when($request->filled('miti_from'), function ($query) use ($request) {
+                $query->where('miti', '>=', $request->miti_from);
+            })
+            ->when($request->filled('miti_upto'), function ($query) use ($request) {
+                $query->where('miti', '<=', $request->miti_upto);
             })
             ->when($request->filled('shift'), function ($query) use ($request) {
                 $query->where('shift', $request->shift);
@@ -45,12 +51,18 @@ class CreditService
             ->when($request->filled('customer_id'), function ($query) use ($request) {
                 $query->where('customer_id', $request->customer_id);
             })
-            ->when($request->filled('info'), function ($query) use ($request) {
-                $info = $request->info;
-                $query->whereHas('customer', function ($q) use ($info) {
-                    $q->where('name', 'like', "%{$info}%")
-                        ->orWhere('email', 'like', "%{$info}%")
-                        ->orWhere('phone', 'like', "%{$info}%");
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $info = $request->search;
+                $query->where(function ($q) use ($info) {
+                    $q->whereHas('customer', function ($customerQuery) use ($info) {
+                        $customerQuery->where('name', 'like', "%{$info}%");
+                    })
+                    ->orWhere('description', 'like', "%{$info}%")
+                        ->orWhere('status', 'like', "%{$info}%")
+                        ->orWhere('shift', 'like', "%{$info}%")
+                        ->orWhere('amount', 'like', "%{$info}%")
+                        ->orWhere('invoice_no', 'like', "%{$info}%")
+                        ->orWhere('return_amount', 'like', "%{$info}%");
                 });
             })
             ->orderBy('date', 'DESC')

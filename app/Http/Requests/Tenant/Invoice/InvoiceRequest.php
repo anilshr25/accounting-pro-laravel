@@ -23,7 +23,7 @@ class InvoiceRequest extends FormRequest
             'payment_type' => 'required|string|max:255',
             'remarks' => 'nullable|string|max:255',
             'shift' => 'required|string|max:255',
-            'sale_return' => 'nullable|boolean',
+            'type' => 'nullable|in:single,bulk',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string',
             'items.*.quantity' => 'required|numeric',

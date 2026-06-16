@@ -15,13 +15,17 @@ class CustomerService
     public function paginate($request, $limit = 25)
     {
         $customer = $this->customer
-            ->when($request->filled('info'), function ($query) use ($request) {
-                $query->where(function ($sub) use ($request) {
-                    $info = $request->info;
-                    $sub->where('name', 'like', "%{$info}%")
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $info = $request->search;
+
+                $query->where(function ($q) use ($info) {
+                    $q->where('name', 'like', "%{$info}%")
                         ->orWhere('email', 'like', "%{$info}%")
                         ->orWhere('phone', 'like', "%{$info}%");
-                });
+                })
+                    ->orWhere('address', 'like', "%{$info}%")
+                    ->orWhere('credit_balance', 'like', "%{$info}%")
+                    ->orWhere('vat', 'like', "%{$info}%");
             })
             ->when($request->filled('address'), function ($query) use ($request) {
                 $query->where('address', 'like', "%{$request->address}%");
@@ -33,23 +37,6 @@ class CustomerService
                 $query->where('vat', 'like', "%{$request->vat}%");
             })
             ->paginate($request->limit ?? $limit);
-        return CustomerResource::collection($customer);
-    }
-
-    public function search($request, $limit = 10)
-    {
-        $customer = $this->customer
-            ->when($request->filled('info'), function ($query) use ($request) {
-                $query->where(function ($sub) use ($request) {
-                    $info = $request->info;
-                    $sub->where('name', 'like', "%{$info}%")
-                        ->orWhere('email', 'like', "%{$info}%")
-                        ->orWhere('phone', 'like', "%{$info}%");
-                });
-            })
-            ->orderBy('id', 'DESC')
-            ->limit($limit)
-            ->get();
         return CustomerResource::collection($customer);
     }
 

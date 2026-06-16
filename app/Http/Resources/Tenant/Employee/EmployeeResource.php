@@ -17,9 +17,12 @@ class EmployeeResource extends JsonResource
             'address' => $this->address,
             'designation' => $this->designation,
             'joining_date' => $this->joining_date,
-            'employment_type' => $this->employment_type,
-            'base_salary' => $this->base_salary,
-            'salary_type' => $this->salary_type,
+            'pan_no' => $this->pan_no,
+            'license_no' => $this->license_no,
+            'salary' => $this->salary,
+            'image' => $this->image
+                ? url($this->image)
+                : null,
             'bank_name' => $this->bank_name,
             'bank_account_number' => $this->bank_account_number,
             'status' => $this->status,

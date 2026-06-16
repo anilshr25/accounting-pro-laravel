@@ -3,12 +3,15 @@
 namespace App\Http\Resources\Tenant\Invoice;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Helpers\IdHelper;
 
 class InvoiceResource extends JsonResource
 {
     public function toArray($request)
     {
         return [
+            // 'id' => IdHelper::encode($this->id),
+            // 'customer_id' => IdHelper::encode($this->customer_id),
             'id' => $this->id,
             'customer_id' => $this->customer_id,
             'invoice_miti' => $this->invoice_miti,
@@ -21,7 +24,7 @@ class InvoiceResource extends JsonResource
             'status' => $this->status,
             'remarks' => $this->remarks,
             'shift' => $this->shift,
-            'sale_return' => $this->sale_return,
+            'type' => $this->type,
             'items' => \App\Http\Resources\Tenant\Invoice\Item\InvoiceItemResource::collection($this->whenLoaded('items')),
         ];
     }

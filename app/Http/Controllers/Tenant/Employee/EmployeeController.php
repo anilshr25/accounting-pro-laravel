@@ -21,11 +21,6 @@ class EmployeeController extends Controller
         return $this->employee->paginate($request, 25);
     }
 
-    public function search(Request $request)
-    {
-        return $this->employee->search($request, 10);
-    }
-
     public function store(EmployeeRequest $request)
     {
         $employee = $this->employee->store($request->validated());

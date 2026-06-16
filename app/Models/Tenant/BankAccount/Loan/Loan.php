@@ -52,6 +52,6 @@ class Loan extends Model
     public function nextPayment()
     {
         return $this->hasOne(LoanPayment::class, 'loan_id')
-            ->orderBy('due_date', 'asc');
+            ->orderBy('due_date', 'desc');
     }
 }

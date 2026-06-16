@@ -5,6 +5,7 @@ namespace App\Http\Resources\Tenant\Invoice\Return;
 use Illuminate\Http\Resources\Json\JsonResource;
 use App\Http\Resources\Tenant\Invoice\Return\Item\InvoiceReturnItemResource;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class InvoiceReturnResource extends JsonResource
 {
@@ -23,6 +24,7 @@ class InvoiceReturnResource extends JsonResource
             'total' => $this->total,
             'remarks' => $this->remarks,
             'shift' => $this->shift,
+            'type' => $this->type,
             'items' => $this->items
                 ? InvoiceReturnItemResource::collection($this->items)
                 : [],

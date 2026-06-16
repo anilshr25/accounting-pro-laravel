@@ -32,13 +32,23 @@ class ChequeService
             ->when($request->filled('party_id'), function ($query) use ($request) {
                 $query->where('party_id', $request->party_id);
             })
-            ->when($request->filled('party_info'), function ($query) use ($request) {
-                $info = $request->party_info;
-                $query->whereHasMorph('party', ['supplier', 'customer'], function ($q, $type) use ($info) {
-                    $q->where('name', 'like', "%{$info}%")
-                        ->orWhere('email', 'like', "%{$info}%");
-                    if ($type === 'supplier') {
-                        $q->orWhere('pan', 'like', "%{$info}%");
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->search;
+
+                $query->where(function ($q) use ($search) {
+                    $q->whereHasMorph(
+                        'party',
+                        ['supplier', 'customer'],
+                        function ($partyQuery) use ($search) {
+                            $partyQuery->where('name', 'like', "%{$search}%");
+                        }
+                    )
+                        ->orWhere('cheque_number', 'like', "%{$search}%")
+                        ->orWhere('type', 'like', "%{$search}%")
+                        ->orWhere('status', 'like', "%{$search}%");
+
+                    if (is_numeric($search)) {
+                        $q->orWhere('amount', $search);
                     }
                 });
             })
@@ -51,34 +61,24 @@ class ChequeService
             ->when($request->filled('amount'), function ($query) use ($request) {
                 $query->where('amount', $request->amount);
             })
-
-            ->when(
-                $request->filled('start_date') && $request->filled('end_date'),
-                function ($query) use ($request) {
-                    $query->whereBetween('date', [
-                        Carbon::parse($request->start_date)->startOfDay(),
-                        Carbon::parse($request->end_date)->endOfDay(),
-                    ]);
-                }
-            )
-            ->when($request->filled('miti_start') && $request->filled('miti_end'), function ($q) use ($request) {
-                $q->whereBetween('miti', [$request->miti_start, $request->miti_end]);
+            ->when($request->filled('date_from'), function ($query) use ($request) {
+                $query->whereDate('date', '>=', $request->date_from);
             })
-            ->when(
-                $request->filled('date') &&
-                    !$request->filled('start_date') &&
-                    !$request->filled('end_date'),
-                fn($q) => $q->whereDate('date', $request->date)
-            )
-            ->when($request->filled('miti'), function ($query) use ($request) {
-                $query->where('miti', 'like', "%{$request->miti}%");
+            ->when($request->filled('date_upto'), function ($query) use ($request) {
+                $query->whereDate('date', '<=', $request->date_upto);
+            })
+            ->when($request->filled('miti_from'), function ($query) use ($request) {
+                $query->where('miti', '>=', $request->miti_from);
+            })
+            ->when($request->filled('miti_upto'), function ($query) use ($request) {
+                $query->where('miti', '<=', $request->miti_upto);
             })
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->status);
             });
         $totalAmount = (clone $chequeQuery)->sum('amount');
 
-        $cheques = $chequeQuery->orderBy('date', 'ASC')
+        $cheques = $chequeQuery->orderBy('date', 'DESC')
             ->paginate($request->limit ?? $limit);
         return [
             'data' => ChequeResource::collection($cheques),

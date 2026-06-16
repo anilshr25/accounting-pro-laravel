@@ -47,6 +47,23 @@ class LoanPaymentService
     {
         return $this->model
             ->when($request->filled('loan_id'), fn($q) => $q->where('loan_id', $request->loan_id))
+
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->search;
+
+                $q->where(function ($query) use ($search) {
+
+                    $query->orWhere('status', 'like', "%{$search}%")
+                        ->orWhere('paid_miti', 'like', "%{$search}%")
+                        ->orWhere('due_date', 'like', "%{$search}%")
+                        ->orWhere('paid_date', 'like', "%{$search}%");
+
+                    if (is_numeric($search)) {
+                        $query->orWhere('amount', $search)
+                            ->orWhere('late_payment_charge', $search);
+                    }
+                });
+            })
             ->when(
                 $request->filled('due_date'),
                 fn($q) => $q->whereDate('due_date', $request->due_date)
@@ -62,6 +79,30 @@ class LoanPaymentService
             ->when(
                 $request->filled('status'),
                 fn($q) => $q->where('status', $request->status)
+            )
+
+            ->when(
+                $request->filled('date_from'),
+                fn($q) =>
+                $q->whereDate('paid_date', '>=', $request->date_from)
+            )
+
+            ->when(
+                $request->filled('date_upto'),
+                fn($q) =>
+                $q->whereDate('paid_date', '<=', $request->date_upto)
+            )
+
+            ->when(
+                $request->filled('miti_from'),
+                fn($q) =>
+                $q->where('paid_miti', '>=', $request->miti_from)
+            )
+
+            ->when(
+                $request->filled('miti_upto'),
+                fn($q) =>
+                $q->where('paid_miti', '<=', $request->miti_upto)
             )
             ->latest()
             ->paginate($request->limit ?? $limit);
@@ -112,6 +153,10 @@ class LoanPaymentService
 
             $payment = $this->model->create($data);
 
+            if ($payment->status === 'paid') {
+                $this->createNextInstallment($payment);
+            }
+
             $this->updateLoanRemainingAmount($data['loan_id']);
 
             DB::commit();
@@ -140,7 +185,18 @@ class LoanPaymentService
 
             $loanId = $payment->loan_id;
 
+            if (!empty($data['paid_date'])) {
+                $data['status'] = 'paid';
+            }
+
             $payment->update($data);
+
+            $payment->refresh();
+
+            if ($payment->status === 'paid') {
+
+                $this->createNextInstallment($payment);
+            }
 
             $this->updateLoanRemainingAmount($loanId);
 
@@ -187,5 +243,45 @@ class LoanPaymentService
 
             return false;
         }
+    }
+
+    private function createNextInstallment($payment)
+    {
+        $loan = $payment->loan;
+
+        if (!$loan) {
+            return;
+        }
+
+        if ($loan->remaining_amount <= 0) {
+            return;
+        }
+
+        $monthsToAdd = match ($loan->payment_type) {
+            'monthly' => 1,
+            'quarterly' => 3,
+            'yearly' => 12,
+            default => 1,
+        };
+
+        $nextDueDate = Carbon::parse($payment->due_date)
+            ->addMonthsNoOverflow($monthsToAdd)
+            ->toDateString();
+
+        $exists = $this->model
+            ->where('loan_id', $loan->id)
+            ->whereDate('due_date', $nextDueDate)
+            ->exists();
+
+        if ($exists) {
+            return;
+        }
+
+        $this->model->create([
+            'loan_id' => $loan->id,
+            'amount' => $loan->emi_amount,
+            'due_date' => $nextDueDate,
+            'status' => 'pending',
+        ]);
     }
 }

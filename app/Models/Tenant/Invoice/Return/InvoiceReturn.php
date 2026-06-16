@@ -24,6 +24,7 @@ class InvoiceReturn extends Model
         'sub_total',
         'tax',
         'total',
+        'type',
     ];
 
     protected $casts = [

@@ -52,4 +52,9 @@ class InvoiceReturnController extends Controller
             return response(['status' => 'OK'], 200);
         return response(['status' => 'ERROR'], 500);
     }
+
+    public function dateWiseSummary(Request $request)
+    {
+        return $this->invoice_return->dateWiseSummary($request, 25);
+    }
 }
