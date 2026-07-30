@@ -27,6 +27,7 @@ class LedgerService
     public function paginate($request, $limit = 25)
     {
         $ledgers = $this->ledger
+            ->with(['party', 'reference'])
             ->whereNull('deleted_at')
 
             ->when($request->filled('search'), function ($query) use ($request) {
@@ -131,6 +132,14 @@ class LedgerService
             ->orderByDesc('date')
             ->orderByDesc('id')
             ->paginate($request->integer('limit', $limit));
+
+        if ($request->filled('fiscal_year')) {
+            $ledgers->setCollection(
+                $ledgers->getCollection()->filter(function ($ledger) use ($request) {
+                    return $ledger->fiscal_year === $request->fiscal_year;
+                })->values()
+            );
+        }
 
         return LedgerResource::collection($ledgers);
     }

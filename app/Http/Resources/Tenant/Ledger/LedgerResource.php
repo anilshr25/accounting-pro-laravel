@@ -53,6 +53,7 @@ class LedgerResource extends JsonResource
 
             'remarks' => $this->remarks,
             'balance' => $this->balance,
+            'fiscal_year' => $this->fiscal_year,
         ];
     }
 }

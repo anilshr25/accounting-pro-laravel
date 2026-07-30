@@ -2,7 +2,6 @@
 
 namespace App\Models\Tenant\User;
 
-use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Traits\HasUniqueUuid;
 use App\Models\Tenant\Team\Team;
 use Illuminate\Notifications\Notifiable;
@@ -12,7 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes, HasUniqueUuid;
+    use HasFactory, Notifiable, HasUniqueUuid;
 
     protected $guarded = ['uuid'];
 

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Tenant\Kye\Kye;
+use App\Models\Tenant\Salary\Salary;
 
 class Employee extends Model
 {
@@ -33,5 +34,10 @@ class Employee extends Model
     public function kye()
 {
     return $this->hasOne(Kye::class, 'employee_id');
+}
+
+public function salaries()
+{
+    return $this->hasMany(Salary::class, 'employee_id');
 }
 }

@@ -76,10 +76,21 @@ class ChequeService
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->status);
             });
-        $totalAmount = (clone $chequeQuery)->sum('amount');
+        $totalAmountQuery = clone $chequeQuery;
 
-        $cheques = $chequeQuery->orderBy('date', 'DESC')
-            ->paginate($request->limit ?? $limit);
+        if ($request->status === 'pending') {
+            $totalAmountQuery->whereDate('date', '<=', Carbon::today());
+        }
+
+        $totalAmount = $totalAmountQuery->sum('amount');
+
+        if ($request->status === 'pending') {
+            $chequeQuery->orderBy('date', 'ASC');
+        } else {
+            $chequeQuery->orderBy('date', 'DESC');
+        }
+
+        $cheques = $chequeQuery->paginate($request->limit ?? $limit);
         return [
             'data' => ChequeResource::collection($cheques),
             'total_amount' => $totalAmount,

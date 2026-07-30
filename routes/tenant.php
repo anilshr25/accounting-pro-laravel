@@ -44,7 +44,15 @@ use App\Http\Controllers\Tenant\Kye\Education\KyeEducationController;
 use App\Http\Controllers\Tenant\Kye\EmergencyContact\KyeEmergencyContactController;
 use App\Http\Controllers\Tenant\Kye\Experience\KyeExperienceController;
 use App\Http\Controllers\Tenant\Kye\Service\KyeServiceController;
-
+use App\Http\Controllers\Tenant\Payroll\PayrollController;
+use App\Http\Controllers\Tenant\Report\SalesReportController;
+use App\Http\Controllers\Tenant\Report\LoanReportController;
+use App\Http\Controllers\Tenant\Report\CreditReportController;
+use App\Http\Controllers\Tenant\Report\PurchaseReportController;
+use App\Http\Controllers\Tenant\Report\ChequeReportController;
+use App\Http\Controllers\Tenant\Report\PaymentReportController;
+use App\Http\Controllers\Tenant\Auth\AppLoginController;
+use App\Http\Controllers\Tenant\Auth\AppMFAController;
 
 /*
 |--------------------------------------------------------------------------
@@ -74,6 +82,32 @@ Route::group(['prefix' => 'api', 'middleware' => ['tenant', 'prevent_access_from
     $route->post('verify/email-verification-code', [MFAController::class, 'verifyEmailVerificationCode']);
 
     $route->post('request/verification-code', [MFAController::class, 'requestEmailVerificationCode']);
+});
+
+Route::group([
+    'prefix' => 'app',
+    'middleware' => [
+        'tenant',
+        'prevent_access_from_central_domains',
+    ]
+], function ($route) {
+
+    $route->post('login', [AppLoginController::class, 'login']);
+    $route->post('logout', [AppLoginController::class, 'logout']);
+    $route->get('verify', [AppLoginController::class, 'doVerify']);
+    $route->post('check/verification-enabled', [AppMFAController::class, 'checkVerificationEnabled']);
+});
+
+Route::group([
+    'prefix' => 'app',
+    'middleware' => [
+        'tenant',
+        'prevent_access_from_central_domains',
+    ]
+], function ($route) {
+
+    $route->post('logout', [AppLoginController::class, 'logout']);
+    $route->get('verify', [AppLoginController::class, 'doVerify']);
 });
 
 // Tenant API routes
@@ -183,7 +217,7 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->delete('purchase-return-item/{id}', [PurchaseReturnItemController::class, 'destroy']);
 
     $route->get('invoice-return', [InvoiceReturnController::class, 'index']);
-      $route->get('invoice-return/date-wise-summary', [InvoiceReturnController::class, 'dateWiseSummary']);
+    $route->get('invoice-return/date-wise-summary', [InvoiceReturnController::class, 'dateWiseSummary']);
     $route->post('invoice-return', [InvoiceReturnController::class, 'store']);
     $route->get('invoice-return/{id}', [InvoiceReturnController::class, 'show']);
     $route->put('invoice-return/{id}', [InvoiceReturnController::class, 'update']);
@@ -303,9 +337,15 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->put('kye-service/{id}', [KyeServiceController::class, 'update']);
     $route->delete('kye-service/{id}', [KyeServiceController::class, 'destroy']);
 
+    $route->get('payroll', [PayrollController::class, 'index']);
+    $route->get('sales-report', [SalesReportController::class, 'index']);
+    $route->get('bank-loan-report', [LoanReportController::class, 'index']);
+    $route->get('credit-report', [CreditReportController::class, 'index']);
+    $route->get('purchase-report', [PurchaseReportController::class, 'index']);
+    $route->get('cheque-report', [ChequeReportController::class, 'index']);
+    $route->get('payment-report', [PaymentReportController::class, 'index']);
+
     Route::get('/notifications', function () {
-    return Notification::latest()->get();
+        return Notification::latest()->get();
+    });
 });
-});
-
-
