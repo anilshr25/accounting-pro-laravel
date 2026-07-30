@@ -85,7 +85,7 @@ Route::group(['prefix' => 'api', 'middleware' => ['tenant', 'prevent_access_from
 });
 
 Route::group([
-    'prefix' => 'app',
+    'prefix' => 'mobile',
     'middleware' => [
         'tenant',
         'prevent_access_from_central_domains',
@@ -96,18 +96,6 @@ Route::group([
     $route->post('logout', [AppLoginController::class, 'logout']);
     $route->get('verify', [AppLoginController::class, 'doVerify']);
     $route->post('check/verification-enabled', [AppMFAController::class, 'checkVerificationEnabled']);
-});
-
-Route::group([
-    'prefix' => 'app',
-    'middleware' => [
-        'tenant',
-        'prevent_access_from_central_domains',
-    ]
-], function ($route) {
-
-    $route->post('logout', [AppLoginController::class, 'logout']);
-    $route->get('verify', [AppLoginController::class, 'doVerify']);
 });
 
 // Tenant API routes
