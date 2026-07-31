@@ -85,7 +85,7 @@ Route::group(['prefix' => 'api', 'middleware' => ['tenant', 'prevent_access_from
 });
 
 Route::group([
-    'prefix' => 'mobile',
+    'prefix' => 'api/mobile',
     'middleware' => [
         'tenant',
         'prevent_access_from_central_domains',
