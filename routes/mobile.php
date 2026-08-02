@@ -220,11 +220,11 @@ Route::prefix('api/mobile')
         $route->put('procurement-item/{id}', [ProcurementItemController::class, 'update']);
         $route->delete('procurement-item/{id}', [ProcurementItemController::class, 'destroy']);
 
-        Route::get('dashboard', [DashboardController::class, 'index']);
-        Route::get('/dashboard/graph', [DashboardController::class, 'graph']);
+        $route->get('dashboard', [DashboardController::class, 'index']);
+        $route->get('/dashboard/graph', [DashboardController::class, 'graph']);
 
         $route->get('ledger', [LedgerController::class, 'index']);
-        Route::get('/ledger/export/pdf', [LedgerController::class, 'exportPdf']);
+        $route->get('/ledger/export/pdf', [LedgerController::class, 'exportPdf']);
 
         $route->get('employee', [EmployeeController::class, 'index']);
         $route->post('employee', [EmployeeController::class, 'store']);
@@ -318,7 +318,7 @@ Route::prefix('api/mobile')
         $route->get('cheque-report', [ChequeReportController::class, 'index']);
         $route->get('payment-report', [PaymentReportController::class, 'index']);
 
-        Route::get('/notifications', function () {
+        $route->get('/notifications', function () {
             return Notification::latest()->get();
         });
     });
