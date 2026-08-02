@@ -40,6 +40,24 @@ class CustomerService
         return CustomerResource::collection($customer);
     }
 
+    public function search($request, $limit = 10)
+    {
+        $customer = $this->customer
+            ->when($request->filled('info'), function ($query) use ($request) {
+                $query->where(function ($sub) use ($request) {
+                    $info = $request->info;
+                    $sub->where('name', 'like', "%{$info}%")
+                        ->orWhere('email', 'like', "%{$info}%")
+                        ->orWhere('phone', 'like', "%{$info}%")
+                        ->orWhere('address', 'like', "%{$info}%");
+                });
+            })
+            ->orderBy('id', 'DESC')
+            ->limit($limit)
+            ->get();
+        return CustomerResource::collection($customer);
+    }
+
     public function store($data)
     {
         try {
