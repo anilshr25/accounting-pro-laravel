@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Tenant\Auth;
 
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -30,8 +29,8 @@ class AppLoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (!$this->attemptLogin($request)) {
-            return response([
+        if (! $this->attemptLogin($request)) {
+            return response()->json([
                 'status' => 'NOT_FOUND',
                 'message' => ['The provided credentials are incorrect.'],
             ], 200);
@@ -39,35 +38,49 @@ class AppLoginController extends Controller
 
         $authUser = auth()->guard('web')->user();
 
-        $user = new \stdClass();
-        $user->uuid = $authUser->uuid;
-        $user->full_name = $authUser->full_name;
-        $user->user_type_text = $authUser->user_type_text;
-        $user->image_path = $authUser->image_path;
-        $user->token = Str::random(75);
+        if (method_exists($authUser, 'tokens')) {
+            $authUser->tokens()->where('name', 'mobile')->delete();
+        }
+
+        if (! method_exists($authUser, 'createToken')) {
+            return response()->json([
+                'status' => 'NOT_FOUND',
+                'message' => ['Unable to create authentication token.'],
+            ], 200);
+        }
+
+        $token = $authUser->createToken('mobile')->plainTextToken;
 
         $this->user->update($authUser->id, [
             'last_logged_in' => now(),
         ]);
 
-        return response([
-            'data' => $user,
+        return response()->json([
+            'data' => [
+                'uuid' => $authUser->uuid,
+                'full_name' => $authUser->full_name,
+                'user_type_text' => $authUser->user_type_text,
+                'image_path' => $authUser->image_path,
+                'token' => $token,
+            ],
         ], 200);
     }
 
-    public function doVerify()
+    public function doVerify(Request $request)
     {
-        $user = auth()->guard('web')->user();
+        return response()->json([
+            'data' => new AuthUserResource($request->user()),
+        ]);
+    }
 
-        if ($user) {
-            return response([
-                'data' => new AuthUserResource($user),
-            ], 200);
-        }
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
 
-        return response([
-            'status' => 'Unauthorized',
-        ], 401);
+        return response()->json([
+            'status' => 'OK',
+            'message' => 'Logout successfully.',
+        ], 200);
     }
 
     public function username()
@@ -81,24 +94,6 @@ class AppLoginController extends Controller
         ]);
 
         return $field;
-    }
-
-    public function logout(Request $request)
-    {
-        $user = auth()->guard('web')->user();
-
-        if (!$user || $user->uuid !== $request->uuid) {
-            return response([
-                'status' => 'Unauthorized',
-            ], 401);
-        }
-
-        auth()->guard('web')->logout();
-
-        return response([
-            'status' => 'OK',
-            'message' => 'Logout successfully.',
-        ], 200);
     }
 
     protected function passwordResetUrl($token, $email)

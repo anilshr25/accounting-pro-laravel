@@ -84,20 +84,6 @@ Route::group(['prefix' => 'api', 'middleware' => ['tenant', 'prevent_access_from
     $route->post('request/verification-code', [MFAController::class, 'requestEmailVerificationCode']);
 });
 
-Route::group([
-    'prefix' => 'api/mobile',
-    'middleware' => [
-        'tenant',
-        'prevent_access_from_central_domains',
-    ]
-], function ($route) {
-
-    $route->post('login', [AppLoginController::class, 'login']);
-    $route->post('logout', [AppLoginController::class, 'logout']);
-    $route->get('verify', [AppLoginController::class, 'doVerify']);
-    $route->post('check/verification-enabled', [AppMFAController::class, 'checkVerificationEnabled']);
-});
-
 // Tenant API routes
 Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains', 'stateful', 'web', 'user'])->group(function ($route) {
 
@@ -235,11 +221,11 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->put('procurement-item/{id}', [ProcurementItemController::class, 'update']);
     $route->delete('procurement-item/{id}', [ProcurementItemController::class, 'destroy']);
 
-    Route::get('dashboard', [DashboardController::class, 'index']);
-    Route::get('/dashboard/graph', [DashboardController::class, 'graph']);
+    $route->get('dashboard', [DashboardController::class, 'index']);
+    $route->get('/dashboard/graph', [DashboardController::class, 'graph']);
 
     $route->get('ledger', [LedgerController::class, 'index']);
-    Route::get('/ledger/export/pdf', [LedgerController::class, 'exportPdf']);
+    $route->get('/ledger/export/pdf', [LedgerController::class, 'exportPdf']);
 
     $route->get('employee', [EmployeeController::class, 'index']);
     $route->post('employee', [EmployeeController::class, 'store']);
@@ -333,7 +319,7 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->get('cheque-report', [ChequeReportController::class, 'index']);
     $route->get('payment-report', [PaymentReportController::class, 'index']);
 
-    Route::get('/notifications', function () {
+    $route->get('/notifications', function () {
         return Notification::latest()->get();
     });
 });
