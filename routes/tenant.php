@@ -84,20 +84,6 @@ Route::group(['prefix' => 'api', 'middleware' => ['tenant', 'prevent_access_from
     $route->post('request/verification-code', [MFAController::class, 'requestEmailVerificationCode']);
 });
 
-Route::group([
-    'prefix' => 'api/mobile',
-    'middleware' => [
-        'tenant',
-        'prevent_access_from_central_domains',
-    ]
-], function ($route) {
-
-    $route->post('login', [AppLoginController::class, 'login']);
-    $route->post('logout', [AppLoginController::class, 'logout']);
-    $route->get('verify', [AppLoginController::class, 'doVerify']);
-    $route->post('check/verification-enabled', [AppMFAController::class, 'checkVerificationEnabled']);
-});
-
 // Tenant API routes
 Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains', 'stateful', 'web', 'user'])->group(function ($route) {
 
