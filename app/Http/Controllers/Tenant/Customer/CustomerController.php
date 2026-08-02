@@ -21,6 +21,11 @@ class CustomerController extends Controller
         return $this->customer->paginate($request, 25);
     }
 
+    public function search(Request $request)
+    {
+        return $this->customer->search($request, 10);
+    }
+
     public function store(CustomerRequest $request)
     {
         $customer = $this->customer->store($request->validated());
