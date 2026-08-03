@@ -2,13 +2,15 @@
 
 namespace App\Models\AdminUser;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class AdminUser extends Authenticatable
 {
     use HasFactory, SoftDeletes;
+
+    protected $connection = 'central';
 
     protected $fillable = [
         'first_name',
@@ -32,12 +34,13 @@ class AdminUser extends Authenticatable
 
     protected $appends = ['full_name'];
 
-    function getFullNameAttribute()
+    public function getFullNameAttribute()
     {
-        if (!empty($this->middle_name))
-            return ucfirst($this->first_name . " " . $this->middle_name . " " . $this->last_name);
-        else
-            return ucfirst($this->first_name . " " . $this->last_name);
+        if (! empty($this->middle_name)) {
+            return ucfirst($this->first_name.' '.$this->middle_name.' '.$this->last_name);
+        } else {
+            return ucfirst($this->first_name.' '.$this->last_name);
+        }
 
     }
 }

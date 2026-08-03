@@ -2,16 +2,20 @@
 
 namespace App\Models\OwnerUser;
 
+use App\Models\Domain\Domain;
+use App\Models\Tenant\Tenant;
 use App\Services\Traits\UploadPathTrait;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class OwnerUser extends Authenticatable
 {
-    use HasFactory, UploadPathTrait, SoftDeletes;
+    use HasFactory, SoftDeletes, UploadPathTrait;
 
-    protected $uploadPath = "owner-user";
+    protected $uploadPath = 'owner-user';
+
+    protected $connection = 'central';
 
     protected $fillable = [
         'first_name',
@@ -54,40 +58,44 @@ class OwnerUser extends Authenticatable
     public function getImagePathAttribute()
     {
         $imagePath = null;
-        if (!empty($this->image)) {
+        if (! empty($this->image)) {
             $uploadPath = $this->getUploadPath($this->uploadPath, 'image');
             $imagePath = getImagePath($uploadPath, $this->image, true);
         }
+
         return $imagePath;
     }
 
     public function getDocOnePathAttribute()
     {
         $imagePath = null;
-        if (!empty($this->doc_one)) {
+        if (! empty($this->doc_one)) {
             $uploadPath = $this->getUploadPath($this->uploadPath, 'doc/one');
             $imagePath = getImagePath($uploadPath, $this->doc_one, true);
         }
+
         return $imagePath;
     }
 
     public function getDocTwoPathAttribute()
     {
         $imagePath = null;
-        if (!empty($this->doc_two)) {
+        if (! empty($this->doc_two)) {
             $uploadPath = $this->getUploadPath($this->uploadPath, 'doc/two');
             $imagePath = getImagePath($uploadPath, $this->doc_two, true);
         }
+
         return $imagePath;
     }
 
     public function getDocThreePathAttribute()
     {
         $imagePath = null;
-        if (!empty($this->doc_three)) {
+        if (! empty($this->doc_three)) {
             $uploadPath = $this->getUploadPath($this->uploadPath, 'doc/three');
             $imagePath = getImagePath($uploadPath, $this->doc_three, true);
         }
+
         return $imagePath;
     }
 
@@ -96,7 +104,7 @@ class OwnerUser extends Authenticatable
      */
     public function tenants()
     {
-        return $this->hasMany(\App\Models\Tenant\Tenant::class, 'owner_user_id', 'id');
+        return $this->hasMany(Tenant::class, 'owner_user_id', 'id');
     }
 
     /**
@@ -104,6 +112,6 @@ class OwnerUser extends Authenticatable
      */
     public function domains()
     {
-        return $this->hasMany(\App\Models\Domain\Domain::class, 'owner_user_id', 'id');
+        return $this->hasMany(Domain::class, 'owner_user_id', 'id');
     }
 }

@@ -3,9 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Tenant\Auth\MFAController;
 use App\Http\Controllers\Tenant\User\UserController;
-use App\Http\Controllers\Tenant\Auth\LoginController;
 use App\Http\Controllers\Tenant\Cheque\ChequeController;
 use App\Http\Controllers\Tenant\Credit\CreditController;
 use App\Http\Controllers\Tenant\Ledger\LedgerController;
@@ -14,7 +12,6 @@ use App\Http\Controllers\Tenant\Balance\BalanceController;
 use App\Http\Controllers\Tenant\Daybook\DaybookController;
 use App\Http\Controllers\Tenant\Invoice\InvoiceController;
 use App\Http\Controllers\Tenant\Payment\PaymentController;
-use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
 use App\Http\Controllers\Tenant\Customer\CustomerController;
 use App\Http\Controllers\Tenant\Supplier\SupplierController;
 use App\Http\Controllers\Tenant\BankAccount\BankAccountController;
