@@ -51,19 +51,6 @@ use App\Http\Controllers\Tenant\Report\PaymentReportController;
 use App\Http\Controllers\Tenant\Auth\AppLoginController;
 use App\Http\Controllers\Tenant\Auth\AppMFAController;
 
-/*
-|--------------------------------------------------------------------------
-| Tenant Routes
-|--------------------------------------------------------------------------
-|
-| Here you can register the tenant routes for your application.
-| These routes are loaded by the TenantRouteServiceProvider.
-|
-| Feel free to customize them however you want. Good luck!
-|
-*/
-
-
 Route::prefix('api/mobile')
     ->middleware([
         'tenant',
@@ -113,7 +100,7 @@ Route::prefix('api/mobile')
         $route->delete('credit/{id}', [CreditController::class, 'destroy']);
 
         $route->get('customer', [CustomerController::class, 'index']);
-        $route->get('customer/get/search', [CustomerController::class, 'search'])->name('tenant.customer.search');
+        $route->get('customer/get/search', [CustomerController::class, 'search'])->name('mobile.customer.search');
         $route->post('customer', [CustomerController::class, 'store']);
         $route->get('customer/{id}', [CustomerController::class, 'show']);
         $route->put('customer/{id}', [CustomerController::class, 'update']);
@@ -160,7 +147,7 @@ Route::prefix('api/mobile')
         $route->delete('purchase-order-item/{id}', [PurchaseOrderItemController::class, 'destroy']);
 
         $route->get('supplier', [SupplierController::class, 'index']);
-        $route->get('supplier/get/search', [SupplierController::class, 'search'])->name('tenant.supplier.search');
+        $route->get('supplier/get/search', [SupplierController::class, 'search'])->name('mobile.supplier.search');
         $route->post('supplier', [SupplierController::class, 'store']);
         $route->get('supplier/{id}', [SupplierController::class, 'show']);
         $route->put('supplier/{id}', [SupplierController::class, 'update']);
@@ -217,11 +204,11 @@ Route::prefix('api/mobile')
         $route->put('procurement-item/{id}', [ProcurementItemController::class, 'update']);
         $route->delete('procurement-item/{id}', [ProcurementItemController::class, 'destroy']);
 
-        Route::get('dashboard', [DashboardController::class, 'index']);
-        Route::get('/dashboard/graph', [DashboardController::class, 'graph']);
+        $route->get('dashboard', [DashboardController::class, 'index']);
+        $route->get('/dashboard/graph', [DashboardController::class, 'graph']);
 
         $route->get('ledger', [LedgerController::class, 'index']);
-        Route::get('/ledger/export/pdf', [LedgerController::class, 'exportPdf']);
+        $route->get('/ledger/export/pdf', [LedgerController::class, 'exportPdf']);
 
         $route->get('employee', [EmployeeController::class, 'index']);
         $route->post('employee', [EmployeeController::class, 'store']);
@@ -315,7 +302,7 @@ Route::prefix('api/mobile')
         $route->get('cheque-report', [ChequeReportController::class, 'index']);
         $route->get('payment-report', [PaymentReportController::class, 'index']);
 
-        Route::get('/notifications', function () {
+        $route->get('/notifications', function () {
             return Notification::latest()->get();
         });
     });
