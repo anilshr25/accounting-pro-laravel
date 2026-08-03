@@ -18,25 +18,29 @@ class ChequeService
 
     public function paginate($request, $limit = 25)
     {
-        $chequeQuery = $this->cheque
-            ->when($request->filled('bank_account_id'), function ($query) use ($request) {
+        $query = $this->cheque
+            ->when($request->filled('bank_account_id'), function ($q) use ($request) {
                 $bankIds = is_array($request->bank_account_id)
                     ? $request->bank_account_id
                     : [$request->bank_account_id];
 
-                $query->whereIn('bank_account_id', $bankIds);
+                $q->whereIn('bank_account_id', $bankIds);
             })
-            ->when($request->filled('party_type'), function ($query) use ($request) {
-                $query->where('party_type', $request->party_type);
-            })
-            ->when($request->filled('party_id'), function ($query) use ($request) {
-                $query->where('party_id', $request->party_id);
-            })
-            ->when($request->filled('search'), function ($query) use ($request) {
+            ->when($request->filled('party_type'), fn($q) => $q->where('party_type', $request->party_type))
+            ->when($request->filled('party_id'), fn($q) => $q->where('party_id', $request->party_id))
+            ->when($request->filled('type'), fn($q) => $q->where('type', $request->type))
+            ->when($request->filled('cheque_number'), fn($q) => $q->where('cheque_number', 'like', "%{$request->cheque_number}%"))
+            ->when($request->filled('amount'), fn($q) => $q->where('amount', $request->amount))
+            ->when($request->filled('date_from'), fn($q) => $q->whereDate('date', '>=', $request->date_from))
+            ->when($request->filled('date_upto'), fn($q) => $q->whereDate('date', '<=', $request->date_upto))
+            ->when($request->filled('miti_from'), fn($q) => $q->where('miti', '>=', $request->miti_from))
+            ->when($request->filled('miti_upto'), fn($q) => $q->where('miti', '<=', $request->miti_upto))
+            ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
+            ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->search;
 
-                $query->where(function ($q) use ($search) {
-                    $q->whereHasMorph(
+                $q->where(function ($query) use ($search) {
+                    $query->whereHasMorph(
                         'party',
                         ['supplier', 'customer'],
                         function ($partyQuery) use ($search) {
@@ -48,53 +52,60 @@ class ChequeService
                         ->orWhere('status', 'like', "%{$search}%");
 
                     if (is_numeric($search)) {
-                        $q->orWhere('amount', $search);
+                        $query->orWhere('amount', $search);
                     }
                 });
-            })
-            ->when($request->filled('type'), function ($query) use ($request) {
-                $query->where('type', $request->type);
-            })
-            ->when($request->filled('cheque_number'), function ($query) use ($request) {
-                $query->where('cheque_number', 'like', "%{$request->cheque_number}%");
-            })
-            ->when($request->filled('amount'), function ($query) use ($request) {
-                $query->where('amount', $request->amount);
-            })
-            ->when($request->filled('date_from'), function ($query) use ($request) {
-                $query->whereDate('date', '>=', $request->date_from);
-            })
-            ->when($request->filled('date_upto'), function ($query) use ($request) {
-                $query->whereDate('date', '<=', $request->date_upto);
-            })
-            ->when($request->filled('miti_from'), function ($query) use ($request) {
-                $query->where('miti', '>=', $request->miti_from);
-            })
-            ->when($request->filled('miti_upto'), function ($query) use ($request) {
-                $query->where('miti', '<=', $request->miti_upto);
-            })
-            ->when($request->filled('status'), function ($query) use ($request) {
-                $query->where('status', $request->status);
             });
-        $totalAmountQuery = clone $chequeQuery;
+
+        $summaryQuery = clone $query;
 
         if ($request->status === 'pending') {
-            $totalAmountQuery->whereDate('date', '<=', Carbon::today());
+            $summaryQuery->whereDate('date', '<=', Carbon::today());
         }
 
-        $totalAmount = $totalAmountQuery->sum('amount');
+        $summaryCheques = $summaryQuery->get();
+
+        $summary = [
+            'cheque_count' => $summaryCheques->count(),
+            'received_amount' => round(
+                $summaryCheques->where('type', 'received')->sum('amount'),
+                2
+            ),
+            'cleared_amount' => round(
+                $summaryCheques->where('status', 'cleared')->sum('amount'),
+                2
+            ),
+            'pending_amount' => round(
+                $summaryCheques->where('status', 'pending')->sum('amount'),
+                2
+            ),
+            'cancelled_amount' => round(
+                $summaryCheques->where('status', 'cancelled')->sum('amount'),
+                2
+            ),
+            'total_amount' => round(
+                $summaryCheques->sum('amount'),
+                2
+            ),
+        ];
 
         if ($request->status === 'pending') {
-            $chequeQuery->orderBy('date', 'ASC');
+            $query->orderBy('date', 'ASC');
         } else {
-            $chequeQuery->orderBy('date', 'DESC');
+            $query->orderBy('date', 'DESC');
         }
 
-        $cheques = $chequeQuery->paginate($request->limit ?? $limit);
+        $cheques = $query->paginate($request->limit ?? $limit);
+
         return [
+            'summary' => $summary,
             'data' => ChequeResource::collection($cheques),
-            'total_amount' => $totalAmount,
-            'links' => $cheques->links(),
+            'links' => [
+                'first' => $cheques->url(1),
+                'last' => $cheques->url($cheques->lastPage()),
+                'prev' => $cheques->previousPageUrl(),
+                'next' => $cheques->nextPageUrl(),
+            ],
             'meta' => [
                 'current_page' => $cheques->currentPage(),
                 'from' => $cheques->firstItem(),
