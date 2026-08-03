@@ -2,57 +2,57 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Tenant\Auth\MFAController;
-use App\Http\Controllers\Tenant\User\UserController;
-use App\Http\Controllers\Tenant\Auth\LoginController;
-use App\Http\Controllers\Tenant\Cheque\ChequeController;
-use App\Http\Controllers\Tenant\Credit\CreditController;
-use App\Http\Controllers\Tenant\Ledger\LedgerController;
-use App\Http\Controllers\Tenant\Ledger\LedgerAdjustmentController;
-use App\Http\Controllers\Tenant\Balance\BalanceController;
-use App\Http\Controllers\Tenant\Daybook\DaybookController;
-use App\Http\Controllers\Tenant\Invoice\InvoiceController;
-use App\Http\Controllers\Tenant\Payment\PaymentController;
-use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
-use App\Http\Controllers\Tenant\Customer\CustomerController;
-use App\Http\Controllers\Tenant\Supplier\SupplierController;
-use App\Http\Controllers\Tenant\BankAccount\BankAccountController;
-use App\Http\Controllers\Tenant\Invoice\Item\InvoiceItemController;
-use App\Http\Controllers\Tenant\Purchase\Order\PurchaseOrderController;
-use App\Http\Controllers\Tenant\Purchase\Order\Item\PurchaseOrderItemController;
-use App\Http\Controllers\Tenant\Purchase\Return\PurchaseReturnController;
-use App\Http\Controllers\Tenant\Purchase\Return\Item\PurchaseReturnItemController;
-use App\Http\Controllers\Tenant\Invoice\Return\InvoiceReturnController;
-use App\Http\Controllers\Tenant\Invoice\Return\Item\InvoiceReturnItemController;
-use App\Http\Controllers\Tenant\Dashboard\DashboardController;
-use App\Http\Controllers\Tenant\Product\ProductController;
-use App\Http\Controllers\Tenant\Procurement\ProcurementController;
-use App\Http\Controllers\Tenant\Procurement\Item\ProcurementItemController;
-use App\Http\Controllers\Tenant\Employee\EmployeeController;
 use App\Http\Controllers\Tenant\Attendance\AttendanceController;
-use App\Http\Controllers\Tenant\Salary\SalaryController;
-use App\Http\Controllers\Tenant\Scheme\SchemeController;
-use App\Http\Controllers\Tenant\Scheme\Payment\SchemePaymentController;
+use App\Http\Controllers\Tenant\Auth\LoginController;
+use App\Http\Controllers\Tenant\Auth\MFAController;
+use App\Http\Controllers\Tenant\Balance\BalanceController;
+use App\Http\Controllers\Tenant\BankAccount\BankAccountController;
 use App\Http\Controllers\Tenant\BankAccount\Loan\LoanController;
 use App\Http\Controllers\Tenant\BankAccount\Loan\Payment\LoanPaymentController;
+use App\Http\Controllers\Tenant\Cheque\ChequeController;
+use App\Http\Controllers\Tenant\Credit\CreditController;
+use App\Http\Controllers\Tenant\Customer\CustomerController;
+use App\Http\Controllers\Tenant\Dashboard\DashboardController;
+use App\Http\Controllers\Tenant\Daybook\DaybookController;
+use App\Http\Controllers\Tenant\Employee\EmployeeController;
 use App\Http\Controllers\Tenant\Expenses\ExpensesController;
-use App\Models\Tenant\Notification\Notification;
-use App\Http\Controllers\Tenant\Kye\KyeController;
+use App\Http\Controllers\Tenant\Invoice\InvoiceController;
+use App\Http\Controllers\Tenant\Invoice\Item\InvoiceItemController;
+use App\Http\Controllers\Tenant\Invoice\Return\InvoiceReturnController;
+use App\Http\Controllers\Tenant\Invoice\Return\Item\InvoiceReturnItemController;
 use App\Http\Controllers\Tenant\Kye\Address\KyeAddressController;
 use App\Http\Controllers\Tenant\Kye\Education\KyeEducationController;
 use App\Http\Controllers\Tenant\Kye\EmergencyContact\KyeEmergencyContactController;
 use App\Http\Controllers\Tenant\Kye\Experience\KyeExperienceController;
+use App\Http\Controllers\Tenant\Kye\KyeController;
 use App\Http\Controllers\Tenant\Kye\Service\KyeServiceController;
+use App\Http\Controllers\Tenant\Ledger\LedgerAdjustmentController;
+use App\Http\Controllers\Tenant\Ledger\LedgerController;
+use App\Http\Controllers\Tenant\Payment\PaymentController;
 use App\Http\Controllers\Tenant\Payroll\PayrollController;
-use App\Http\Controllers\Tenant\Report\SalesReportController;
-use App\Http\Controllers\Tenant\Report\LoanReportController;
-use App\Http\Controllers\Tenant\Report\CreditReportController;
-use App\Http\Controllers\Tenant\Report\PurchaseReportController;
+use App\Http\Controllers\Tenant\Procurement\Item\ProcurementItemController;
+use App\Http\Controllers\Tenant\Procurement\ProcurementController;
+use App\Http\Controllers\Tenant\Product\ProductController;
+use App\Http\Controllers\Tenant\Purchase\Order\Item\PurchaseOrderItemController;
+use App\Http\Controllers\Tenant\Purchase\Order\PurchaseOrderController;
+use App\Http\Controllers\Tenant\Purchase\Return\Item\PurchaseReturnItemController;
+use App\Http\Controllers\Tenant\Purchase\Return\PurchaseReturnController;
 use App\Http\Controllers\Tenant\Report\ChequeReportController;
+use App\Http\Controllers\Tenant\Report\CreditReportController;
+use App\Http\Controllers\Tenant\Report\LoanReportController;
 use App\Http\Controllers\Tenant\Report\PaymentReportController;
-use App\Http\Controllers\Tenant\Auth\AppLoginController;
-use App\Http\Controllers\Tenant\Auth\AppMFAController;
+use App\Http\Controllers\Tenant\Report\PurchaseReportController;
+use App\Http\Controllers\Tenant\Report\SalesReportController;
+use App\Http\Controllers\Tenant\Salary\SalaryController;
+use App\Http\Controllers\Tenant\Scheme\Payment\SchemePaymentController;
+use App\Http\Controllers\Tenant\Scheme\SchemeController;
+use App\Http\Controllers\Tenant\SiteSetting\SiteSettingController;
+use App\Http\Controllers\Tenant\Storage\TenantFileController;
+use App\Http\Controllers\Tenant\Supplier\SupplierController;
+use App\Http\Controllers\Tenant\User\UserController;
+use App\Models\Tenant\Notification\Notification;
+use Illuminate\Support\Facades\Route;
+use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
 
 /*
 |--------------------------------------------------------------------------
@@ -86,6 +86,14 @@ Route::group(['prefix' => 'api', 'middleware' => ['tenant', 'prevent_access_from
 
 // Tenant API routes
 Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains', 'stateful', 'web', 'user'])->group(function ($route) {
+
+    $route->middleware('tenant.owner')->group(function ($route): void {
+        $route->get('site-setting', [SiteSettingController::class, 'show']);
+        $route->put('site-setting', [SiteSettingController::class, 'update']);
+    });
+    $route->get('tenant-files/show', TenantFileController::class)
+        ->middleware('signed')
+        ->name('tenant.storage.show');
 
     $route->post('logout', [LoginController::class, 'logout'])->name('logout');
     $route->get('do-verify', [LoginController::class, 'doVerify']);
@@ -122,7 +130,6 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->get('customer/{id}', [CustomerController::class, 'show']);
     $route->put('customer/{id}', [CustomerController::class, 'update']);
     $route->delete('customer/{id}', [CustomerController::class, 'destroy']);
-
 
     $route->get('daybook', [DaybookController::class, 'index']);
     $route->post('daybook', [DaybookController::class, 'store']);
@@ -170,13 +177,11 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->put('supplier/{id}', [SupplierController::class, 'update']);
     $route->delete('supplier/{id}', [SupplierController::class, 'destroy']);
 
-
     $route->get('user', [UserController::class, 'index']);
     $route->post('user', [UserController::class, 'store']);
     $route->get('user/{id}', [UserController::class, 'show']);
     $route->put('user/{id}', [UserController::class, 'update']);
     $route->delete('user/{id}', [UserController::class, 'destroy']);
-
 
     $route->get('purchase-return', [PurchaseReturnController::class, 'index']);
     $route->post('purchase-return', [PurchaseReturnController::class, 'store']);

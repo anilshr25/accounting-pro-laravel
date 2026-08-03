@@ -2,9 +2,9 @@
 
 namespace App\Models\Tenant\SiteSetting;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class SiteSetting extends Model
 {
@@ -57,6 +57,11 @@ class SiteSetting extends Model
         'mail_encryption',
         'mail_sender_name',
         'mail_sender_address',
+        'mail_fallback_host',
+        'mail_fallback_port',
+        'mail_fallback_user_name',
+        'mail_fallback_password',
+        'mail_fallback_encryption',
         'storage_url',
         'storage_type',
         'storage_access_key',
@@ -71,5 +76,10 @@ class SiteSetting extends Model
 
     protected $casts = [
         'enable_cookies' => 'boolean',
+        'recaptcha_secret_key' => 'encrypted',
+        'mail_password' => 'encrypted',
+        'mail_fallback_password' => 'encrypted',
+        'storage_access_key' => 'encrypted',
+        'storage_secret_key' => 'encrypted',
     ];
 }
