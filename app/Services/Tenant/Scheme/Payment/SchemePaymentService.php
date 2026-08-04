@@ -15,7 +15,14 @@ class SchemePaymentService
     }
     public function paginate($request, $limit = 25)
     {
+        $fiscalYear = $request->input('fiscal_year', '2083/84');
+
+        [$startYear] = explode('/', $fiscalYear);
+
+        $mitiFrom = $startYear . '-04-01';
+        $mitiUpto = ($startYear + 1) . '-03-31';
         $schemepayment = $this->schemepayment
+            ->whereBetween('miti', [$mitiFrom, $mitiUpto])
             ->when($request->filled('scheme_id'), function ($query) use ($request) {
                 $query->where('scheme_id', $request->scheme_id);
             })

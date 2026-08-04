@@ -26,9 +26,51 @@ class LedgerService
 
     public function paginate($request, $limit = 25)
     {
+        $fiscalYear = $request->input('fiscal_year');
+
+        if (!$fiscalYear) {
+            $todayMiti = now()->format('Y-m-d');
+
+            $year = (int) substr($todayMiti, 0, 4);
+            $month = (int) substr($todayMiti, 5, 2);
+
+            if ($month >= 4) {
+                $fiscalYear = $year . '/' . substr($year + 1, -2);
+            } else {
+                $fiscalYear = ($year - 1) . '/' . substr($year, -2);
+            }
+        }
+
+        [$startYear] = explode('/', $fiscalYear);
+
+        $mitiFrom = $startYear . '-04-01';
+        $mitiUpto = ((int) $startYear + 1) . '-03-31';
+
+        $openingBalance = 0;
+
+        if ($request->filled('party_type') && $request->filled('party_id')) {
+            $openingBalance = $this->ledger
+                ->where('party_type', $request->party_type)
+                ->where('party_id', $request->party_id)
+                ->whereNull('deleted_at')
+                ->where('miti', '<', $mitiFrom)
+                ->latest('miti')
+                ->latest('id')
+                ->value('balance');
+
+            if (is_null($openingBalance)) {
+
+                if ($request->party_type === 'supplier') {
+                    $openingBalance = \App\Models\Tenant\Supplier\Supplier::find($request->party_id)?->opening_balance ?? 0;
+                } else {
+                    $openingBalance = \App\Models\Tenant\Customer\Customer::find($request->party_id)?->credit_balance ?? 0;
+                }
+            }
+        }
         $ledgers = $this->ledger
             ->with(['party', 'reference'])
             ->whereNull('deleted_at')
+            ->whereBetween('miti', [$mitiFrom, $mitiUpto])
 
             ->when($request->filled('search'), function ($query) use ($request) {
 
@@ -133,15 +175,25 @@ class LedgerService
             ->orderByDesc('id')
             ->paginate($request->integer('limit', $limit));
 
-        if ($request->filled('fiscal_year')) {
-            $ledgers->setCollection(
-                $ledgers->getCollection()->filter(function ($ledger) use ($request) {
-                    return $ledger->fiscal_year === $request->fiscal_year;
-                })->values()
-            );
-        }
-
-        return LedgerResource::collection($ledgers);
+        return [
+            'fiscal_year' => $fiscalYear,
+            'opening_balance' => $openingBalance,
+            'data' => LedgerResource::collection($ledgers),
+            'links' => [
+                'first' => $ledgers->url(1),
+                'last' => $ledgers->url($ledgers->lastPage()),
+                'prev' => $ledgers->previousPageUrl(),
+                'next' => $ledgers->nextPageUrl(),
+            ],
+            'meta' => [
+                'current_page' => $ledgers->currentPage(),
+                'from' => $ledgers->firstItem(),
+                'last_page' => $ledgers->lastPage(),
+                'per_page' => $ledgers->perPage(),
+                'to' => $ledgers->lastItem(),
+                'total' => $ledgers->total(),
+            ],
+        ];
     }
 
     public function store($data)
@@ -272,6 +324,7 @@ class LedgerService
 
             $data = [
                 'date' => $payment->date,
+                'miti' => $payment->miti,
                 'party_type' => $payment->party_type,
                 'party_id' => $payment->party_id,
                 'debit' => $debit,
@@ -335,6 +388,7 @@ class LedgerService
             // Create ledger entry
             $ledger = new Ledger([
                 'date' => $cheque->date,
+                'miti' => $cheque->miti,
                 'debit' => $debit,
                 'credit' => $credit,
                 'balance' => $newBalance,
@@ -398,6 +452,7 @@ class LedgerService
 
             $data = [
                 'date' => $cheque->date,
+                'miti' => $cheque->miti,
                 'party_type' => $partyType,
                 'party_id' => $partyId,
                 'debit' => $debit,
@@ -452,6 +507,7 @@ class LedgerService
 
             $data = [
                 'date' => $purchaseOrder->order_date ?? $purchaseOrder->received_date,
+                'miti' => $purchaseOrder->order_date_miti ?? $purchaseOrder->received_date_miti,
                 'party_type' => $partyType,
                 'party_id' => $partyId,
                 'debit' => $debit,
@@ -520,6 +576,7 @@ class LedgerService
 
             $data = [
                 'date'           => $purchaseReturn->return_date,
+                'miti'           => $purchaseReturn->return_miti,
                 'party_type'     => $partyType,
                 'party_id'       => $partyId,
                 'debit'          => 0,
@@ -589,6 +646,7 @@ class LedgerService
 
             $data = [
                 'date'           => $invoiceReturn->return_date,
+                'miti'           => $invoiceReturn->return_miti,
                 'party_type'     => $partyType,
                 'party_id'       => $partyId,
                 'debit'          => $debit,
@@ -647,6 +705,7 @@ class LedgerService
 
             $data = [
                 'date' => $credit->date,
+                'miti' => $credit->miti,
                 'party_type' => $partyType,
                 'party_id' => $partyId,
                 'debit' => 0,

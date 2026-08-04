@@ -18,7 +18,14 @@ class ChequeService
 
     public function paginate($request, $limit = 25)
     {
+        $fiscalYear = $request->input('fiscal_year', '2083/84');
+
+        [$startYear] = explode('/', $fiscalYear);
+
+        $mitiFrom = $startYear . '-04-01';
+        $mitiUpto = ($startYear + 1) . '-03-31';
         $query = $this->cheque
+            ->whereBetween('miti', [$mitiFrom, $mitiUpto])
             ->when($request->filled('bank_account_id'), function ($q) use ($request) {
                 $bankIds = is_array($request->bank_account_id)
                     ? $request->bank_account_id

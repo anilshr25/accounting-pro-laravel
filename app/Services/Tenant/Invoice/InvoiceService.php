@@ -21,8 +21,15 @@ class InvoiceService
     }
     public function paginate($request, $limit = 25)
     {
+        $fiscalYear = $request->input('fiscal_year', '2083/84');
+
+        [$startYear] = explode('/', $fiscalYear);
+
+        $mitiFrom = $startYear . '-04-01';
+        $mitiUpto = ($startYear + 1) . '-03-31';
         $invoice = $this->invoice
             ->with('items')
+            ->whereBetween('invoice_miti', [$mitiFrom, $mitiUpto])
             ->when($request->filled('customer_id'), function ($query) use ($request) {
                 $query->where('customer_id', $request->customer_id);
             })

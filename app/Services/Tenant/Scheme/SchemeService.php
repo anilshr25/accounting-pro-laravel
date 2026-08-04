@@ -14,9 +14,16 @@ class SchemeService
     }
     public function paginate($request, $limit = 25)
     {
+        $fiscalYear = $request->input('fiscal_year', '2083/84');
+
+        [$startYear] = explode('/', $fiscalYear);
+
+        $mitiFrom = $startYear . '-04-01';
+        $mitiUpto = ($startYear + 1) . '-03-31';
         $scheme = $this->scheme
             ->with('supplier')
             ->withSum('payments as total_paid', 'amount')
+            ->whereBetween('start_miti', [$mitiFrom, $mitiUpto])
             ->when($request->filled('supplier_id'), function ($query) use ($request) {
                 $query->where('supplier_id', $request->supplier_id);
             })

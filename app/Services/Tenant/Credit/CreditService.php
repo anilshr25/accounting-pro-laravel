@@ -17,8 +17,15 @@ class CreditService
     }
     public function paginate($request, $limit = 25)
     {
+        $fiscalYear = $request->input('fiscal_year', '2083/84');
+
+        [$startYear] = explode('/', $fiscalYear);
+
+        $mitiFrom = $startYear . '-04-01';
+        $mitiUpto = ($startYear + 1) . '-03-31';
         $query = $this->credit
             ->with('customer:id,name')
+            ->whereBetween('miti', [$mitiFrom, $mitiUpto])
             ->when($request->filled('type'), function ($query) use ($request) {
                 $query->where('type', $request->type);
             })
