@@ -38,6 +38,13 @@ class DashboardService
 
     public function getSummary(array $filters = [])
     {
+        $fiscalYear = $filters['fiscal_year'] ?? '2083/84';
+
+        [$startYear] = explode('/', $fiscalYear);
+
+        $mitiFrom = $startYear . '-04-01';
+        $mitiUpto = ($startYear + 1) . '-03-31';
+
         $type = $filters['type'] ?? 'monthly';
 
         $date  = null;
@@ -68,14 +75,17 @@ class DashboardService
         }
 
         $totalSales = $this->invoice
+            ->whereBetween('invoice_miti', [$mitiFrom, $mitiUpto])
             ->whereBetween('invoice_date', [$startDate, $endDate])
             ->sum('total');
 
         $salesReturns = $this->invoiceReturn
+            ->whereBetween('return_miti', [$mitiFrom, $mitiUpto])
             ->whereBetween('return_date', [$startDate, $endDate])
             ->sum('total');
 
         $salesBreakdown = $this->invoice
+            ->whereBetween('invoice_miti', [$mitiFrom, $mitiUpto])
             ->whereBetween('invoice_date', [$startDate, $endDate])
             ->selectRaw('payment_type, SUM(total) as total')
             ->groupBy('payment_type')
@@ -88,26 +98,31 @@ class DashboardService
             ]);
 
         $totalPurchases = $this->purchaseOrder
+            ->whereBetween('received_date_miti', [$mitiFrom, $mitiUpto])
             ->whereBetween('received_date', [$startDate, $endDate])
             ->sum('total');
 
         $purchaseReturns = $this->purchaseReturn
+            ->whereBetween('return_miti', [$mitiFrom, $mitiUpto])
             ->whereBetween('return_date', [$startDate, $endDate])
             ->sum('total');
 
         $purchaseBreakdown = collect([(object)['type' => 'purchase', 'total' => $totalPurchases,], (object)['type' => 'return', 'total' => $purchaseReturns,]]);
 
         $credit = $this->credit
+            ->whereBetween('miti', [$mitiFrom, $mitiUpto])
             ->whereBetween('date', [$startDate, $endDate])
             ->sum('amount');
 
         $customerChequeAmount = $this->cheque
+            ->whereBetween('miti', [$mitiFrom, $mitiUpto])
             ->where('type', 'customer')
             ->where('status', 'pending')
             ->whereBetween('date', [$startDate, $endDate])
             ->sum('amount');
 
         $supplierChequeAmount = $this->cheque
+            ->whereBetween('miti', [$mitiFrom, $mitiUpto])
             ->where('type', 'supplier')
             ->where('status', 'pending')
             ->whereBetween('date', [$startDate, $endDate])
@@ -124,7 +139,7 @@ class DashboardService
             'outstanding_credit' => $credit,
             'cheque_balance' => $supplierChequeAmount,
             'customer_cheque_balance' => $customerChequeAmount,
-
+            'fiscal_year' => $fiscalYear,
             'type'  => $type,
             'date'  => $date,
             'month' => $month,
@@ -134,6 +149,13 @@ class DashboardService
 
     public function getGraphData(array $filters = [])
     {
+        $fiscalYear = $filters['fiscal_year'] ?? '2083/84';
+
+        [$startYear] = explode('/', $fiscalYear);
+
+        $mitiFrom = $startYear . '-04-01';
+        $mitiUpto = ($startYear + 1) . '-03-31';
+
         $type = $filters['type'] ?? 'monthly';
 
         if ($type === 'custom') {
@@ -168,12 +190,14 @@ class DashboardService
         }
 
         $sales = $this->invoice
+            ->whereBetween('invoice_miti', [$mitiFrom, $mitiUpto])
             ->whereBetween('invoice_date', [$startDate, $endDate])
             ->selectRaw("DATE_FORMAT(invoice_date, '$format') as label, SUM(total) as total")
             ->groupBy('label')
             ->pluck('total', 'label');
 
         $purchases = $this->purchaseOrder
+            ->whereBetween('received_date_miti', [$mitiFrom, $mitiUpto])
             ->whereBetween('received_date', [$startDate, $endDate])
             ->selectRaw("DATE_FORMAT(received_date, '$format') as label, SUM(total) as total")
             ->groupBy('label')
@@ -196,6 +220,7 @@ class DashboardService
             'filter_type' => $type,
             'start_date' => $startDate->toDateString(),
             'end_date' => $endDate->toDateString(),
+            'fiscal_year' => $fiscalYear,
             'graph' => $data,
         ];
     }

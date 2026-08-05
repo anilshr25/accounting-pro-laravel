@@ -23,6 +23,7 @@ class DashboardController extends Controller
             'date'       => $request->input('date'),
             'month'      => $request->input('month'),
             'year'       => $request->input('year'),
+            'fiscal_year' => $request->input('fiscal_year'),
             'start_date' => $request->input('start_date'),
             'end_date'   => $request->input('end_date')
         ];
@@ -39,6 +40,7 @@ class DashboardController extends Controller
             'date',
             'month',
             'year',
+            'fiscal_year',
             'start_date',
             'end_date'
         ]);

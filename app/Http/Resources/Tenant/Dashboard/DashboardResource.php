@@ -15,6 +15,7 @@ class DashboardResource extends JsonResource
                     'type' => $this['filter_type'],
                     'start_date' => $this['start_date'],
                     'end_date' => $this['end_date'],
+                    'fiscal_year' => $this['fiscal_year'] ?? '2083/84',
                 ],
 
                 'labels' => collect($this['graph'])->pluck('label'),
@@ -42,6 +43,7 @@ class DashboardResource extends JsonResource
                 'date'  => $this['date'] ?? null,
                 'month' => $this['month'] ?? null,
                 'year'  => $this['year'] ?? null,
+                'fiscal_year' => $this['fiscal_year'] ?? '2083/84',
             ],
         ];
     }
