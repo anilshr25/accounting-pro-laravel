@@ -23,7 +23,7 @@ class PurchaseOrderService
 
     public function paginate($request, $limit = 25)
     {
-        $fiscalYear = $request->input('fiscal_year', '2083/84');
+        $fiscalYear = $request->input('fiscal_year');
 
         [$startYear] = explode('/', $fiscalYear);
 

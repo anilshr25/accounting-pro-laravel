@@ -18,7 +18,7 @@ class ChequeService
 
     public function paginate($request, $limit = 25)
     {
-        $fiscalYear = $request->input('fiscal_year', '2083/84');
+        $fiscalYear = $request->input('fiscal_year');
 
         [$startYear] = explode('/', $fiscalYear);
 
@@ -74,10 +74,6 @@ class ChequeService
 
         $summary = [
             'cheque_count' => $summaryCheques->count(),
-            'received_amount' => round(
-                $summaryCheques->where('type', 'received')->sum('amount'),
-                2
-            ),
             'cleared_amount' => round(
                 $summaryCheques->where('status', 'cleared')->sum('amount'),
                 2
