@@ -22,8 +22,15 @@ class PurchaseReturnService
 
     public function paginate($request, $limit = 25)
     {
+        $fiscalYear = $request->input('fiscal_year');
+
+        [$startYear] = explode('/', $fiscalYear);
+
+        $mitiFrom = $startYear . '-04-01';
+        $mitiUpto = ($startYear + 1) . '-03-31';
         $query = $this->purchase_return
             ->with(['items', 'supplier'])
+            ->whereBetween('return_miti', [$mitiFrom, $mitiUpto])
             ->when(
                 $request->filled('purchase_return_number'),
                 fn($q) =>

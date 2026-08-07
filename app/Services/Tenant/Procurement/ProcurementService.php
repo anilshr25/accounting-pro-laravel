@@ -22,8 +22,15 @@ class ProcurementService
 
     public function paginate($request, $limit = 25)
     {
+        $fiscalYear = $request->input('fiscal_year');
+
+        [$startYear] = explode('/', $fiscalYear);
+
+        $mitiFrom = $startYear . '-04-01';
+        $mitiUpto = ($startYear + 1) . '-03-31';
         $procurements = $this->procurement
             ->with(['items.product'])
+            ->whereBetween('order_miti', [$mitiFrom, $mitiUpto])
 
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = $request->search;

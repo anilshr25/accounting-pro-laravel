@@ -62,37 +62,35 @@ class LoanService
 
     public function paginate($request, $limit = 25)
     {
-        $loan = $this->loan
-            ->select($this->fields())
-            ->with('nextPayment:id,loan_id,due_date')
+        $query = $this->loan
+            ->with(['nextPayment:id,loan_id,due_date', 'payments']);
 
-            ->when($request->filled('search'), function ($q) use ($request) {
-                $search = $request->search;
+        $query->when($request->filled('search'), function ($q) use ($request) {
+            $search = $request->search;
 
-                $q->where(function ($query) use ($search) {
+            $q->where(function ($query) use ($search) {
+                $query->where('loan_number', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%")
+                    ->orWhere('loan_type', 'like', "%{$search}%")
+                    ->orWhere('remarks', 'like', "%{$search}%")
+                    ->orWhere('duration', 'like', "%{$search}%")
+                    ->orWhere('payment_type', 'like', "%{$search}%")
+                    ->orWhere('collateral', 'like', "%{$search}%");
 
-                    $query->where('loan_number', 'like', "%{$search}%")
-                        ->orWhere('status', 'like', "%{$search}%")
-                        ->orWhere('loan_type', 'like', "%{$search}%")
-                        ->orWhere('remarks', 'like', "%{$search}%")
-                        ->orWhere('duration', 'like', "%{$search}%")
-                        ->orWhere('payment_type', 'like', "%{$search}%")
-                        ->orWhere('collateral', 'like', "%{$search}%");
+                if (is_numeric($search)) {
+                    $query->orWhere('total_amount', $search)
+                        ->orWhere('base_rate', $search)
+                        ->orWhere('premium_rate', $search)
+                        ->orWhere('emi_amount', $search)
+                        ->orWhere('principal_amount', $search);
+                }
+            });
+        });
 
-                    if (is_numeric($search)) {
-                        $query->orWhere('total_amount', $search)
-                            ->orWhere('base_rate', $search)
-                            ->orWhere('premium_rate', $search)
-                            ->orWhere('emi_amount', $search)
-                            ->orWhere('principal_amount', $search);
-                    }
-                });
-            })
-
-            ->when(
-                $request->filled('loan_number'),
-                fn($q) => $q->where('loan_number', $request->loan_number)
-            )
+        $query->when(
+            $request->filled('loan_number'),
+            fn($q) => $q->where('loan_number', $request->loan_number)
+        )
             ->when(
                 $request->filled('bank_account_id'),
                 fn($q) => $q->where('bank_account_id', $request->bank_account_id)
@@ -120,11 +118,47 @@ class LoanService
             ->when(
                 $request->filled('end_miti'),
                 fn($q) => $q->where('end_miti', $request->end_miti)
-            )
+            );
+
+        $summaryLoans = (clone $query)->get();
+
+        $summary = [
+            'total_loans' => $summaryLoans->count(),
+            'active_loans' => $summaryLoans->where('status', 'active')->count(),
+            'closed_loans' => $summaryLoans->where('status', 'closed')->count(),
+            'principal_amount' => round($summaryLoans->sum('principal_amount'), 2),
+            'total_amount' => round($summaryLoans->sum('total_amount'), 2),
+            'remaining_amount' => round($summaryLoans->sum('remaining_amount'), 2),
+            'paid_amount' => round(
+                $summaryLoans->sum(fn($loan) => $loan->payments->sum('amount')),
+                2
+            ),
+            'monthly_emi' => round($summaryLoans->sum('emi_amount'), 2),
+        ];
+
+        $loans = $query
+            ->select($this->fields())
             ->latest()
             ->paginate($request->limit ?? $limit);
 
-        return LoanResource::collection($loan);
+        return [
+            'summary' => $summary,
+            'data' => LoanResource::collection($loans),
+            'links' => [
+                'first' => $loans->url(1),
+                'last' => $loans->url($loans->lastPage()),
+                'prev' => $loans->previousPageUrl(),
+                'next' => $loans->nextPageUrl(),
+            ],
+            'meta' => [
+                'current_page' => $loans->currentPage(),
+                'from' => $loans->firstItem(),
+                'last_page' => $loans->lastPage(),
+                'per_page' => $loans->perPage(),
+                'to' => $loans->lastItem(),
+                'total' => $loans->total(),
+            ],
+        ];
     }
 
     public function store($data)

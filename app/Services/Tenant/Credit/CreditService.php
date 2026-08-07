@@ -17,7 +17,15 @@ class CreditService
     }
     public function paginate($request, $limit = 25)
     {
-        $credit = $this->credit
+        $fiscalYear = $request->input('fiscal_year');
+
+        [$startYear] = explode('/', $fiscalYear);
+
+        $mitiFrom = $startYear . '-04-01';
+        $mitiUpto = ($startYear + 1) . '-03-31';
+        $query = $this->credit
+            ->with('customer:id,name')
+            ->whereBetween('miti', [$mitiFrom, $mitiUpto])
             ->when($request->filled('type'), function ($query) use ($request) {
                 $query->where('type', $request->type);
             })
@@ -57,17 +65,50 @@ class CreditService
                     $q->whereHas('customer', function ($customerQuery) use ($info) {
                         $customerQuery->where('name', 'like', "%{$info}%");
                     })
-                    ->orWhere('description', 'like', "%{$info}%")
+                        ->orWhere('description', 'like', "%{$info}%")
                         ->orWhere('status', 'like', "%{$info}%")
                         ->orWhere('shift', 'like', "%{$info}%")
                         ->orWhere('amount', 'like', "%{$info}%")
                         ->orWhere('invoice_no', 'like', "%{$info}%")
                         ->orWhere('return_amount', 'like', "%{$info}%");
                 });
-            })
+            });
+        $summaryCredits = (clone $query)->get();
+
+        $summary = [
+            'total_records' => $summaryCredits->count(),
+            'total_credit_amount' => round($summaryCredits->sum('amount'), 2),
+            'returned_amount' => round($summaryCredits->sum('return_amount'), 2),
+            'remaining_amount' => round(
+                $summaryCredits->sum(fn($credit) => $credit->amount - $credit->return_amount),
+                2
+            ),
+            'completed' => $summaryCredits->where('status', 'completed')->count(),
+            'pending' => $summaryCredits->where('status', 'pending')->count(),
+        ];
+
+        $credits = $query
             ->orderBy('date', 'DESC')
             ->paginate($request->limit ?? $limit);
-        return CreditResource::collection($credit);
+
+        return [
+            'summary' => $summary,
+            'data' => CreditResource::collection($credits),
+            'links' => [
+                'first' => $credits->url(1),
+                'last' => $credits->url($credits->lastPage()),
+                'prev' => $credits->previousPageUrl(),
+                'next' => $credits->nextPageUrl(),
+            ],
+            'meta' => [
+                'current_page' => $credits->currentPage(),
+                'from' => $credits->firstItem(),
+                'last_page' => $credits->lastPage(),
+                'per_page' => $credits->perPage(),
+                'to' => $credits->lastItem(),
+                'total' => $credits->total(),
+            ],
+        ];
     }
 
     public function store($data)

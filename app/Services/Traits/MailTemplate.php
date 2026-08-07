@@ -5,7 +5,6 @@ namespace App\Services\Traits;
 use App\Models\EmailTemplate\EmailTemplate;
 use HTMLPurifier;
 use HTMLPurifier_Config;
-use Illuminate\Support\Facades\Blade;
 
 trait MailTemplate
 {
@@ -20,9 +19,10 @@ trait MailTemplate
         //     ])->firstOrFail()
         // );
         return EmailTemplate::where([
-                'role' => $role,
-                'type' => $type
-            ])->firstOrFail();
+            'role' => $role,
+            'type' => $type,
+            'is_active' => true,
+        ])->firstOrFail();
     }
 
     public function sanitize($data, $template, $isMessageContent = false): string
@@ -43,13 +43,28 @@ trait MailTemplate
         // Optional: automatically add rel="noopener" for security
         $config->set('Attr.DefaultImageAlt', '');
 
-        $purifier = new HTMLPurifier();
+        $purifier = new HTMLPurifier($config);
 
         return $purifier->purify($content);
     }
 
     private function prepareContent($data, $description)
     {
-        return Blade::render($description, data: $data);
+        $content = (string) $description;
+
+        foreach ($data as $key => $value) {
+            if (! is_scalar($value) && $value !== null) {
+                continue;
+            }
+
+            $escapedValue = e((string) $value);
+            $content = str_replace(
+                ["{{ \${$key} }}", "{{\${$key}}}"],
+                $escapedValue,
+                $content,
+            );
+        }
+
+        return $content;
     }
 }

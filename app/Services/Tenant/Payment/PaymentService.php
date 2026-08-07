@@ -18,7 +18,15 @@ class PaymentService
     }
     public function paginate($request, $limit = 25)
     {
+        $fiscalYear = $request->input('fiscal_year');
+
+        [$startYear] = explode('/', $fiscalYear);
+
+        $mitiFrom = $startYear . '-04-01';
+        $mitiUpto = ($startYear + 1) . '-03-31';
+
         $payment = $this->payment
+            ->whereBetween('miti', [$mitiFrom, $mitiUpto])
             ->when($request->filled('party_type'), function ($query) use ($request) {
                 $query->where('party_type', $request->party_type);
             })

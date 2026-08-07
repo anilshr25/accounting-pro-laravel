@@ -23,8 +23,14 @@ class PurchaseOrderService
 
     public function paginate($request, $limit = 25)
     {
-        $purchaseOrder = $this->purchase_order
+        $fiscalYear = $request->input('fiscal_year');
 
+        [$startYear] = explode('/', $fiscalYear);
+
+        $mitiFrom = $startYear . '-04-01';
+        $mitiUpto = ($startYear + 1) . '-03-31';
+        $purchaseOrder = $this->purchase_order
+            ->whereBetween('received_date_miti', [$mitiFrom, $mitiUpto])
             ->when($request->filled('supplier_id'), function ($query) use ($request) {
                 $query->where('supplier_id', $request->supplier_id);
             })
@@ -85,7 +91,7 @@ class PurchaseOrderService
             ->when($request->filled('received_by'), function ($query) use ($request) {
                 $query->where('received_by', 'like', "%{$request->received_by}%");
             })
-             ->when($request->filled('date_from'), function ($query) use ($request) {
+            ->when($request->filled('date_from'), function ($query) use ($request) {
                 $query->whereDate('received_date', '>=', $request->date_from);
             })
             ->when($request->filled('date_upto'), function ($query) use ($request) {
