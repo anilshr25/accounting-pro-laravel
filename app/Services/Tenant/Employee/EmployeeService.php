@@ -25,6 +25,7 @@ class EmployeeService
                         ->orWhere('phone', 'like', "%{$info}%")
                         ->orWhere('address', 'like', "%{$info}%")
                         ->orWhere('designation', 'like', "%{$info}%")
+                        ->orWhere('department', 'like', "%{$info}%")
                         ->orWhere('pan_no', 'like', "%{$info}%")
                         ->orWhere('license_no', 'like', "%{$info}%")
                         ->orWhere('bank_name', 'like', "%{$info}%")

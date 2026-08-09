@@ -24,8 +24,10 @@ class SupplierResource extends JsonResource
             'email' => $this->email,
             'phone' => $this->phone,
             'address' => $this->address,
-            'opening_balance' => $this->opening_balance,
-            'closing_balance' => $this->closing_balance,
+            'opening_balance' => $this->fiscal_opening_balance
+                ?? number_format((float) $this->opening_balance, 2, '.', ''),
+            'closing_balance' => $this->fiscal_closing_balance
+                ?? number_format((float) $this->closing_balance, 2, '.', ''),
             'pan' => $this->pan,
             'payment_terms' => $this->payment_terms,
 

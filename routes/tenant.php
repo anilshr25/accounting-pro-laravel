@@ -176,6 +176,8 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->get('supplier/{id}', [SupplierController::class, 'show']);
     $route->put('supplier/{id}', [SupplierController::class, 'update']);
     $route->delete('supplier/{id}', [SupplierController::class, 'destroy']);
+    $route->post('supplier/export', [SupplierController::class, 'exportPdf']);
+     $route->get('supplier/export/pdf', [SupplierController::class, 'downloadExportPdf'])->name('supplier.export.pdf');
 
     $route->get('user', [UserController::class, 'index']);
     $route->post('user', [UserController::class, 'store']);
