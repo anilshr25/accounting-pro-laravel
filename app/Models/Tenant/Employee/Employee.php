@@ -21,6 +21,7 @@ class Employee extends Model
         'phone',
         'address',
         'designation',
+        'department',
         'joining_date',
         'image',
         'salary',

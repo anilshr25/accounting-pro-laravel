@@ -26,6 +26,7 @@ class EmployeeRequest extends FormRequest
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:255',
             'designation' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:255',
             'joining_date' => 'nullable|date',
             'pan_no' => [
                 'nullable',

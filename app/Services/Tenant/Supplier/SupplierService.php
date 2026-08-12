@@ -4,6 +4,7 @@ namespace App\Services\Tenant\Supplier;
 
 use App\Models\Tenant\Supplier\Supplier;
 use App\Http\Resources\Tenant\Supplier\SupplierResource;
+use App\Models\Tenant\Ledger\Ledger;
 
 class SupplierService
 {
@@ -14,7 +15,28 @@ class SupplierService
     }
     public function paginate($request, $limit = 25)
     {
-        $supplier = $this->supplier
+        $fiscalYear = $request->input('fiscal_year');
+
+        if (!$fiscalYear) {
+            $todayMiti = now()->format('Y-m-d');
+
+            $year = (int) substr($todayMiti, 0, 4);
+            $month = (int) substr($todayMiti, 5, 2);
+
+            if ($month >= 4) {
+                $fiscalYear = $year . '/' . substr($year + 1, -2);
+            } else {
+                $fiscalYear = ($year - 1) . '/' . substr($year, -2);
+            }
+        }
+
+        [$startYear] = explode('/', $fiscalYear);
+
+        $startYear = (int) trim($startYear);
+
+        $mitiFrom = "{$startYear}-04-01";
+        $mitiUpto = ($startYear + 1) . "-03-31";
+        $suppliers = $this->supplier
             ->when($request->filled('search'), function ($query) use ($request) {
                 $query->where(function ($sub) use ($request) {
                     $info = $request->search;
@@ -32,7 +54,52 @@ class SupplierService
                 $query->where('pan', 'like', "%{$request->pan}%");
             })
             ->paginate($request->limit ?? $limit);
-        return SupplierResource::collection($supplier);
+
+        $suppliers->getCollection()->transform(function ($supplier) use ($mitiFrom, $mitiUpto) {
+
+            $openingLedger = Ledger::query()
+                ->where('party_type', 'supplier')
+                ->where('party_id', $supplier->id)
+                ->whereNull('deleted_at')
+                ->where('miti', '<', $mitiFrom)
+                ->orderByDesc('miti')
+                ->orderByDesc('id')
+                ->first();
+
+            $openingBalance = $openingLedger
+                ? (float) $openingLedger->balance
+                : (float) ($supplier->opening_balance ?? 0);
+
+            $closingLedger = Ledger::query()
+                ->where('party_type', 'supplier')
+                ->where('party_id', $supplier->id)
+                ->whereNull('deleted_at')
+                ->whereBetween('miti', [$mitiFrom, $mitiUpto])
+                ->orderByDesc('miti')
+                ->orderByDesc('id')
+                ->first();
+
+            $closingBalance = $closingLedger
+                ? (float) $closingLedger->balance
+                : $openingBalance;
+
+            $supplier->fiscal_opening_balance = number_format(
+                $openingBalance,
+                2,
+                '.',
+                ''
+            );
+
+            $supplier->fiscal_closing_balance = number_format(
+                $closingBalance,
+                2,
+                '.',
+                ''
+            );
+
+            return $supplier;
+        });
+        return SupplierResource::collection($suppliers);
     }
 
     public function search($request, $limit = 10)
@@ -61,13 +128,78 @@ class SupplierService
         }
     }
 
-    public function find($id, $resource = false)
+    public function find($id, $resource = false, $fiscalYear = null)
     {
         $supplier = $this->supplier->find($id);
+
         if (!$supplier) {
             return null;
         }
-        return $resource ? new SupplierResource($supplier) : $supplier;
+
+        if ($resource) {
+            if (!$fiscalYear) {
+                $todayMiti = now()->format('Y-m-d');
+
+                $year = (int) substr($todayMiti, 0, 4);
+                $month = (int) substr($todayMiti, 5, 2);
+
+                if ($month >= 4) {
+                    $fiscalYear = $year . '/' . substr($year + 1, -2);
+                } else {
+                    $fiscalYear = ($year - 1) . '/' . substr($year, -2);
+                }
+            }
+
+            [$startYear] = explode('/', $fiscalYear);
+            $startYear = (int) trim($startYear);
+
+            $mitiFrom = "{$startYear}-04-01";
+            $mitiUpto = ($startYear + 1) . "-03-31";
+
+            $openingLedger = Ledger::query()
+                ->where('party_type', 'supplier')
+                ->where('party_id', $supplier->id)
+                ->whereNull('deleted_at')
+                ->where('miti', '<', $mitiFrom)
+                ->orderByDesc('miti')
+                ->orderByDesc('id')
+                ->first();
+
+            $openingBalance = $openingLedger
+                ? (float) $openingLedger->balance
+                : (float) ($supplier->opening_balance ?? 0);
+
+            $closingLedger = Ledger::query()
+                ->where('party_type', 'supplier')
+                ->where('party_id', $supplier->id)
+                ->whereNull('deleted_at')
+                ->whereBetween('miti', [$mitiFrom, $mitiUpto])
+                ->orderByDesc('miti')
+                ->orderByDesc('id')
+                ->first();
+
+            $closingBalance = $closingLedger
+                ? (float) $closingLedger->balance
+                : $openingBalance;
+
+            $supplier->fiscal_opening_balance = number_format(
+                $openingBalance,
+                2,
+                '.',
+                ''
+            );
+
+            $supplier->fiscal_closing_balance = number_format(
+                $closingBalance,
+                2,
+                '.',
+                ''
+            );
+        }
+
+        return $resource
+            ? new SupplierResource($supplier)
+            : $supplier;
     }
 
     public function update($id, $data)
@@ -94,5 +226,44 @@ class SupplierService
         } catch (\Exception $ex) {
             return false;
         }
+    }
+
+    public function getExportData($fiscalYear, $supplierIds)
+    {
+        [$startYear] = explode('/', $fiscalYear);
+
+        $startYear = (int) trim($startYear);
+
+        $mitiFrom = "{$startYear}-04-01";
+        $mitiUpto = ($startYear + 1) . "-03-31";
+
+        $suppliers = $this->supplier
+            ->whereIn('id', $supplierIds)
+            ->get();
+
+        $data = [];
+
+        foreach ($suppliers as $supplier) {
+
+            $lastLedger = Ledger::query()
+                ->where('party_type', 'supplier')
+                ->where('party_id', $supplier->id)
+                ->whereBetween('miti', [$mitiFrom, $mitiUpto])
+                ->orderByDesc('miti')
+                ->orderByDesc('id')
+                ->first();
+
+            $data[] = [
+                'party_id' => $supplier->id,
+                'party_name' => $supplier->name,
+                'date' => $lastLedger?->date?->format('Y-m-d'),
+                'miti' => $lastLedger?->miti
+                    ? \Carbon\Carbon::parse($lastLedger->miti)->format('Y-m-d')
+                    : null,
+                'amount' => $lastLedger?->balance ?? '0.00',
+            ];
+        }
+
+        return $data;
     }
 }

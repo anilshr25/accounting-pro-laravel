@@ -66,7 +66,16 @@ class ChequeService
 
         $summaryQuery = clone $query;
 
-        if ($request->status === 'pending') {
+        $bankAccountIds = $request->filled('bank_account_id')
+            ? (is_array($request->bank_account_id)
+                ? $request->bank_account_id
+                : [$request->bank_account_id])
+            : [];
+
+        if (
+            $request->status === 'pending' &&
+            count($bankAccountIds) === 1
+        ) {
             $summaryQuery->whereDate('date', '<=', Carbon::today());
         }
 
