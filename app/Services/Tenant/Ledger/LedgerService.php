@@ -805,6 +805,14 @@ class LedgerService
                 !empty($request->date_to),
                 fn($q) => $q->whereDate('date', '<=', $request->date_to)
             )
+            ->when(
+                !empty($request->miti_from),
+                fn($q) => $q->whereDate('miti', '>=', $request->miti_from)
+            )
+            ->when(
+                !empty($request->miti_to),
+                fn($q) => $q->whereDate('miti', '<=', $request->miti_to)
+            )
             ->orderByDesc('date')
             ->orderByDesc('id')
             ->get();
