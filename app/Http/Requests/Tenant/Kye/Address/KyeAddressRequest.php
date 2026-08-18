@@ -20,7 +20,7 @@ class KyeAddressRequest extends FormRequest
             'district' => 'required|string|max:255',
             'municipality' => 'required|string|max:255',
             'ward_number' => 'required|string|max:255',
-            'plus_code' => 'required|string|max:255',
+            'plus_code' => 'nullable|string|max:255',
             'locality' => 'required|string|max:255',
         ];
     }

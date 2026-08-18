@@ -53,7 +53,7 @@ class Kye extends Model
 
     public function educations()
     {
-        return $this->hasMany(
+        return $this->hasOne(
             KyeEducation::class,
             'employee_id',
             'employee_id'

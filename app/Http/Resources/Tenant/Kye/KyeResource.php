@@ -37,7 +37,7 @@ class KyeResource extends JsonResource
                 $this->whenLoaded('addresses')
             ),
 
-            'educations' => KyeEducationResource::collection(
+            'education' => new KyeEducationResource(
                 $this->whenLoaded('educations')
             ),
 

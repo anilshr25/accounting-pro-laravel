@@ -10,6 +10,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
+use App\Http\Middleware\HandleMultipartPut;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -33,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'stateful' => EnsureFrontendRequestsAreStateful::class,
         ])->web([
             TransformAPIHeaders::class,
+            HandleMultipartPut::class,
         ])->validateCsrfTokens(['api/*']);
 
     })
