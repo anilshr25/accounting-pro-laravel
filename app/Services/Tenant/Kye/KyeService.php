@@ -96,7 +96,16 @@ class KyeService
 
     public function find($id, $resource = false)
     {
-        $kye = $this->kye->find($id);
+        $kye = $this->kye
+            ->with([
+                'addresses',
+                'educations',
+                'emergencyContacts',
+                'experiences',
+                'services'
+            ])
+            ->find($id);
+
         if (!$kye) {
             return null;
         }
@@ -106,7 +115,15 @@ class KyeService
     public function update($id, $data)
     {
         try {
-            $kye = $this->kye->find($id);
+            $kye = $this->kye
+                ->with([
+                    'addresses',
+                    'educations',
+                    'emergencyContacts',
+                    'experiences',
+                    'services'
+                ])
+                ->find($id);
             if (!$kye) {
                 return null;
             }
