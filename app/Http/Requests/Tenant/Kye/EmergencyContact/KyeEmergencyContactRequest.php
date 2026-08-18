@@ -14,7 +14,7 @@ class KyeEmergencyContactRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kye_id' => 'required|exists:kyes,id',
+            'employee_id' => 'required|exists:employees,id',
             'name' => 'required|string|max:255',
             'relationship' => 'required|string|max:255',
             'phone' => 'required|string|max:255',

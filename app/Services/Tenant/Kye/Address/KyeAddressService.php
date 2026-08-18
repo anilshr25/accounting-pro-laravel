@@ -31,8 +31,8 @@ class KyeAddressService
                 });
             })
 
-            ->when($request->filled('kye_id'), function ($query) use ($request) {
-                $query->where('kye_id', $request->kye_id);
+            ->when($request->filled('employee_id'), function ($query) use ($request) {
+                $query->where('employee_id', $request->employee_id);
             })
             ->when($request->filled('type'), function ($query) use ($request) {
                 $query->where('type', $request->type);

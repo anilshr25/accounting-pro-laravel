@@ -10,7 +10,7 @@ class KyeEmergencyContactResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'kye_id' => $this->kye_id,
+            'employee_id' => $this->employee_id,
             'name' => $this->name,
             'relationship' => $this->relationship,
             'phone' => $this->phone,

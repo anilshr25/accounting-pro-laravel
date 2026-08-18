@@ -6,14 +6,14 @@ use App\Services\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Tenant\Kye\Kye;
+use App\Models\Tenant\Employee\Employee;
 
 class KyeExperience extends Model
 {
     use HasFactory, SoftDeletes, Auditable;
     protected $table = 'kye_experiences';
     protected $fillable = [
-        'kye_id',
+        'employee_id',
         'company_name',
         'position',
         'start_date',
@@ -24,8 +24,12 @@ class KyeExperience extends Model
         'end_date' => 'date',
     ];
 
-    public function kye()
+    public function employee()
     {
-        return $this->belongsTo(Kye::class);
+        return $this->belongsTo(
+            Employee::class,
+            'employee_id',
+            'id'
+        );
     }
 }

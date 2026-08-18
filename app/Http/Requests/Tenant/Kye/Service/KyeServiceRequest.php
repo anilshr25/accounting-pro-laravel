@@ -14,7 +14,7 @@ class KyeServiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kye_id' => 'required|exists:kyes,id',
+            'employee_id' => 'required|exists:employees,id',
             'department' => 'required|string|max:255',
             'position' => 'required|string|max:255',
             'shift' => 'required|in:morning,evening',
