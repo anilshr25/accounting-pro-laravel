@@ -14,7 +14,7 @@ class KyeExperienceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kye_id' => 'required|exists:kyes,id',
+            'employee_id' => 'required|exists:employees,id',
             'company_name' => 'required|string|max:255',
             'position' => 'required|string|max:255',
             'start_date' => 'required|date',

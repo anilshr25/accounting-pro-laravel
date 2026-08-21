@@ -26,8 +26,8 @@ class KyeExperienceService
                 });
             })
 
-            ->when($request->filled('kye_id'), function ($query) use ($request) {
-                $query->where('kye_id', $request->kye_id);
+            ->when($request->filled('employee_id'), function ($query) use ($request) {
+                $query->where('employee_id', $request->employee_id);
             })
             ->when($request->filled('date_from'), function ($query) use ($request) {
                 $query->where('start_date', '>=', $request->date_from);

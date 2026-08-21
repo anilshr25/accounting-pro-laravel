@@ -10,7 +10,7 @@ class KyeExperienceResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'kye_id' => $this->kye_id,
+            'employee_id' => $this->employee_id,
             'company_name' => $this->company_name,
             'position' => $this->position,
             'start_date' => $this->start_date->format('Y-m-d'),

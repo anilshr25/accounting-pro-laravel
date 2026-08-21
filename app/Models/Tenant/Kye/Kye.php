@@ -37,33 +37,53 @@ class Kye extends Model
         'issue_date' => 'date',
     ];
 
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class, 'employee_id');
+    }
+
     public function addresses()
     {
-        return $this->hasMany(KyeAddress::class);
+        return $this->hasMany(
+            KyeAddress::class,
+            'employee_id',
+            'employee_id'
+        );
     }
 
     public function educations()
     {
-        return $this->hasOne(KyeEducation::class);
+        return $this->hasOne(
+            KyeEducation::class,
+            'employee_id',
+            'employee_id'
+        );
     }
 
     public function experiences()
     {
-        return $this->hasMany(KyeExperience::class);
+        return $this->hasMany(
+            KyeExperience::class,
+            'employee_id',
+            'employee_id'
+        );
     }
 
-    public function emergencyContact()
+    public function emergencyContacts()
     {
-        return $this->hasOne(KyeEmergencyContact::class);
+        return $this->hasMany(
+            KyeEmergencyContact::class,
+            'employee_id',
+            'employee_id'
+        );
     }
 
     public function services()
     {
-        return $this->hasMany(KyeService::class);
+        return $this->hasMany(
+            KyeService::class,
+            'employee_id',
+            'employee_id'
+        );
     }
-
-    public function employee()
-{
-    return $this->belongsTo(Employee::class, 'employee_id');
-}
 }

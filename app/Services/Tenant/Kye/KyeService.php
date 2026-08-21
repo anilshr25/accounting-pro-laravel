@@ -16,6 +16,13 @@ class KyeService
     public function paginate($request, $limit = 25)
     {
         $kye = $this->kye
+            ->with([
+                'addresses',
+                'educations',
+                'emergencyContacts',
+                'experiences',
+                'services'
+            ])
             ->when($request->filled('search'), function ($query) use ($request) {
                 $query->where(function ($sub) use ($request) {
                     $info = $request->search;
@@ -89,7 +96,16 @@ class KyeService
 
     public function find($id, $resource = false)
     {
-        $kye = $this->kye->find($id);
+        $kye = $this->kye
+            ->with([
+                'addresses',
+                'educations',
+                'emergencyContacts',
+                'experiences',
+                'services'
+            ])
+            ->find($id);
+
         if (!$kye) {
             return null;
         }
@@ -99,7 +115,15 @@ class KyeService
     public function update($id, $data)
     {
         try {
-            $kye = $this->kye->find($id);
+            $kye = $this->kye
+                ->with([
+                    'addresses',
+                    'educations',
+                    'emergencyContacts',
+                    'experiences',
+                    'services'
+                ])
+                ->find($id);
             if (!$kye) {
                 return null;
             }

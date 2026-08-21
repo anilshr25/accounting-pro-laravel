@@ -14,7 +14,7 @@ class KyeEducationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kye_id' => 'required|exists:kyes,id',
+            'employee_id' => 'required|exists:employees,id',
             'degree' => 'required|string|max:255',
             'university' => 'required|string|max:255',
             'from_date' => 'required|date',

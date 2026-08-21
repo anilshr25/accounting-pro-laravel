@@ -16,7 +16,7 @@ class KyeResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'employee_id'=>$this->employee_id,
+            'employee_id' => $this->employee_id,
             'full_name' => $this->full_name,
             'date_of_birth_ad' => $this->date_of_birth_ad ? $this->date_of_birth_ad->format('Y-m-d') : null,
             'date_of_birth_bs' => $this->date_of_birth_bs ? $this->date_of_birth_bs->format('Y-m-d') : null,
@@ -34,24 +34,24 @@ class KyeResource extends JsonResource
                 : null,
 
             'addresses' => KyeAddressResource::collection(
-                $this->addresses ?? collect()
+                $this->whenLoaded('addresses')
             ),
 
-            'education' => $this->educations
-                ? new KyeEducationResource($this->educations)
-                : null,
+            'education' => new KyeEducationResource(
+                $this->whenLoaded('educations')
+            ),
 
             'experiences' => KyeExperienceResource::collection(
-                $this->experiences ?? collect()
+                $this->whenLoaded('experiences')
             ),
 
             'services' => KyeServiceResource::collection(
-                $this->services ?? collect()
+                $this->whenLoaded('services')
             ),
 
-            'emergency_contact' => $this->emergencyContact
-                ? new KyeEmergencyContactResource($this->emergencyContact)
-                : null,
+            'emergency_contacts' => KyeEmergencyContactResource::collection(
+                $this->whenLoaded('emergencyContacts')
+            ),
         ];
     }
 }

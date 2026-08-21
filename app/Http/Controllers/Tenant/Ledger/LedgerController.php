@@ -34,6 +34,8 @@ class LedgerController extends Controller
             'party_type' => $request->party_type,
             'date_from' => $request->date_from,
             'date_to' => $request->date_to,
+            'miti_from' => $request->miti_from,
+            'miti_to' => $request->miti_to,
         ]);
 
         return response()->json([
@@ -49,6 +51,8 @@ class LedgerController extends Controller
             'party_type' => $partyType,
             'date_from' => $request->query('date_from'),
             'date_to' => $request->query('date_to'),
+            'miti_from' => $request->query('miti_from'),
+            'miti_to' => $request->query('miti_to'),
         ];
 
         $ledgers = $this->ledger->getLedger((object)$filters);
@@ -65,6 +69,8 @@ class LedgerController extends Controller
             'partyType' => $partyType,
             'dateFrom' => $filters['date_from'],
             'dateTo' => $filters['date_to'],
+            'mitiFrom' => $filters['miti_from'],
+            'mitiTo' => $filters['miti_to'],
         ]);
 
         $fileName = 'ledger_' . $party->id . '_' . now()->format('Ymd_His') . '.pdf';
