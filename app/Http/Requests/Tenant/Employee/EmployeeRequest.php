@@ -14,6 +14,7 @@ class EmployeeRequest extends FormRequest
 
     public function rules(): array
     {
+        $employeeId = $this->route('id');
         return [
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
@@ -21,7 +22,8 @@ class EmployeeRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:255',
-                Rule::unique('employees', 'email')->ignore($this->route('id')),
+                Rule::unique('employees', 'email')
+                    ->ignore($employeeId, 'id'),
             ],
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string|max:255',
@@ -32,7 +34,8 @@ class EmployeeRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:255',
-                Rule::unique('employees', 'pan_no')->ignore($this->route('id')),
+                Rule::unique('employees', 'pan_no')
+                    ->ignore($employeeId, 'id'),
             ],
             'license_no' => 'nullable|string|max:255',
             'salary' => 'nullable|numeric|min:0',
