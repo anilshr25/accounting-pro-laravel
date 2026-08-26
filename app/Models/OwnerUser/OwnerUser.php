@@ -2,6 +2,8 @@
 
 namespace App\Models\OwnerUser;
 
+use App\Models\AdminUser\AdminUser;
+use App\Models\Business\Business;
 use App\Models\Domain\Domain;
 use App\Models\Tenant\Tenant;
 use App\Services\Traits\UploadPathTrait;
@@ -55,6 +57,10 @@ class OwnerUser extends Authenticatable
         'doc_three_path',
     ];
 
+    public function approvedBy()
+    {
+        return $this->belongsTo(AdminUser::class, 'approved_by');
+    }
     public function getImagePathAttribute()
     {
         $imagePath = null;
@@ -113,5 +119,17 @@ class OwnerUser extends Authenticatable
     public function domains()
     {
         return $this->hasMany(Domain::class, 'owner_user_id', 'id');
+    }
+
+    public function businesses()
+    {
+        return $this->belongsToMany(
+            Business::class,
+            'business_owners',
+            'owner_user_id',
+            'business_id'
+        )
+            ->withPivot('is_primary')
+            ->withTimestamps();
     }
 }

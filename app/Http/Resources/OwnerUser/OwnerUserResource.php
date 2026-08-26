@@ -2,29 +2,23 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\OwnerUser;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\Admin\Business\BusinessResource;
 
-/**
- * @mixin \App\Models\OwnerUser\OwnerUser
- */
 class OwnerUserResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     */
     public function toArray(Request $request): array
     {
         return [
-             'id' => $this->uuid,
+            'id' => $this->id,
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'email' => $this->email,
             'phone' => $this->phone,
             'image' => $this->image,
-            'image_path' => $this->image_path,
             'company_name' => $this->company_name,
             'company_address' => $this->company_address,
             'workplace' => $this->workplace,
@@ -38,9 +32,12 @@ class OwnerUserResource extends JsonResource
             'doc_two_path' => $this->doc_two_path,
             'doc_three_path' => $this->doc_three_path,
             'status' => $this->status,
+            'is_active' => $this->is_active,
             'approved_by' => $this->approved_by,
             'remarks' => $this->remarks,
-
+            'businesses' => BusinessResource::collection(
+                $this->whenLoaded('businesses')
+            ),
         ];
     }
 }

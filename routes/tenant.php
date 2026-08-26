@@ -71,21 +71,21 @@ Route::middleware(['tenant', 'prevent_access_from_central_domains', 'web'])
     ->get('/api/sanctum/csrf-cookie', [CsrfCookieController::class, 'show'])
     ->name('tenant.sanctum.csrf-cookie');
 
-Route::group(['prefix' => 'api', 'middleware' => ['tenant', 'prevent_access_from_central_domains', 'stateful', 'web']], function ($route) {
+// Route::group(['prefix' => 'api', 'middleware' => ['tenant', 'prevent_access_from_central_domains', 'stateful', 'web']], function ($route) {
 
-    $route->post('check/verification-enabled', [MFAController::class, 'checkVerificationEnabled']);
+//     $route->post('check/verification-enabled', [MFAController::class, 'checkVerificationEnabled']);
 
-    $route->post('login', [LoginController::class, 'login']);
+//     $route->post('login', [LoginController::class, 'login']);
 
-    $route->post('verify/mfa-verification-code', [MFAController::class, 'verifyMfaVerificationCode']);
+//     $route->post('verify/mfa-verification-code', [MFAController::class, 'verifyMfaVerificationCode']);
 
-    $route->post('verify/email-verification-code', [MFAController::class, 'verifyEmailVerificationCode']);
+//     $route->post('verify/email-verification-code', [MFAController::class, 'verifyEmailVerificationCode']);
 
-    $route->post('request/verification-code', [MFAController::class, 'requestEmailVerificationCode']);
-});
+//     $route->post('request/verification-code', [MFAController::class, 'requestEmailVerificationCode']);
+// });
 
 // Tenant API routes
-Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains', 'stateful', 'web', 'user'])->group(function ($route) {
+Route::prefix('api')->middleware(['web', 'central.auth', 'tenant.session'])->group(function ($route) {
 
     $route->middleware('tenant.owner')->group(function ($route): void {
         $route->get('site-setting', [SiteSettingController::class, 'show']);
@@ -110,26 +110,44 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->put('bank-account/{id}', [BankAccountController::class, 'update']);
     $route->delete('bank-account/{id}', [BankAccountController::class, 'destroy']);
 
-    $route->get('cheque', [ChequeController::class, 'index']);
-    $route->post('cheque', [ChequeController::class, 'store']);
-    $route->get('cheque/{id}', [ChequeController::class, 'show']);
-    $route->post('cheque/{id}/clear', [ChequeController::class, 'chequeClear']);
-    $route->post('cheque/{id}/cancel', [ChequeController::class, 'chequeCancel']);
-    $route->put('cheque/{id}', [ChequeController::class, 'update']);
-    $route->delete('cheque/{id}', [ChequeController::class, 'destroy']);
+    $route->get('cheque', [ChequeController::class, 'index'])
+    ->middleware('permission.type:cheque,view');
+    $route->post('cheque', [ChequeController::class, 'store'])
+    ->middleware('permission.type:cheque,create');
+    $route->get('cheque/{id}', [ChequeController::class, 'show'])
+    ->middleware('permission.type:cheque,view');
+    $route->post('cheque/{id}/clear', [ChequeController::class, 'chequeClear'])
+    ->middleware('permission.type:cheque,clear');
+    $route->post('cheque/{id}/cancel', [ChequeController::class, 'chequeCancel'])
+    ->middleware('permission.type:cheque,cancel');
+    $route->put('cheque/{id}', [ChequeController::class, 'update'])
+    ->middleware('permission.type:cheque,update');
+    $route->delete('cheque/{id}', [ChequeController::class, 'destroy'])
+    ->middleware('permission.type:cheque,delete');
 
-    $route->get('credit', [CreditController::class, 'index']);
-    $route->post('credit', [CreditController::class, 'store']);
-    $route->get('credit/{id}', [CreditController::class, 'show']);
-    $route->put('credit/{id}', [CreditController::class, 'update']);
-    $route->delete('credit/{id}', [CreditController::class, 'destroy']);
+    $route->get('credit', [CreditController::class, 'index'])
+    ->middleware('permission.type:credit,view');
+    $route->post('credit', [CreditController::class, 'store'])
+    ->middleware('permission.type:credit,create');
+    $route->get('credit/{id}', [CreditController::class, 'show'])
+    ->middleware('permission.typecredit,view');
+    $route->put('credit/{id}', [CreditController::class, 'update'])
+    ->middleware('permission.type:credit,update');
+    $route->delete('credit/{id}', [CreditController::class, 'destroy'])
+    ->middleware('permission.type:credit,delete');
 
-    $route->get('customer', [CustomerController::class, 'index']);
-    $route->get('customer/get/search', [CustomerController::class, 'search'])->name('tenant.customer.search');
-    $route->post('customer', [CustomerController::class, 'store']);
-    $route->get('customer/{id}', [CustomerController::class, 'show']);
-    $route->put('customer/{id}', [CustomerController::class, 'update']);
-    $route->delete('customer/{id}', [CustomerController::class, 'destroy']);
+    $route->get('customer', [CustomerController::class, 'index'])
+    ->middleware('permission.type:customer,view');
+    $route->get('customer/get/search', [CustomerController::class, 'search'])->name('tenant.customer.search')
+    ->middleware('permission.type:customer,search');
+    $route->post('customer', [CustomerController::class, 'store'])
+    ->middleware('permission.type:customer,create');
+    $route->get('customer/{id}', [CustomerController::class, 'show'])
+    ->middleware('permission.type:customer,view');
+    $route->put('customer/{id}', [CustomerController::class, 'update'])
+    ->middleware('permission.type:customer,update');
+    $route->delete('customer/{id}', [CustomerController::class, 'destroy'])
+    ->middleware('permission.type:customer,delete');
 
     $route->get('daybook', [DaybookController::class, 'index']);
     $route->post('daybook', [DaybookController::class, 'store']);
@@ -137,12 +155,18 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->put('daybook/{id}', [DaybookController::class, 'update']);
     $route->delete('daybook/{id}', [DaybookController::class, 'destroy']);
 
-    $route->get('invoice', [InvoiceController::class, 'index']);
-    $route->get('invoice/date-wise-summary', [InvoiceController::class, 'dateWiseSummary']);
-    $route->post('invoice', [InvoiceController::class, 'store']);
-    $route->get('invoice/{id}', [InvoiceController::class, 'show']);
-    $route->put('invoice/{id}', [InvoiceController::class, 'update']);
-    $route->delete('invoice/{id}', [InvoiceController::class, 'destroy']);
+    $route->get('invoice', [InvoiceController::class, 'index'])
+        ->middleware('permission.type:sales,view');
+    $route->get('invoice/date-wise-summary', [InvoiceController::class, 'dateWiseSummary'])
+        ->middleware('permission.type:sales,view');
+    $route->post('invoice', [InvoiceController::class, 'store'])
+        ->middleware('permission.type:sales,create');
+    $route->get('invoice/{id}', [InvoiceController::class, 'show'])
+        ->middleware('permission.type:sales,view');
+    $route->put('invoice/{id}', [InvoiceController::class, 'update'])
+        ->middleware('permission.type:sales,update');
+    $route->delete('invoice/{id}', [InvoiceController::class, 'destroy'])
+        ->middleware('permission.type:sales,delete');
 
     $route->get('invoice-item', [InvoiceItemController::class, 'index']);
     $route->post('invoice-item', [InvoiceItemController::class, 'store']);
@@ -152,17 +176,27 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
 
     $route->post('ledger/adjustment', [LedgerAdjustmentController::class, 'adjust']);
 
-    $route->get('payment', [PaymentController::class, 'index']);
-    $route->post('payment', [PaymentController::class, 'store']);
-    $route->get('payment/{id}', [PaymentController::class, 'show']);
-    $route->put('payment/{id}', [PaymentController::class, 'update']);
-    $route->delete('payment/{id}', [PaymentController::class, 'destroy']);
+    $route->get('payment', [PaymentController::class, 'index'])
+    ->middleware('permission.type:payment,view');
+    $route->post('payment', [PaymentController::class, 'store'])
+    ->middleware('permission.type:payment,create');
+    $route->get('payment/{id}', [PaymentController::class, 'show'])
+    ->middleware('permission.type:payment,view');
+    $route->put('payment/{id}', [PaymentController::class, 'update'])
+    ->middleware('permission.type:payment,update');
+    $route->delete('payment/{id}', [PaymentController::class, 'destroy'])
+    ->middleware('permission.type:payment,delete');
 
-    $route->get('purchase-order', [PurchaseOrderController::class, 'index']);
-    $route->post('purchase-order', [PurchaseOrderController::class, 'store']);
-    $route->get('purchase-order/{id}', [PurchaseOrderController::class, 'show']);
-    $route->put('purchase-order/{id}', [PurchaseOrderController::class, 'update']);
-    $route->delete('purchase-order/{id}', [PurchaseOrderController::class, 'destroy']);
+    $route->get('purchase-order', [PurchaseOrderController::class, 'index'])
+    ->middleware('permission.type:purchase,view');
+    $route->post('purchase-order', [PurchaseOrderController::class, 'store'])
+    ->middleware('permission.type:purchase,create');;
+    $route->get('purchase-order/{id}', [PurchaseOrderController::class, 'show'])
+    ->middleware('permission.type:purchase,view');;
+    $route->put('purchase-order/{id}', [PurchaseOrderController::class, 'update'])
+    ->middleware('permission.type:purchase,update');;
+    $route->delete('purchase-order/{id}', [PurchaseOrderController::class, 'destroy'])
+    ->middleware('permission.type:purchase,delete');
 
     $route->get('purchase-order-item', [PurchaseOrderItemController::class, 'index']);
     $route->post('purchase-order-item', [PurchaseOrderItemController::class, 'store']);
@@ -170,14 +204,22 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->put('purchase-order-item/{id}', [PurchaseOrderItemController::class, 'update']);
     $route->delete('purchase-order-item/{id}', [PurchaseOrderItemController::class, 'destroy']);
 
-    $route->get('supplier', [SupplierController::class, 'index']);
-    $route->get('supplier/get/search', [SupplierController::class, 'search'])->name('tenant.supplier.search');
-    $route->post('supplier', [SupplierController::class, 'store']);
-    $route->get('supplier/{id}', [SupplierController::class, 'show']);
-    $route->put('supplier/{id}', [SupplierController::class, 'update']);
-    $route->delete('supplier/{id}', [SupplierController::class, 'destroy']);
-    $route->post('supplier/export', [SupplierController::class, 'exportPdf']);
-     $route->get('supplier/export/pdf', [SupplierController::class, 'downloadExportPdf'])->name('supplier.export.pdf');
+    $route->get('supplier', [SupplierController::class, 'index'])
+    ->middleware('permission.type:supplier,view');
+    $route->get('supplier/get/search', [SupplierController::class, 'search'])->name('tenant.supplier.search')
+    ->middleware('permission.type:supplier,search');
+    $route->post('supplier', [SupplierController::class, 'store'])
+    ->middleware('permission.type:supplier,create');
+    $route->get('supplier/{id}', [SupplierController::class, 'show'])
+    ->middleware('permission.type:supplier,view');
+    $route->put('supplier/{id}', [SupplierController::class, 'update'])
+    ->middleware('permission.type:supplier,update');
+    $route->delete('supplier/{id}', [SupplierController::class, 'destroy'])
+    ->middleware('permission.type:supplier,delete');
+    $route->post('supplier/export', [SupplierController::class, 'exportPdf'])
+    ->middleware('permission.type:supplier,export');
+    $route->get('supplier/export/pdf', [SupplierController::class, 'downloadExportPdf'])->name('supplier.export.pdf')
+    ->middleware('permission.type:supplier,export');
 
     $route->get('user', [UserController::class, 'index']);
     $route->post('user', [UserController::class, 'store']);
@@ -185,11 +227,16 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->put('user/{id}', [UserController::class, 'update']);
     $route->delete('user/{id}', [UserController::class, 'destroy']);
 
-    $route->get('purchase-return', [PurchaseReturnController::class, 'index']);
-    $route->post('purchase-return', [PurchaseReturnController::class, 'store']);
-    $route->get('purchase-return/{id}', [PurchaseReturnController::class, 'show']);
-    $route->put('purchase-return/{id}', [PurchaseReturnController::class, 'update']);
-    $route->delete('purchase-return/{id}', [PurchaseReturnController::class, 'destroy']);
+    $route->get('purchase-return', [PurchaseReturnController::class, 'index'])
+    ->middleware('permission.type:purchase-return,view');
+    $route->post('purchase-return', [PurchaseReturnController::class, 'store'])
+    ->middleware('permission.type:purchase-return,create');
+    $route->get('purchase-return/{id}', [PurchaseReturnController::class, 'show'])
+    ->middleware('permission.type:purchase-return,view');
+    $route->put('purchase-return/{id}', [PurchaseReturnController::class, 'update'])
+    ->middleware('permission.type:purchase-return,update');
+    $route->delete('purchase-return/{id}', [PurchaseReturnController::class, 'destroy'])
+    ->middleware('permission.type:purchase-return,delete');
 
     $route->get('purchase-return-item', [PurchaseReturnItemController::class, 'index']);
     $route->post('purchase-return-item', [PurchaseReturnItemController::class, 'store']);

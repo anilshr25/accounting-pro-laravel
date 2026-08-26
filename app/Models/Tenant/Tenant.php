@@ -11,9 +11,11 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 {
     use HasDatabase, HasDomains;
 
+
     protected $fillable = [
         'id',
         'owner_user_id',
+        'tenancy_db_name',
         'data',
     ];
 
@@ -38,5 +40,38 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     public function owner()
     {
         return $this->belongsTo(\App\Models\OwnerUser\OwnerUser::class, 'owner_user_id', 'id');
+    }
+
+    public function business()
+    {
+        return $this->hasOne(
+            \App\Models\Business\Business::class,
+            'tenant_id',
+            'id'
+        );
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(
+            \App\Models\User\User::class,
+            'tenant_user',
+            'tenant_id',
+            'user_id'
+        )
+            ->withPivot([
+                'role_id',
+                'is_active',
+            ])
+            ->withTimestamps();
+    }
+
+    public function tenantUsers()
+    {
+        return $this->hasMany(
+            \App\Models\TenantUser\TenantUser::class,
+            'tenant_id',
+            'id'
+        );
     }
 }

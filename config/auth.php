@@ -1,6 +1,8 @@
 <?php
 
-use App\Models\Tenant\User\User;
+use App\Models\User\User;
+use App\Models\AdminUser\AdminUser;
+use App\Models\OwnerUser\OwnerUser;
 
 return [
 
@@ -42,6 +44,18 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admin_users',
+        ],
+        'owner' => [
+            'driver' => 'session',
+            'provider' => 'owner_users',
+        ],
+        'user' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
     ],
 
     /*
@@ -64,13 +78,17 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+            'model' => User::class,
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        'admin_users' => [
+            'driver' => 'eloquent',
+            'model' => AdminUser::class,
+        ],
+        'owner_users' => [
+            'driver' => 'eloquent',
+            'model' => OwnerUser::class,
+        ],
     ],
 
     /*
