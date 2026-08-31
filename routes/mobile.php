@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Tenant\User\UserController;
+use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\Tenant\Cheque\ChequeController;
 use App\Http\Controllers\Tenant\Credit\CreditController;
 use App\Http\Controllers\Tenant\Ledger\LedgerController;
@@ -48,30 +48,49 @@ use App\Http\Controllers\Tenant\Report\CreditReportController;
 use App\Http\Controllers\Tenant\Report\PurchaseReportController;
 use App\Http\Controllers\Tenant\Report\ChequeReportController;
 use App\Http\Controllers\Tenant\Report\PaymentReportController;
-use App\Http\Controllers\Tenant\Auth\AppLoginController;
+use App\Http\Controllers\Auth\AppLoginController;
 use App\Http\Controllers\Tenant\Auth\AppMFAController;
+use App\Http\Controllers\Admin\Business\BusinessController;
 
 Route::prefix('api/mobile')
-    ->middleware([
-        'tenant',
-        'prevent_access_from_central_domains',
-    ])
     ->group(function () {
 
         Route::post('login', [AppLoginController::class, 'login']);
-        Route::post('check/verification-enabled', [AppMFAController::class, 'checkVerificationEnabled']);
+
+        Route::post(
+            'check/verification-enabled',
+            [AppMFAController::class, 'checkVerificationEnabled']
+        );
     });
+
 
 Route::prefix('api/mobile')
     ->middleware([
-        'tenant',
-        'prevent_access_from_central_domains',
         'auth:sanctum',
+        'prevent_access_from_central_domains',
     ])
     ->group(function ($route) {
 
         $route->get('verify', [AppLoginController::class, 'doVerify']);
+
         $route->post('logout', [AppLoginController::class, 'logout']);
+
+        $route->post('select-business', [AppLoginController::class, 'selectBusiness']);
+    });
+
+Route::prefix('api/mobile')
+    ->middleware([
+        'auth:sanctum',
+        'tenant.selected',
+        'prevent_access_from_central_domains',
+    ])
+    ->group(function ($route) {
+        $route->get('business', [BusinessController::class, 'index']);
+        $route->get('business/search', [BusinessController::class, 'search']);
+        $route->post('business', [BusinessController::class, 'store']);
+        $route->get('business/{id}', [BusinessController::class, 'show']);
+        $route->put('business/{id}', [BusinessController::class, 'update']);
+        $route->delete('business/{id}', [BusinessController::class, 'destroy']);
 
         $route->get('balance', [BalanceController::class, 'index']);
         $route->post('balance', [BalanceController::class, 'store']);
@@ -159,6 +178,10 @@ Route::prefix('api/mobile')
         $route->get('user/{id}', [UserController::class, 'show']);
         $route->put('user/{id}', [UserController::class, 'update']);
         $route->delete('user/{id}', [UserController::class, 'destroy']);
+        $route->post('/user/{id}/business', [UserController::class, 'assignBusiness']);
+        $route->put('/user/{id}/business/{tenantId}', [UserController::class, 'updateBusinessAccess']);
+        $route->delete('/user/{id}/business/{tenantId}', [UserController::class, 'removeBusiness']);
+        $route->get('/user/{id}/businesses', [UserController::class, 'businesses']);
 
 
         $route->get('purchase-return', [PurchaseReturnController::class, 'index']);

@@ -2,6 +2,7 @@
 
 namespace App\Models\User;
 
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Tenant\Tenant;
@@ -9,7 +10,7 @@ use App\Models\TenantUser\TenantUser;
 
 class User extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable, HasApiTokens;
 
     protected $fillable = [
         'name',

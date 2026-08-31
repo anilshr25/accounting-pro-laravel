@@ -4,7 +4,7 @@ namespace App\Http\Resources\Tenant\Auth;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Str;
+use Illuminate\Support\Str;
 
 class AuthUserResource extends JsonResource
 {

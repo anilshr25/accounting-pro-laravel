@@ -9,11 +9,12 @@ use App\Models\Tenant\Tenant;
 use App\Services\Traits\UploadPathTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class OwnerUser extends Authenticatable
 {
-    use HasFactory, SoftDeletes, UploadPathTrait;
+    use HasFactory, SoftDeletes, UploadPathTrait, HasApiTokens;
 
     protected $uploadPath = 'owner-user';
 
