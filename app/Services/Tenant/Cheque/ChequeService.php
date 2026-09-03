@@ -24,24 +24,47 @@ class ChequeService
 
         $mitiFrom = $startYear . '-04-01';
         $mitiUpto = ($startYear + 1) . '-03-31';
+
+        $bankAccountIds = [];
+        if ($request->filled('bank_account_ids')) {
+            $bankAccountIds = json_decode($request->bank_account_ids, true);
+            if (!is_array($bankAccountIds)) {
+                $bankAccountIds = [];
+            }
+        }
         $query = $this->cheque
             ->whereBetween('miti', [$mitiFrom, $mitiUpto])
-            ->when($request->filled('bank_account_id'), function ($q) use ($request) {
-                $bankIds = is_array($request->bank_account_id)
-                    ? $request->bank_account_id
-                    : [$request->bank_account_id];
-
-                $q->whereIn('bank_account_id', $bankIds);
+            ->when(!empty($bankAccountIds), function ($q) use ($bankAccountIds) {
+                $q->whereIn('bank_account_id', $bankAccountIds);
             })
             ->when($request->filled('party_type'), fn($q) => $q->where('party_type', $request->party_type))
             ->when($request->filled('party_id'), fn($q) => $q->where('party_id', $request->party_id))
             ->when($request->filled('type'), fn($q) => $q->where('type', $request->type))
             ->when($request->filled('cheque_number'), fn($q) => $q->where('cheque_number', 'like', "%{$request->cheque_number}%"))
             ->when($request->filled('amount'), fn($q) => $q->where('amount', $request->amount))
-            ->when($request->filled('date_from'), fn($q) => $q->whereDate('date', '>=', $request->date_from))
-            ->when($request->filled('date_upto'), fn($q) => $q->whereDate('date', '<=', $request->date_upto))
-            ->when($request->filled('miti_from'), fn($q) => $q->where('miti', '>=', $request->miti_from))
-            ->when($request->filled('miti_upto'), fn($q) => $q->where('miti', '<=', $request->miti_upto))
+            ->when(
+                $request->filled('date_from'),
+                fn($q) => $q->whereDate('date', '>=', $request->date_from)
+            )
+            ->when(
+                $request->filled('date_upto'),
+                fn($q) => $q->whereDate('date', '<=', $request->date_upto)
+            )
+            ->when(
+                $request->filled('miti_from'),
+                fn($q) => $q->where('miti', '>=', $request->miti_from)
+            )
+            ->when(
+                $request->filled('miti_upto'),
+                fn($q) => $q->where('miti', '<=', $request->miti_upto)
+            )
+            ->when(
+                !$request->filled('date_from') &&
+                    !$request->filled('date_upto') &&
+                    !$request->filled('miti_from') &&
+                    !$request->filled('miti_upto'),
+                fn($q) => $q->whereDate('date', '<=', Carbon::today())
+            )
             ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->search;
