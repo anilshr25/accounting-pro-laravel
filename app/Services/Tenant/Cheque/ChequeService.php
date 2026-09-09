@@ -131,7 +131,13 @@ class ChequeService
 
         $summaryQuery = clone $query;
 
-        if (count($bankAccountIds) <= 1) {
+        $hasDateOrMitiFilter =
+            $request->filled('date_from') ||
+            $request->filled('date_upto') ||
+            $request->filled('miti_from') ||
+            $request->filled('miti_upto');
+
+        if (count($bankAccountIds) <= 1 && !$hasDateOrMitiFilter) {
             $summaryQuery->whereDate('date', '<=', Carbon::today());
         }
 
