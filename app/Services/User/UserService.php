@@ -8,6 +8,8 @@ use App\Models\TenantUser\TenantUser;
 use App\Services\Service;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use App\Models\Role\Role;
+use Illuminate\Validation\ValidationException;
 
 class UserService extends Service
 {
@@ -21,7 +23,10 @@ class UserService extends Service
     public function paginate($request, $limit = 25)
     {
         $users = $this->user
-            ->with('tenants.business')
+            ->with([
+                'tenants.business',
+                'tenantUsers.role.permissions',
+            ])
             ->when($request->filled('name'), function ($query) use ($request) {
                 $query->where(function ($query) use ($request) {
                     $query->where('name', 'like', '%' . $request->name . '%')
@@ -36,24 +41,58 @@ class UserService extends Service
 
     public function store($data)
     {
-        try {
-            return DB::connection('central')->transaction(function () use ($data) {
+        return DB::connection('central')->transaction(function () use ($data) {
 
-                if (!empty($data['password'])) {
-                    $data['password'] = Hash::make($data['password']);
-                }
+            $tenantExists = DB::connection('central')
+                ->table('tenants')
+                ->where('id', $data['tenant_id'])
+                ->exists();
 
-                return $this->user->create($data);
-            });
-        } catch (\Exception $ex) {
-            return false;
-        }
+            if (! $tenantExists) {
+                throw ValidationException::withMessages([
+                    'tenant_id' => ['The selected business does not exist.'],
+                ]);
+            }
+
+            $role = Role::where('id', $data['role_id'])
+                ->where('tenant_id', $data['tenant_id'])
+                ->first();
+
+            if (! $role) {
+                throw ValidationException::withMessages([
+                    'role_id' => [
+                        'The selected role does not belong to this business.'
+                    ],
+                ]);
+            }
+
+            $user = $this->user->create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+            ]);
+
+            TenantUser::create([
+                'tenant_id' => $data['tenant_id'],
+                'user_id' => $user->id,
+                'role_id' => $role->id,
+                'is_active' => $data['is_active'] ?? true,
+            ]);
+
+            return $user->load([
+                'tenants.business',
+                'tenantUsers.role.permissions',
+            ]);
+        });
     }
 
     public function find($id, $resource = true)
     {
         $user = $this->user
-            ->with('tenants.business')
+            ->with([
+                'tenants.business',
+                'tenantUsers.role.permissions',
+            ])
             ->find($id);
 
         if (!$user) {
@@ -67,13 +106,28 @@ class UserService extends Service
 
     public function update($id, $data)
     {
-        try {
+        return DB::connection('central')->transaction(function () use ($id, $data) {
 
-            $user = $this->find($id, false);
+            $user = $this->user
+                ->with([
+                    'tenants.business',
+                    'tenantUsers.role.permissions',
+                ])
+                ->find($id);
 
             if (!$user) {
                 return false;
             }
+
+            $tenantId = $data['tenant_id'] ?? null;
+            $roleId = $data['role_id'] ?? null;
+            $permissionIds = $data['permission_ids'] ?? null;
+
+            unset(
+                $data['tenant_id'],
+                $data['role_id'],
+                $data['permission_ids']
+            );
 
             if (empty($data['password'])) {
                 unset($data['password']);
@@ -81,12 +135,64 @@ class UserService extends Service
                 $data['password'] = Hash::make($data['password']);
             }
 
-            $user->update($data);
+            if (!empty($data)) {
+                $user->update($data);
+            }
 
-            return $user;
-        } catch (\Exception $ex) {
-            return false;
-        }
+            if ($tenantId && $roleId !== null) {
+
+                $tenantExists = DB::connection('central')
+                    ->table('tenants')
+                    ->where('id', $tenantId)
+                    ->exists();
+
+                if (!$tenantExists) {
+                    throw ValidationException::withMessages([
+                        'tenant_id' => [
+                            'The selected business does not exist.'
+                        ],
+                    ]);
+                }
+
+                $role = Role::where('id', $roleId)
+                    ->where('tenant_id', $tenantId)
+                    ->first();
+
+                if (!$role) {
+                    throw ValidationException::withMessages([
+                        'role_id' => [
+                            'The selected role does not belong to this business.'
+                        ],
+                    ]);
+                }
+
+                $tenantUser = TenantUser::where('user_id', $user->id)
+                    ->where('tenant_id', $tenantId)
+                    ->first();
+
+                if (!$tenantUser) {
+                    throw ValidationException::withMessages([
+                        'tenant_id' => [
+                            'User is not assigned to this business.'
+                        ],
+                    ]);
+                }
+
+                $tenantUser->update([
+                    'role_id' => $roleId,
+                    'is_active' => $data['is_active'] ?? $tenantUser->is_active,
+                ]);
+
+                if (is_array($permissionIds)) {
+                    $role->permissions()->sync($permissionIds);
+                }
+            }
+
+            return $user->fresh([
+                'tenants.business',
+                'tenantUsers.role.permissions',
+            ]);
+        });
     }
 
     public function delete($id)
@@ -109,18 +215,33 @@ class UserService extends Service
     {
         $user = User::findOrFail($userId);
 
+        $role = Role::where('id', $data['role_id'])
+            ->where('tenant_id', $data['tenant_id'])
+            ->first();
+
+        if (!$role) {
+            throw ValidationException::withMessages([
+                'role_id' => [
+                    'The selected role does not belong to this business.'
+                ],
+            ]);
+        }
+
         TenantUser::updateOrCreate(
             [
                 'tenant_id' => $data['tenant_id'],
                 'user_id' => $user->id,
             ],
             [
-                'role_id' => $data['role_id'],
+                'role_id' => $role->id,
                 'is_active' => $data['is_active'] ?? true,
             ]
         );
 
-        return $user->load('tenants.business');
+        return $user->load([
+            'tenants.business',
+            'tenantUsers.role.permissions',
+        ]);
     }
 
     public function updateBusinessAccess($userId, $tenantId, $data)
@@ -133,23 +254,35 @@ class UserService extends Service
                 return false;
             }
 
-            $exists = $user->tenants()
-                ->where('tenants.id', $tenantId)
-                ->exists();
+            $role = Role::where('id', $data['role_id'])
+                ->where('tenant_id', $tenantId)
+                ->first();
 
-            if (!$exists) {
+            if (!$role) {
+                throw ValidationException::withMessages([
+                    'role_id' => [
+                        'The selected role does not belong to this business.'
+                    ],
+                ]);
+            }
+
+            $tenantUser = TenantUser::where('user_id', $userId)
+                ->where('tenant_id', $tenantId)
+                ->first();
+
+            if (!$tenantUser) {
                 return false;
             }
 
-            $user->tenants()->updateExistingPivot(
-                $tenantId,
-                [
-                    'role_id' => $data['role_id'],
-                    'is_active' => $data['is_active'] ?? true,
-                ]
-            );
+            $tenantUser->update([
+                'role_id' => $data['role_id'],
+                'is_active' => $data['is_active'] ?? $tenantUser->is_active,
+            ]);
 
-            return $user;
+            return $user->fresh([
+                'tenants.business',
+                'tenantUsers.role.permissions',
+            ]);
         } catch (\Exception $ex) {
             return false;
         }
@@ -174,7 +307,10 @@ class UserService extends Service
     public function getBusinesses($userId)
     {
         $user = $this->user
-            ->with('tenants.business')
+            ->with([
+                'tenants.business',
+                'tenantUsers.role.permissions',
+            ])
             ->find($userId);
 
         if (!$user) {

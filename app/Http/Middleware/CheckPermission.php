@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 use App\Models\Role\Role;
+use App\Models\OwnerUser\OwnerUser;
+use App\Models\User\User;
 
 class CheckPermission
 {
@@ -20,7 +22,39 @@ class CheckPermission
             return $next($request);
         }
 
-        $user = auth('user')->user();
+        $user = null;
+        $tenantId = null;
+
+        if (auth('sanctum')->check()) {
+
+            $authenticatedUser = auth('sanctum')->user();
+
+            if ($authenticatedUser instanceof OwnerUser) {
+                return $next($request);
+            }
+
+            if (! $authenticatedUser instanceof User) {
+                return response()->json([
+                    'status' => 'UNAUTHORIZED',
+                    'message' => 'Invalid authenticated user.',
+                ], 401);
+            }
+
+            $user = $authenticatedUser;
+
+            $token = $user->currentAccessToken();
+
+            $tenantId = $token?->selected_tenant_id;
+        } elseif (auth('user')->check()) {
+
+            $user = auth('user')->user();
+
+            if ($user->user_type === 'owner') {
+                return $next($request);
+            }
+
+            $tenantId = session('tenant_id');
+        }
 
         if (!$user) {
             return response()->json([
@@ -28,8 +62,6 @@ class CheckPermission
                 'message' => 'Authentication required.',
             ], 401);
         }
-
-        $tenantId = session('tenant_id');
 
         if (!$tenantId) {
             return response()->json([
@@ -40,11 +72,19 @@ class CheckPermission
 
         $tenant = DB::connection('central')
             ->table('tenants')
-            ->join('tenant_user', 'tenants.id', '=', 'tenant_user.tenant_id')
+            ->join(
+                'tenant_user',
+                'tenants.id',
+                '=',
+                'tenant_user.tenant_id'
+            )
             ->where('tenants.id', $tenantId)
             ->where('tenant_user.user_id', $user->id)
             ->where('tenant_user.is_active', true)
-            ->select('tenants.*', 'tenant_user.role_id')
+            ->select(
+                'tenants.*',
+                'tenant_user.role_id'
+            )
             ->first();
 
         if (!$tenant) {
@@ -72,7 +112,6 @@ class CheckPermission
             ], 403);
         }
 
-
         $hasPermission = $role->permissions
             ->contains('name', $permission);
 
@@ -82,7 +121,6 @@ class CheckPermission
                 'message' => 'You do not have permission to perform this action.',
             ], 403);
         }
-
 
         return $next($request);
     }

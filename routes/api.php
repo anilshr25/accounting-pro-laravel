@@ -71,6 +71,12 @@ Route::group([
     $route->delete('/user/{id}/business/{tenantId}', [UserController::class, 'removeBusiness']);
     $route->get('/user/{id}/businesses', [UserController::class, 'businesses']);
 
+    $route->get('permission', [PermissionController::class, 'index']);
+    $route->get('permission/{id}', [PermissionController::class, 'show']);
+
+    $route->get('role', [RoleController::class, 'index']);
+    $route->get('role/{id}', [RoleController::class, 'show']);
+
     $route->post('role/{id}/permission', [RoleController::class, 'assignPermissions']);
     $route->get('role/{id}/permission', [RoleController::class, 'permissions']);
 });

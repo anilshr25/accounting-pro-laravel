@@ -29,6 +29,9 @@ class UserRequest extends FormRequest
                 'string',
                 'min:8',
             ],
+            'tenant_id' => ['required', 'string', 'max:255', 'exists:tenants,id',],
+            'role_id' => ['required', 'integer', 'exists:roles,id',],
+            'is_active' => ['sometimes', 'boolean',],
         ];
     }
 }

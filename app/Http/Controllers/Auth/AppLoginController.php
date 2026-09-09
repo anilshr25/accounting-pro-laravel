@@ -119,8 +119,8 @@ class AppLoginController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'user_type' => 'user',
-                    'businesses' => $businesses,
                     'token' => $token,
+                    'businesses' => $businesses,
                 ],
             ], 200);
         }
@@ -238,6 +238,15 @@ class AppLoginController extends Controller
             ], 401);
         }
 
+        $token = $user->currentAccessToken();
+
+        if (! $token) {
+            return response()->json([
+                'status' => 'Unauthorized',
+                'message' => 'Invalid access token.',
+            ], 401);
+        }
+
         if ($user instanceof OwnerUser) {
 
             $business = $user->businesses()
@@ -251,6 +260,9 @@ class AppLoginController extends Controller
                     'message' => 'This business is not assigned to this owner.',
                 ], 403);
             }
+
+            $token->selected_tenant_id = $business->tenant_id;
+            $token->save();
 
             return response()->json([
                 'status' => 'OK',
@@ -279,6 +291,9 @@ class AppLoginController extends Controller
                     'message' => 'This business is not assigned to this user.',
                 ], 403);
             }
+
+            $token->selected_tenant_id = $tenant->id;
+            $token->save();
 
             return response()->json([
                 'status' => 'OK',

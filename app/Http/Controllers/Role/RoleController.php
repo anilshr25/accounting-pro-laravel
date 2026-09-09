@@ -89,8 +89,12 @@ class RoleController extends Controller
     {
         $role = $this->role->permissions($id);
 
-        if (!$role)
-            return response(['status' => 'ERROR'], 404);
+        if (!$role) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Role not found.'
+            ], 404);
+        }
 
         return response([
             'data' => $role

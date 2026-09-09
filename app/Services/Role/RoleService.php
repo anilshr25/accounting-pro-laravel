@@ -6,6 +6,8 @@ use App\Http\Resources\Role\RoleResource;
 use App\Models\Role\Role;
 use App\Services\Service;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+
 
 class RoleService extends Service
 {
@@ -20,6 +22,9 @@ class RoleService extends Service
     {
         $roles = $this->role
             ->with('permissions')
+            ->when($request->filled('tenant_id'), function ($query) use ($request) {
+                $query->where('tenant_id', $request->tenant_id);
+            })
             ->when($request->filled('name'), function ($query) use ($request) {
                 $query->where(
                     'name',
@@ -38,10 +43,30 @@ class RoleService extends Service
         try {
             return DB::connection('central')->transaction(function () use ($data) {
 
+                $tenantExists = DB::connection('central')
+                    ->table('tenants')
+                    ->where('id', $data['tenant_id'])
+                    ->exists();
+
+                if (! $tenantExists) {
+                    throw ValidationException::withMessages([
+                        'tenant_id' => [
+                            'The selected business does not exist.'
+                        ],
+                    ]);
+                }
+
                 $data['guard_name'] = $data['guard_name'] ?? 'web';
 
-                return $this->role->create($data);
+                return $this->role->create([
+                    'tenant_id' => $data['tenant_id'],
+                    'name' => $data['name'],
+                    'guard_name' => $data['guard_name'],
+                ]);
             });
+
+        } catch (ValidationException $ex) {
+            throw $ex;
 
         } catch (\Exception $ex) {
             return false;
@@ -73,10 +98,10 @@ class RoleService extends Service
                 return false;
             }
 
+            unset($data['tenant_id']);
             $role->update($data);
 
             return $role;
-
         } catch (\Exception $ex) {
             return false;
         }
@@ -93,7 +118,6 @@ class RoleService extends Service
             }
 
             return $role->delete();
-
         } catch (\Exception $ex) {
             return false;
         }
@@ -112,7 +136,6 @@ class RoleService extends Service
             $role->permissions()->sync($permissionIds);
 
             return $role->load('permissions');
-
         } catch (\Exception $ex) {
             return false;
         }

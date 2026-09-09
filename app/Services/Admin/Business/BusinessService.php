@@ -59,14 +59,8 @@ class BusinessService
 {
     return DB::transaction(function () use ($data) {
 
-        /*
-         * Generate slug
-         */
         $slug = Str::slug($data['name']);
 
-        /*
-         * Prevent duplicate business slug
-         */
         if (
             $this->business
                 ->where('slug', $slug)
@@ -75,24 +69,14 @@ class BusinessService
             return false;
         }
 
-        /*
-         * Tenant handling
-         */
         if (! empty($data['tenant_id'])) {
 
-            /*
-             * Use existing tenant
-             */
             $tenant = Tenant::find($data['tenant_id']);
 
             if (! $tenant) {
                 return false;
             }
 
-            /*
-             * Make sure this tenant is not already
-             * assigned to another business.
-             */
             if (
                 $this->business
                     ->where('tenant_id', $tenant->id)
@@ -103,9 +87,6 @@ class BusinessService
 
         } else {
 
-            /*
-             * Create a new tenant
-             */
             $tenantId = (string) Str::uuid();
 
             $tenant = Tenant::create([
@@ -114,9 +95,6 @@ class BusinessService
             ]);
         }
 
-        /*
-         * Create business
-         */
         $business = $this->business->create([
             'name' => $data['name'],
             'slug' => $slug,
@@ -127,9 +105,6 @@ class BusinessService
             'tenant_id' => $tenant->id,
         ]);
 
-        /*
-         * Return business with relationships
-         */
         return $business->load([
             'tenant',
             'owners',

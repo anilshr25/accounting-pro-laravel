@@ -14,6 +14,13 @@ class RoleRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'tenant_id' => [
+                'required',
+                'string',
+                'max:255',
+                'exists:tenants,id',
+            ],
+
             'name' => [
                 'required',
                 'string',

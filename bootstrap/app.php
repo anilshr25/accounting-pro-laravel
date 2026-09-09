@@ -14,7 +14,7 @@ use App\Http\Middleware\HandleMultipartPut;
 use App\Http\Middleware\CentralAuth;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\InitializeTenantFromSession;
-use App\Http\Middleware\InitializeTenantFromHeader;
+use App\Http\Middleware\InitializeTenantFromToken;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -39,7 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'stateful' => EnsureFrontendRequestsAreStateful::class,
             'central.auth' => CentralAuth::class,
             'tenant.session' => InitializeTenantFromSession::class,
-            'tenant.header' => InitializeTenantFromHeader::class,
+            'tenant.token' => InitializeTenantFromToken::class,
         ])->web([
             TransformAPIHeaders::class,
             HandleMultipartPut::class,
