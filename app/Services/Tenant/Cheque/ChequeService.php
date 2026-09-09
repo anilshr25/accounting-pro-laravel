@@ -58,13 +58,6 @@ class ChequeService
                 $request->filled('miti_upto'),
                 fn($q) => $q->where('miti', '<=', $request->miti_upto)
             )
-            ->when(
-                !$request->filled('date_from') &&
-                    !$request->filled('date_upto') &&
-                    !$request->filled('miti_from') &&
-                    !$request->filled('miti_upto'),
-                fn($q) => $q->whereDate('date', '<=', Carbon::today())
-            )
             ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->search;
@@ -89,13 +82,7 @@ class ChequeService
 
         $summaryQuery = clone $query;
 
-        $bankAccountIds = $request->filled('bank_account_id')
-            ? (
-                is_array($request->bank_account_id)
-                ? $request->bank_account_id
-                : [$request->bank_account_id]
-            )
-            : [];
+        $summaryQuery->whereDate('date', '<=', Carbon::today());
 
         $summaryCheques = $summaryQuery->get();
 
