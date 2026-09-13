@@ -11,6 +11,15 @@ class AdminLoginController extends Controller
 {
     public function login(Request $request)
     {
+        if (!$request->token) {
+            return response([
+                'status' => 'ERROR',
+                'message' => [
+                    'Something went wrong in recaptcha !!'
+                ],
+            ], 500);
+        }
+        
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
