@@ -117,7 +117,7 @@ class BusinessService
         $business = $this->business
             ->with([
                 'tenant',
-                'owner',
+                'owners',
             ])
             ->find($id);
 

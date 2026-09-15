@@ -412,59 +412,59 @@ Route::prefix('api/mobile')
             ->middleware('permission.type:kye,delete');
 
         $route->get('kye-address', [KyeAddressController::class, 'index'])
-            ->middleware('permission.type:kye-address,view');
+            ->middleware('permission.type:kye,sview');
         $route->post('kye-address', [KyeAddressController::class, 'store'])
-            ->middleware('permission.type:kye-address,create');
+            ->middleware('permission.type:kye,create');
         $route->get('kye-address/{id}', [KyeAddressController::class, 'show'])
-            ->middleware('permission.type:kye-address,view');
+            ->middleware('permission.type:kye,view');
         $route->put('kye-address/{id}', [KyeAddressController::class, 'update'])
-            ->middleware('permission.type:kye-address,update');
+            ->middleware('permission.type:kye,update');
         $route->delete('kye-address/{id}', [KyeAddressController::class, 'destroy'])
-            ->middleware('permission.type:kye-address,delete');
+            ->middleware('permission.type:kye,delete');
 
         $route->get('kye-education', [KyeEducationController::class, 'index'])
-            ->middleware('permission.type:kye-education,view');
+            ->middleware('permission.type:kye,view');
         $route->post('kye-education', [KyeEducationController::class, 'store'])
-            ->middleware('permission.type:kye-education,create');
+            ->middleware('permission.type:kye,create');
         $route->get('kye-education/{id}', [KyeEducationController::class, 'show'])
-            ->middleware('permission.type:kye-education,view');
+            ->middleware('permission.type:kye,view');
         $route->put('kye-education/{id}', [KyeEducationController::class, 'update'])
-            ->middleware('permission.type:kye-education,update');
+            ->middleware('permission.type:kye,update');
         $route->delete('kye-education/{id}', [KyeEducationController::class, 'destroy'])
-            ->middleware('permission.type:kye-education,delete');
+            ->middleware('permission.type:kye,delete');
 
         $route->get('kye-emergency-contact', [KyeEmergencyContactController::class, 'index'])
-            ->middleware('permission.type:kye-emergency-contact,view');
+            ->middleware('permission.type:kye,view');
         $route->post('kye-emergency-contact', [KyeEmergencyContactController::class, 'store'])
-            ->middleware('permission.type:kye-emergency-contact,create');
+            ->middleware('permission.type:kye,create');
         $route->get('kye-emergency-contact/{id}', [KyeEmergencyContactController::class, 'show'])
-            ->middleware('permission.type:kye-emergency-contact,view');
+            ->middleware('permission.type:kye,view');
         $route->put('kye-emergency-contact/{id}', [KyeEmergencyContactController::class, 'update'])
-            ->middleware('permission.type:kye-emergency-contact,update');
+            ->middleware('permission.type:kye,update');
         $route->delete('kye-emergency-contact/{id}', [KyeEmergencyContactController::class, 'destroy'])
-            ->middleware('permission.type:kye-emergency-contact,delete');
+            ->middleware('permission.type:kye,delete');
 
         $route->get('kye-experience', [KyeExperienceController::class, 'index'])
-            ->middleware('permission.type:kye-experience,view');
+            ->middleware('permission.type:kye,view');
         $route->post('kye-experience', [KyeExperienceController::class, 'store'])
-            ->middleware('permission.type:kye-experience,create');
+            ->middleware('permission.type:kye,create');
         $route->get('kye-experience/{id}', [KyeExperienceController::class, 'show'])
-            ->middleware('permission.type:kye-experience,view');
+            ->middleware('permission.type:kye,view');
         $route->put('kye-experience/{id}', [KyeExperienceController::class, 'update'])
-            ->middleware('permission.type:kye-experience,update');
+            ->middleware('permission.type:kye,update');
         $route->delete('kye-experience/{id}', [KyeExperienceController::class, 'destroy'])
-            ->middleware('permission.type:kye-experience,delete');
+            ->middleware('permission.type:kye,delete');
 
         $route->get('kye-service', [KyeServiceController::class, 'index'])
-            ->middleware('permission.type:kye-service,view');
+            ->middleware('permission.type:kye,view');
         $route->post('kye-service', [KyeServiceController::class, 'store'])
-            ->middleware('permission.type:kye-service,create');
+            ->middleware('permission.type:kye,create');
         $route->get('kye-service/{id}', [KyeServiceController::class, 'show'])
-            ->middleware('permission.type:kye-service,view');
+            ->middleware('permission.type:kye,view');
         $route->put('kye-service/{id}', [KyeServiceController::class, 'update'])
-            ->middleware('permission.type:kye-service,update');
+            ->middleware('permission.type:kye,update');
         $route->delete('kye-service/{id}', [KyeServiceController::class, 'destroy'])
-            ->middleware('permission.type:kye-service,delete');
+            ->middleware('permission.type:kye,delete');
 
         $route->get('payroll', [PayrollController::class, 'index']);
         $route->get('sales-report', [SalesReportController::class, 'index']);
