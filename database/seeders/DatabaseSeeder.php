@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             OwnerUserSeeder::class,
             TbrothersOwnerSeeder::class,
             RoyalCountrySideOwnerSeeder::class,
+            PermissionSeeder::class,
         ]);
     }
 }
