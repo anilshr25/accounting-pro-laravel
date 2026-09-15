@@ -8,9 +8,161 @@ use App\Models\User\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use ReCaptcha\ReCaptcha;
+use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
+    public function checkVerificationEnabled(Request $request)
+    {
+        $request->validate([
+            'token' => ['required', 'string'],
+            'email' => ['required', 'string'],
+            'password' => ['required', 'string'],
+        ]);
+
+        $recaptcha = new ReCaptcha(
+            config('recaptcha.secret_key')
+        );
+
+        $response = $recaptcha->verify(
+            $request->token
+        );
+
+        if (! $response->isSuccess()) {
+
+            Log::error('Verification reCAPTCHA failed', [
+                'errors' => $response->getErrorCodes(),
+            ]);
+
+            return response([
+                'status' => 'ERROR',
+                'message' => [
+                    'Something went wrong in recaptcha !!'
+                ],
+
+                'recaptcha_errors' => $response->getErrorCodes(),
+
+            ], 500);
+        }
+
+        $email = $request->email;
+        $password = $request->password;
+
+        $owner = OwnerUser::where('email', $email)->first();
+
+        if ($owner && Hash::check($password, $owner->password)) {
+
+            if (! $owner->is_login_verified) {
+                return response([
+                    'status' => 'NOT_VERIFIED',
+                    'message' => 'Email not verified. Please verify your email.',
+                ], 200);
+            }
+
+            if (
+                $owner->is_email_authentication_enabled &&
+                ! $owner->is_mfa_enabled
+            ) {
+                $this->sendEmailVerificationCode($owner);
+
+                return response([
+                    'status' => 'EMAIL_VERIFICATION_REQUIRED',
+                    'message' => 'Verification code has been sent to your email.',
+                    'data' => [
+                        'id' => $owner->id,
+                        'name' => trim(
+                            $owner->first_name . ' ' . $owner->last_name
+                        ),
+                        'email' => $owner->email,
+                        'user_type' => 'owner',
+                        'is_login_verified' => (bool) $owner->is_login_verified,
+                        'is_mfa_enabled' => (bool) $owner->is_mfa_enabled,
+                        'is_email_authentication_enabled' =>
+                        (bool) $owner->is_email_authentication_enabled,
+                        'is_active' => (bool) $owner->is_active,
+                    ],
+                ], 200);
+            }
+
+            return response([
+                'status' => 'OK',
+                'message' => 'Verification successful.',
+                'data' => [
+                    'id' => $owner->id,
+                    'name' => trim(
+                        $owner->first_name . ' ' . $owner->last_name
+                    ),
+                    'email' => $owner->email,
+                    'user_type' => 'owner',
+                    'is_login_verified' => (bool) $owner->is_login_verified,
+                    'is_mfa_enabled' => (bool) $owner->is_mfa_enabled,
+                    'is_email_authentication_enabled' =>
+                    (bool) $owner->is_email_authentication_enabled,
+                    'is_active' => (bool) $owner->is_active,
+                ],
+            ], 200);
+        }
+
+        $user = User::where('email', $email)->first();
+
+        if ($user && Hash::check($password, $user->password)) {
+
+            if (! $user->is_login_verified) {
+                return response([
+                    'status' => 'NOT_VERIFIED',
+                    'message' => 'Email not verified. Please verify your email.',
+                ], 200);
+            }
+
+            if (
+                $user->is_email_authentication_enabled &&
+                ! $user->is_mfa_enabled
+            ) {
+                $this->sendEmailVerificationCode($user);
+
+                return response([
+                    'status' => 'EMAIL_VERIFICATION_REQUIRED',
+                    'message' => 'Verification code has been sent to your email.',
+                    'data' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'user_type' => 'user',
+                        'is_login_verified' => (bool) $user->is_login_verified,
+                        'is_mfa_enabled' => (bool) $user->is_mfa_enabled,
+                        'is_email_authentication_enabled' =>
+                        (bool) $user->is_email_authentication_enabled,
+                        'is_active' => (bool) $user->is_active,
+                    ],
+                ], 200);
+            }
+
+            return response([
+                'status' => 'OK',
+                'message' => 'Verification successful.',
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'user_type' => 'user',
+                    'is_login_verified' => (bool) $user->is_login_verified,
+                    'is_mfa_enabled' => (bool) $user->is_mfa_enabled,
+                    'is_email_authentication_enabled' =>
+                    (bool) $user->is_email_authentication_enabled,
+                    'is_active' => (bool) $user->is_active,
+                ],
+            ], 200);
+        }
+
+        return response([
+            'status' => 'NOT_FOUND',
+            'message' => [
+                'The provided credentials are incorrect.'
+            ],
+        ], 200);
+    }
+
     public function login(Request $request)
     {
         if (!$request->token) {
@@ -272,5 +424,29 @@ class LoginController extends Controller
         return response()->json([
             'status' => 'Unauthorized',
         ], 401);
+    }
+
+    protected function sendEmailVerificationCode($user)
+    {
+        /*
+         * Keep your existing OTP/email implementation here.
+         *
+         * Example:
+         *
+         * $code = random_int(100000, 999999);
+         *
+         * $user->update([
+         *     'email_verification_code' => $code,
+         *     'email_verification_code_expires_at' => now()->addMinutes(10),
+         * ]);
+         *
+         * Mail::to($user->email)->send(
+         *     new EmailVerificationCodeMail($code)
+         * );
+         */
+
+        // IMPORTANT:
+        // Do not use this placeholder if you already have
+        // an existing OTP implementation.
     }
 }

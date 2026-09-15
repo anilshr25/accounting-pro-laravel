@@ -87,6 +87,7 @@ Route::group([
 ], function ($route) {
 
 
+    $route->post('/verification-enabled', [LoginController::class, 'checkVerificationEnabled']);
     $route->post('/login', [LoginController::class, 'login'])->name('auth.login');
     $route->post('/select-business', [LoginController::class, 'selectBusiness'])->middleware('auth:owner,user');
     $route->get('/verify', [LoginController::class, 'verify'])->name('auth.verify');
