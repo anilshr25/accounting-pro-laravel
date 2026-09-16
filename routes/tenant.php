@@ -130,7 +130,7 @@ Route::prefix('api')->middleware(['web', 'central.auth', 'tenant.session'])->gro
     $route->post('credit', [CreditController::class, 'store'])
         ->middleware('permission.type:credit,create');
     $route->get('credit/{id}', [CreditController::class, 'show'])
-        ->middleware('permission.typecredit,view');
+        ->middleware('permission.type:credit,view');
     $route->put('credit/{id}', [CreditController::class, 'update'])
         ->middleware('permission.type:credit,update');
     $route->delete('credit/{id}', [CreditController::class, 'destroy'])
@@ -220,17 +220,6 @@ Route::prefix('api')->middleware(['web', 'central.auth', 'tenant.session'])->gro
         ->middleware('permission.type:supplier,export');
     $route->get('supplier/export/pdf', [SupplierController::class, 'downloadExportPdf'])->name('supplier.export.pdf')
         ->middleware('permission.type:supplier,export');
-
-    $route->get('user', [UserController::class, 'index'])
-        ->middleware('permission.type:user,view');
-    $route->post('user', [UserController::class, 'store'])
-        ->middleware('permission.type:user,create');
-    $route->get('user/{id}', [UserController::class, 'show'])
-        ->middleware('permission.type:user,view');
-    $route->put('user/{id}', [UserController::class, 'update'])
-        ->middleware('permission.type:user,update');
-    $route->delete('user/{id}', [UserController::class, 'destroy'])
-        ->middleware('permission.type:user,delete');
 
     $route->get('purchase-return', [PurchaseReturnController::class, 'index'])
         ->middleware('permission.type:purchase-return,view');

@@ -354,7 +354,7 @@ class LoginController extends Controller
                 ], 403);
             }
 
-            session([
+            session()->put([
                 'tenant_id'  => $business->tenant_id,
                 'business_id' => $business->id,
                 'user_type'  => 'owner',
@@ -400,7 +400,7 @@ class LoginController extends Controller
                 ], 403);
             }
 
-            session([
+            session()->put([
                 'tenant_id'  => $tenant->id,
                 'business_id' => $tenant->business?->id,
                 'user_type'  => 'user',

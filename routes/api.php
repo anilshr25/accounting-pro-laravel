@@ -22,8 +22,7 @@ Route::group([
         'login',
     ]);
 
-
-    $route->group(['middleware' => ['auth:admin'],], function ($route) {
+    Route::middleware(['auth:admin'])->group(function ($route) {
 
         $route->get('profile', [AdminLoginController::class, 'profile',]);
 
@@ -56,20 +55,27 @@ Route::group([
     });
 });
 
-Route::group([
-    'prefix' => 'owner',
-    'middleware' => ['web'],
-], function ($route) {
+Route::prefix('owner')->middleware(['web', 'auth:owner',])->group(function ($route) {
 
-    $route->get('/user', [UserController::class, 'index']);
-    $route->post('/user', [UserController::class, 'store']);
-    $route->get('/user/{id}', [UserController::class, 'show']);
-    $route->put('/user/{id}', [UserController::class, 'update']);
-    $route->delete('/user/{id}', [UserController::class, 'destroy']);
-    $route->post('/user/{id}/business', [UserController::class, 'assignBusiness']);
-    $route->put('/user/{id}/business/{tenantId}', [UserController::class, 'updateBusinessAccess']);
-    $route->delete('/user/{id}/business/{tenantId}', [UserController::class, 'removeBusiness']);
-    $route->get('/user/{id}/businesses', [UserController::class, 'businesses']);
+    $route->get('/user', [UserController::class, 'index'])
+        ->middleware('permission.type:user,view');
+    $route->post('/user', [UserController::class, 'store'])
+        ->middleware('permission.type:user,create');
+    $route->get('/user/{id}', [UserController::class, 'show'])
+        ->middleware('permission.type:user,view');
+    $route->put('/user/{id}', [UserController::class, 'update'])
+        ->middleware('permission.type:user,update');
+    $route->delete('/user/{id}', [UserController::class, 'destroy'])
+        ->middleware('permission.type:user,delete');
+
+    $route->post('/user/{id}/business', [UserController::class, 'assignBusiness'])
+        ->middleware('permission.type:user,update');
+    $route->put('/user/{id}/business/{tenantId}', [UserController::class, 'updateBusinessAccess'])
+        ->middleware('permission.type:user,update');
+    $route->delete('/user/{id}/business/{tenantId}', [UserController::class, 'removeBusiness'])
+        ->middleware('permission.type:user,update');
+    $route->get('/user/{id}/businesses', [UserController::class, 'businesses'])
+        ->middleware('permission.type:user,view');
 
     $route->get('permission', [PermissionController::class, 'index']);
     $route->get('permission/{id}', [PermissionController::class, 'show']);
@@ -77,19 +83,20 @@ Route::group([
     $route->get('role', [RoleController::class, 'index']);
     $route->get('role/{id}', [RoleController::class, 'show']);
 
-    $route->post('role/{id}/permission', [RoleController::class, 'assignPermissions']);
-    $route->get('role/{id}/permission', [RoleController::class, 'permissions']);
+    $route->post('role/{id}/permission', [RoleController::class, 'assignPermissions'])
+        ->middleware('permission.type:role,update');
+    $route->get('role/{id}/permission', [RoleController::class, 'permissions'])
+        ->middleware('permission.type:role,view');
 });
 
-Route::group([
-    'prefix' => 'auth',
-    'middleware' => ['web'],
-], function ($route) {
-
+Route::prefix('auth')->middleware(['web'])->group(function ($route) {
 
     $route->post('/verification-enabled', [LoginController::class, 'checkVerificationEnabled']);
     $route->post('/login', [LoginController::class, 'login'])->name('auth.login');
-    $route->post('/select-business', [LoginController::class, 'selectBusiness'])->middleware('auth:owner,user');
-    $route->get('/verify', [LoginController::class, 'verify'])->name('auth.verify');
-    $route->post('/logout', [LoginController::class, 'logout'])->name('auth.logout');
+
+    Route::middleware(['auth:owner,user'])->group(function ($route) {
+        $route->post('/select-business', [LoginController::class, 'selectBusiness']);
+        $route->get('/verify', [LoginController::class, 'verify'])->name('auth.verify');
+        $route->post('/logout', [LoginController::class, 'logout'])->name('auth.logout');
+    });
 });

@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Tenant\Auth;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Hash;
+
 use App\Http\Controllers\Controller;
+use App\Models\OwnerUser\OwnerUser;
+use App\Models\User\User;
 use App\Services\Tenant\User\UserService;
 use App\Services\Authenticator\Authenticator;
 
@@ -23,29 +27,68 @@ class AppMFAController extends Controller
 
     public function checkVerificationEnabled(Request $request)
     {
-        $user = $this->user->getUserForLogin(
-            $request->only(['email', 'password'])
-        );
+        $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
+        ]);
 
-        if (!$user) {
+        $email = $request->email;
+        $password = $request->password;
+
+        $owner = OwnerUser::where('email', $email)->first();
+
+        if ($owner && Hash::check($password, $owner->password)) {
+
+            if (! $owner->is_active) {
+                return response([
+                    'status' => 'INACTIVE',
+                    'message' => 'Your owner account is inactive.',
+                ], 403);
+            }
+
             return response([
-                'status' => 'NOT_FOUND',
-                'message' => 'The provided credentials are incorrect.',
+                'status' => 'OK',
+                'data' => [
+                    'id' => $owner->id,
+                    'name' => trim(
+                        $owner->first_name . ' ' . $owner->last_name
+                    ),
+                    'email' => $owner->email,
+                    'user_type' => 'owner',
+                    'is_login_verified' => (bool) $owner->is_login_verified,
+                    'is_mfa_enabled' => (bool) $owner->is_mfa_enabled,
+                    'is_email_authentication_enabled' =>
+                        (bool) $owner->is_email_authentication_enabled,
+                    'is_active' => (bool) $owner->is_active,
+                ],
             ], 200);
         }
 
-        if (!$user->is_login_verified) {
+        $user = User::where('email', $email)->first();
+
+        if ($user && Hash::check($password, $user->password)) {
+
             return response([
-                'status' => 'NOT_VERIFIED',
-                'message' => 'Email not verified. Please verify your email.',
+                'status' => 'OK',
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'user_type' => 'user',
+                    'is_mfa_enabled' => (bool) $user->is_mfa_enabled,
+                    'is_email_authentication_enabled' =>
+                        (bool) $user->is_email_authentication_enabled,
+                    'is_active' => (bool) $user->is_active,
+                ],
             ], 200);
         }
 
         return response([
-            'status' => 'OK',
-            'data' => $user,
+            'status' => 'NOT_FOUND',
+            'message' => 'The provided credentials are incorrect.',
         ], 200);
     }
+
 
     public function activateEmailAuthenticator(Request $request)
     {
@@ -62,6 +105,7 @@ class AppMFAController extends Controller
         ], 500);
     }
 
+
     public function deactivateEmailAuthenticator()
     {
         $authUser = auth()->guard('web')->user();
@@ -74,6 +118,7 @@ class AppMFAController extends Controller
             'status' => 'OK',
         ], 200);
     }
+
 
     public function getMfaAuthenticatorCode()
     {
@@ -95,11 +140,12 @@ class AppMFAController extends Controller
         ]);
     }
 
+
     public function activateMfaAuthenticator(Request $request)
     {
         $authUser = auth()->guard('web')->user();
 
-        if (!$request->filled('secret_key')) {
+        if (! $request->filled('secret_key')) {
             return response([
                 'msg' => 'Secret key not found',
             ], 200);
@@ -115,7 +161,7 @@ class AppMFAController extends Controller
             2
         );
 
-        if (!$checkResult) {
+        if (! $checkResult) {
             return response([
                 'status' => 'ERROR',
             ], 500);
@@ -132,6 +178,7 @@ class AppMFAController extends Controller
         ], 200);
     }
 
+
     public function deactivateMfaAuthenticator(Request $request)
     {
         $authUser = auth()->guard('web')->user();
@@ -142,7 +189,7 @@ class AppMFAController extends Controller
             2
         );
 
-        if (!$checkResult) {
+        if (! $checkResult) {
             return response([
                 'message' => 'Authentication code is not valid',
             ], 200);
@@ -158,6 +205,7 @@ class AppMFAController extends Controller
             'status' => 'OK',
         ], 200);
     }
+
 
     public function csrfToken()
     {

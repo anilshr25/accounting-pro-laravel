@@ -8,6 +8,7 @@ use App\Models\Domain\Domain;
 use App\Models\Tenant\Tenant;
 use App\Services\Traits\UploadPathTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -122,7 +123,7 @@ class OwnerUser extends Authenticatable
         return $this->hasMany(Domain::class, 'owner_user_id', 'id');
     }
 
-    public function businesses()
+    public function businesses(): BelongsToMany
     {
         return $this->belongsToMany(
             Business::class,

@@ -6,12 +6,14 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Tenant\Tenant;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\TenantUser\TenantUser;
 
 class User extends Authenticatable
 {
     use Notifiable, HasApiTokens;
 
+    protected $connection = 'central';
     protected $fillable = [
         'name',
         'email',
@@ -31,7 +33,7 @@ class User extends Authenticatable
         ];
     }
 
-    public function tenants()
+    public function tenants(): BelongsToMany
     {
         return $this->belongsToMany(
             Tenant::class,

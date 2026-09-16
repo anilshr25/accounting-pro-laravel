@@ -37,7 +37,7 @@ class Business extends Model
         );
     }
 
-    public function owners()
+    public function owners(): BelongsToMany
     {
         return $this->belongsToMany(
             OwnerUser::class,
