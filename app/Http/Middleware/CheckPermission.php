@@ -103,7 +103,10 @@ class CheckPermission
             ], 403);
         }
 
-        $role = Role::with('permissions')->find($roleId);
+        $role = Role::with('permissions')
+            ->where('id', $roleId)
+            ->where('tenant_id', $tenantId)
+            ->first();
 
         if (!$role) {
             return response()->json([
@@ -112,10 +115,27 @@ class CheckPermission
             ], 403);
         }
 
-        $hasPermission = $role->permissions
-            ->contains('name', $permission);
+        $parts = explode(',', $permission, 2);
 
-        if (!$hasPermission) {
+        $permissionName = $parts[0] ?? null;
+        $permissionType = $parts[1] ?? null;
+
+        if (! $permissionName || ! $permissionType) {
+            return response()->json([
+                'status' => 'FORBIDDEN',
+                'message' => 'Invalid permission format.',
+            ], 403);
+        }
+
+        $hasPermission = $role->permissions->contains(function ($rolePermission) use (
+            $permissionName,
+            $permissionType
+        ) {
+            return $rolePermission->name === $permissionName
+                && $rolePermission->type === $permissionType;
+        });
+
+        if (! $hasPermission) {
             return response()->json([
                 'status' => 'FORBIDDEN',
                 'message' => 'You do not have permission to perform this action.',

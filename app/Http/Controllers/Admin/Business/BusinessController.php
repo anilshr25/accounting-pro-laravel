@@ -22,6 +22,11 @@ class BusinessController extends Controller
         return $this->business->paginate($request, 25);
     }
 
+    public function ownerBusinesses(Request $request)
+    {
+        return $this->business->ownerPaginate($request);
+    }
+
     public function store(BusinessRequest $request)
     {
         try {

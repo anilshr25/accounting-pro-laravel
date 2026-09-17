@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\OwnerUser\OwnerUser;
 use App\Models\User\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use ReCaptcha\ReCaptcha;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use ReCaptcha\ReCaptcha;
 
 class LoginController extends Controller
 {
@@ -21,29 +21,13 @@ class LoginController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $recaptcha = new ReCaptcha(
-            config('recaptcha.secret_key')
-        );
-
-        $response = $recaptcha->verify(
-            $request->token
-        );
-
-        if (! $response->isSuccess()) {
-
-            Log::error('Verification reCAPTCHA failed', [
-                'errors' => $response->getErrorCodes(),
-            ]);
-
+        if (! $this->verifyRecaptcha($request->token)) {
             return response([
                 'status' => 'ERROR',
                 'message' => [
-                    'Something went wrong in recaptcha !!'
+                    'Something went wrong in recaptcha !!',
                 ],
-
-                'recaptcha_errors' => $response->getErrorCodes(),
-
-            ], 500);
+            ], 422);
         }
 
         $email = $request->email;
@@ -53,7 +37,7 @@ class LoginController extends Controller
 
         if ($owner && Hash::check($password, $owner->password)) {
 
-            if (! $owner->is_login_verified) {
+            if (! $owner->is_active) {
                 return response([
                     'status' => 'NOT_VERIFIED',
                     'message' => 'Email not verified. Please verify your email.',
@@ -108,7 +92,7 @@ class LoginController extends Controller
 
         if ($user && Hash::check($password, $user->password)) {
 
-            if (! $user->is_login_verified) {
+            if (! $user->is_active) {
                 return response([
                     'status' => 'NOT_VERIFIED',
                     'message' => 'Email not verified. Please verify your email.',
@@ -158,47 +142,50 @@ class LoginController extends Controller
         return response([
             'status' => 'NOT_FOUND',
             'message' => [
-                'The provided credentials are incorrect.'
+                'The provided credentials are incorrect.',
             ],
         ], 200);
     }
 
     public function login(Request $request)
     {
-        if (!$request->token) {
-            return response([
-                'status' => 'ERROR',
-                'message' => ['Something went wrong in recaptcha !!'],
-            ], 500);
-        }
-
         $request->validate([
+            'token' => ['required', 'string'],
             'email' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
+        if (! $this->verifyRecaptcha($request->token)) {
+            return response([
+                'status' => 'ERROR',
+                'message' => [
+                    'reCAPTCHA verification failed.',
+                ],
+            ], 422);
+        }
+
         $email = $request->email;
         $password = $request->password;
 
-        $ownerUser = OwnerUser::where('email', $email)->first();
+        $owner = OwnerUser::where('email', $email)->first();
 
-        if ($ownerUser && Hash::check($password, $ownerUser->password)) {
+        if ($owner && Hash::check($password, $owner->password)) {
 
-            if (!$ownerUser->is_active) {
+            if (! $owner->is_active) {
                 return response([
                     'status' => 'INACTIVE',
                     'message' => [
-                        'Your owner account is inactive.'
+                        'Your owner account is inactive.',
                     ],
                 ], 403);
             }
 
-            Auth::guard('owner')->login($ownerUser);
+            Auth::guard('owner')->login($owner);
 
             $request->session()->regenerate();
 
-            $businesses = $ownerUser->businesses()
-                ->where('status', 'active')
+            $businesses = $owner->businesses()
+                ->where('businesses.status', 'active')
                 ->get()
                 ->map(function ($business) {
                     return [
@@ -215,11 +202,11 @@ class LoginController extends Controller
                 'status' => 'OK',
                 'message' => 'Login successful.',
                 'data' => [
-                    'id' => $ownerUser->id,
+                    'id' => $owner->id,
                     'name' => trim(
-                        $ownerUser->first_name . ' ' . $ownerUser->last_name
+                        $owner->first_name . ' ' . $owner->last_name
                     ),
-                    'email' => $ownerUser->email,
+                    'email' => $owner->email,
                     'user_type' => 'owner',
                     'businesses' => $businesses,
                 ],
@@ -232,6 +219,15 @@ class LoginController extends Controller
 
         if ($user && Hash::check($password, $user->password)) {
 
+            if (! $user->is_active) {
+                return response([
+                    'status' => 'INACTIVE',
+                    'message' => [
+                        'Your account is inactive.',
+                    ],
+                ], 403);
+            }
+
             Auth::guard('user')->login($user);
 
             $request->session()->regenerate();
@@ -239,7 +235,6 @@ class LoginController extends Controller
             $businesses = $user->tenants
                 ->where('pivot.is_active', true)
                 ->map(function ($tenant) {
-
                     return [
                         'tenant_id' => $tenant->id,
                         'business_id' => $tenant->business?->id,
@@ -266,7 +261,7 @@ class LoginController extends Controller
         return response([
             'status' => 'NOT_FOUND',
             'message' => [
-                'The provided credentials are incorrect.'
+                'The provided credentials are incorrect.',
             ],
         ], 401);
     }
@@ -281,7 +276,9 @@ class LoginController extends Controller
                 'status' => 'OK',
                 'data' => [
                     'id' => $owner->id,
-                    'name' => $owner->name,
+                    'name' => trim(
+                        $owner->first_name . ' ' . $owner->last_name
+                    ),
                     'email' => $owner->email,
                     'user_type' => 'owner',
                 ],
@@ -304,9 +301,10 @@ class LoginController extends Controller
         }
 
         return response([
-            'status' => 'Unauthorized'
+            'status' => 'UNAUTHORIZED',
         ], 401);
     }
+
 
     public function logout(Request $request)
     {
@@ -318,9 +316,10 @@ class LoginController extends Controller
 
         return response([
             'status' => 'OK',
-            'message' => 'Logout successfully.'
+            'message' => 'Logout successfully.',
         ], 200);
     }
+
 
     public function selectBusiness(Request $request)
     {
@@ -332,13 +331,15 @@ class LoginController extends Controller
 
             $owner = Auth::guard('owner')->user();
 
-            if (! $owner instanceof \App\Models\OwnerUser\OwnerUser || ! method_exists($owner, 'businesses')) {
-                $owner = OwnerUser::find(Auth::guard('owner')->id());
+            if (! $owner instanceof OwnerUser) {
+                $owner = OwnerUser::find(
+                    Auth::guard('owner')->id()
+                );
             }
 
             if (! $owner) {
                 return response()->json([
-                    'status' => 'Unauthorized',
+                    'status' => 'UNAUTHORIZED',
                 ], 401);
             }
 
@@ -355,10 +356,10 @@ class LoginController extends Controller
             }
 
             session()->put([
-                'tenant_id'  => $business->tenant_id,
+                'tenant_id' => $business->tenant_id,
                 'business_id' => $business->id,
-                'user_type'  => 'owner',
-                'user_id'    => $owner->id,
+                'user_type' => 'owner',
+                'user_id' => $owner->id,
             ]);
 
             return response()->json([
@@ -377,13 +378,15 @@ class LoginController extends Controller
 
             $user = Auth::guard('user')->user();
 
-            if (! $user instanceof \App\Models\User\User || ! method_exists($user, 'tenants')) {
-                $user = User::find(Auth::guard('user')->id());
+            if (! $user instanceof User) {
+                $user = User::find(
+                    Auth::guard('user')->id()
+                );
             }
 
             if (! $user) {
                 return response()->json([
-                    'status' => 'Unauthorized',
+                    'status' => 'UNAUTHORIZED',
                 ], 401);
             }
 
@@ -401,11 +404,11 @@ class LoginController extends Controller
             }
 
             session()->put([
-                'tenant_id'  => $tenant->id,
+                'tenant_id' => $tenant->id,
                 'business_id' => $tenant->business?->id,
-                'user_type'  => 'user',
-                'user_id'    => $user->id,
-                'role_id'    => $tenant->pivot->role_id,
+                'user_type' => 'user',
+                'user_id' => $user->id,
+                'role_id' => $tenant->pivot->role_id,
             ]);
 
             return response()->json([
@@ -422,31 +425,32 @@ class LoginController extends Controller
         }
 
         return response()->json([
-            'status' => 'Unauthorized',
+            'status' => 'UNAUTHORIZED',
         ], 401);
     }
 
-    protected function sendEmailVerificationCode($user)
-    {
-        /*
-         * Keep your existing OTP/email implementation here.
-         *
-         * Example:
-         *
-         * $code = random_int(100000, 999999);
-         *
-         * $user->update([
-         *     'email_verification_code' => $code,
-         *     'email_verification_code_expires_at' => now()->addMinutes(10),
-         * ]);
-         *
-         * Mail::to($user->email)->send(
-         *     new EmailVerificationCodeMail($code)
-         * );
-         */
+    protected function sendEmailVerificationCode($user) {}
 
-        // IMPORTANT:
-        // Do not use this placeholder if you already have
-        // an existing OTP implementation.
+    private function verifyRecaptcha(string $token): bool
+    {
+        if (! config('recaptcha.enabled')) {
+            return true;
+        }
+
+        $recaptcha = new ReCaptcha(
+            config('recaptcha.secret_key')
+        );
+
+        $response = $recaptcha->verify($token);
+
+        if (! $response->isSuccess()) {
+            Log::error('Login reCAPTCHA failed', [
+                'errors' => $response->getErrorCodes(),
+            ]);
+
+            return false;
+        }
+
+        return true;
     }
 }

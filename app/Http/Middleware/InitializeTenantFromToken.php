@@ -41,84 +41,105 @@ class InitializeTenantFromToken
             ], 400);
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Owner
-        |--------------------------------------------------------------------------
-        |
-        | Owner can access any business assigned to them.
-        |
-        */
-        if (
-            $user instanceof OwnerUser ||
-            ($user instanceof User && $user->user_type === 'owner')
-        ) {
-            $tenant = DB::connection('central')
-                ->table('tenants')
-                ->where('id', $tenantId)
-                ->first();
-
-            if (! $tenant) {
-                return response()->json([
-                    'status' => 'INVALID_TENANT',
-                    'message' => 'Invalid tenant.',
-                ], 404);
-            }
-
-            // Convert stdClass to Tenant model
-            $tenant = Tenant::on('central')->find($tenantId);
-
-            tenancy()->initialize($tenant);
-
-            return $next($request);
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Normal Tenant User
-        |--------------------------------------------------------------------------
-        |
-        | Check user's access to the selected tenant from CENTRAL database.
-        |
-        */
-        if ($user instanceof User) {
-
-            $tenant = DB::connection('central')
-                ->table('tenants')
+        if ($user instanceof OwnerUser) {
+            $hasAccess = DB::connection('central')
+                ->table('business_owners')
                 ->join(
-                    'tenant_user',
-                    'tenants.id',
+                    'businesses',
+                    'businesses.id',
                     '=',
-                    'tenant_user.tenant_id'
+                    'business_owners.business_id'
                 )
-                ->where('tenants.id', $tenantId)
-                ->where('tenant_user.user_id', $user->id)
-                ->where('tenant_user.is_active', true)
-                ->select('tenants.id')
-                ->first();
+                ->where(
+                    'business_owners.owner_user_id',
+                    $user->id
+                )
+                ->where(
+                    'businesses.tenant_id',
+                    $tenantId
+                )
+                ->where(
+                    'businesses.status',
+                    'active'
+                )
+                ->exists();
 
-            if (! $tenant) {
+            if (! $hasAccess) {
                 return response()->json([
                     'status' => 'FORBIDDEN',
                     'message' => 'You do not have access to this business.',
                 ], 403);
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | Initialize Stancl Tenancy
-            |--------------------------------------------------------------------------
-            */
-            $tenantModel = Tenant::on('central')->find($tenantId);
+            $tenant = Tenant::on('central')->find($tenantId);
 
-            if (! $tenantModel) {
+            if (! $tenant) {
                 return response()->json([
                     'status' => 'INVALID_TENANT',
                     'message' => 'Tenant not found.',
                 ], 404);
             }
 
-            tenancy()->initialize($tenantModel);
+            tenancy()->initialize($tenant);
+
+            $request->attributes->set('tenant', $tenant);
+
+            return $next($request);
+        }
+
+        if ($user instanceof User) {
+
+            $hasAccess = DB::connection('central')
+                ->table('tenant_user')
+                ->join(
+                    'tenants',
+                    'tenants.id',
+                    '=',
+                    'tenant_user.tenant_id'
+                )
+                ->join(
+                    'businesses',
+                    'businesses.tenant_id',
+                    '=',
+                    'tenants.id'
+                )
+                ->where(
+                    'tenant_user.user_id',
+                    $user->id
+                )
+                ->where(
+                    'tenant_user.tenant_id',
+                    $tenantId
+                )
+                ->where(
+                    'tenant_user.is_active',
+                    true
+                )
+                ->where(
+                    'businesses.status',
+                    'active'
+                )
+                ->exists();
+
+            if (! $hasAccess) {
+                return response()->json([
+                    'status' => 'FORBIDDEN',
+                    'message' => 'You do not have access to this business.',
+                ], 403);
+            }
+
+            $tenant = Tenant::on('central')->find($tenantId);
+
+            if (! $tenant) {
+                return response()->json([
+                    'status' => 'INVALID_TENANT',
+                    'message' => 'Tenant not found.',
+                ], 404);
+            }
+
+            tenancy()->initialize($tenant);
+
+            $request->attributes->set('tenant', $tenant);
 
             return $next($request);
         }

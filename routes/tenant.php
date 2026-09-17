@@ -98,17 +98,16 @@ Route::prefix('api')->middleware(['web', 'central.auth', 'tenant.session'])->gro
     $route->post('logout', [LoginController::class, 'logout'])->name('logout');
     $route->get('do-verify', [LoginController::class, 'doVerify']);
 
-    $route->get('balance', [BalanceController::class, 'index']);
-    $route->post('balance', [BalanceController::class, 'store']);
-    $route->get('balance/{id}', [BalanceController::class, 'show']);
-    $route->put('balance/{id}', [BalanceController::class, 'update']);
-    $route->delete('balance/{id}', [BalanceController::class, 'destroy']);
-
-    $route->get('bank-account', [BankAccountController::class, 'index']);
-    $route->post('bank-account', [BankAccountController::class, 'store']);
-    $route->get('bank-account/{id}', [BankAccountController::class, 'show']);
-    $route->put('bank-account/{id}', [BankAccountController::class, 'update']);
-    $route->delete('bank-account/{id}', [BankAccountController::class, 'destroy']);
+    $route->get('bank-account', [BankAccountController::class, 'index'])
+        ->middleware('permission.type:bank,view');
+    $route->post('bank-account', [BankAccountController::class, 'store'])
+        ->middleware('permission.type:bank,create');
+    $route->get('bank-account/{id}', [BankAccountController::class, 'show'])
+        ->middleware('permission.type:bank,view');
+    $route->put('bank-account/{id}', [BankAccountController::class, 'update'])
+        ->middleware('permission.type:bank,update');
+    $route->delete('bank-account/{id}', [BankAccountController::class, 'destroy'])
+        ->middleware('permission.type:bank,delete');
 
     $route->get('cheque', [ChequeController::class, 'index'])
         ->middleware('permission.type:cheque,view');
@@ -168,11 +167,16 @@ Route::prefix('api')->middleware(['web', 'central.auth', 'tenant.session'])->gro
     $route->delete('invoice/{id}', [InvoiceController::class, 'destroy'])
         ->middleware('permission.type:sales,delete');
 
-    $route->get('invoice-item', [InvoiceItemController::class, 'index']);
-    $route->post('invoice-item', [InvoiceItemController::class, 'store']);
-    $route->get('invoice-item/{id}', [InvoiceItemController::class, 'show']);
-    $route->put('invoice-item/{id}', [InvoiceItemController::class, 'update']);
-    $route->delete('invoice-item/{id}', [InvoiceItemController::class, 'destroy']);
+    $route->get('invoice-item', [InvoiceItemController::class, 'index'])
+        ->middleware('permission.type:sales,view');
+    $route->post('invoice-item', [InvoiceItemController::class, 'store'])
+        ->middleware('permission.type:sales,create');
+    $route->get('invoice-item/{id}', [InvoiceItemController::class, 'show'])
+        ->middleware('permission.type:sales,view');
+    $route->put('invoice-item/{id}', [InvoiceItemController::class, 'update'])
+        ->middleware('permission.type:sales,update');
+    $route->delete('invoice-item/{id}', [InvoiceItemController::class, 'destroy'])
+        ->middleware('permission.type:sales,delete');
 
     $route->post('ledger/adjustment', [LedgerAdjustmentController::class, 'adjust']);
 
@@ -198,11 +202,16 @@ Route::prefix('api')->middleware(['web', 'central.auth', 'tenant.session'])->gro
     $route->delete('purchase-order/{id}', [PurchaseOrderController::class, 'destroy'])
         ->middleware('permission.type:purchase,delete');
 
-    $route->get('purchase-order-item', [PurchaseOrderItemController::class, 'index']);
-    $route->post('purchase-order-item', [PurchaseOrderItemController::class, 'store']);
-    $route->get('purchase-order-item/{id}', [PurchaseOrderItemController::class, 'show']);
-    $route->put('purchase-order-item/{id}', [PurchaseOrderItemController::class, 'update']);
-    $route->delete('purchase-order-item/{id}', [PurchaseOrderItemController::class, 'destroy']);
+    $route->get('purchase-order-item', [PurchaseOrderItemController::class, 'index'])
+        ->middleware('permission.type:purchase,view');
+    $route->post('purchase-order-item', [PurchaseOrderItemController::class, 'store'])
+        ->middleware('permission.type:purchase,create');
+    $route->get('purchase-order-item/{id}', [PurchaseOrderItemController::class, 'show'])
+        ->middleware('permission.type:purchase,view');
+    $route->put('purchase-order-item/{id}', [PurchaseOrderItemController::class, 'update'])
+        ->middleware('permission.type:purchase,update');
+    $route->delete('purchase-order-item/{id}', [PurchaseOrderItemController::class, 'destroy'])
+        ->middleware('permission.type:purchase,delete');
 
     $route->get('supplier', [SupplierController::class, 'index'])
         ->middleware('permission.type:supplier,view');
@@ -232,11 +241,16 @@ Route::prefix('api')->middleware(['web', 'central.auth', 'tenant.session'])->gro
     $route->delete('purchase-return/{id}', [PurchaseReturnController::class, 'destroy'])
         ->middleware('permission.type:purchase-return,delete');
 
-    $route->get('purchase-return-item', [PurchaseReturnItemController::class, 'index']);
-    $route->post('purchase-return-item', [PurchaseReturnItemController::class, 'store']);
-    $route->get('purchase-return-item/{id}', [PurchaseReturnItemController::class, 'show']);
-    $route->put('purchase-return-item/{id}', [PurchaseReturnItemController::class, 'update']);
-    $route->delete('purchase-return-item/{id}', [PurchaseReturnItemController::class, 'destroy']);
+    $route->get('purchase-return-item', [PurchaseReturnItemController::class, 'index'])
+        ->middleware('permission.type:purchase-return,view');
+    $route->post('purchase-return-item', [PurchaseReturnItemController::class, 'store'])
+        ->middleware('permission.type:purchase-return,create');
+    $route->get('purchase-return-item/{id}', [PurchaseReturnItemController::class, 'show'])
+        ->middleware('permission.type:purchase-return,view');
+    $route->put('purchase-return-item/{id}', [PurchaseReturnItemController::class, 'update'])
+        ->middleware('permission.type:purchase-return,update');
+    $route->delete('purchase-return-item/{id}', [PurchaseReturnItemController::class, 'destroy'])
+        ->middleware('permission.type:purchase-return,delete');
 
     $route->get('invoice-return', [InvoiceReturnController::class, 'index'])
         ->middleware('permission.type:sales-return,view');
@@ -251,11 +265,16 @@ Route::prefix('api')->middleware(['web', 'central.auth', 'tenant.session'])->gro
     $route->delete('invoice-return/{id}', [InvoiceReturnController::class, 'destroy'])
         ->middleware('permission.type:sales-return,delete');
 
-    $route->get('invoice-return-item', [InvoiceReturnItemController::class, 'index']);
-    $route->post('invoice-return-item', [InvoiceReturnItemController::class, 'store']);
-    $route->get('invoice-return-item/{id}', [InvoiceReturnItemController::class, 'show']);
-    $route->put('invoice-return-item/{id}', [InvoiceReturnItemController::class, 'update']);
-    $route->delete('invoice-return-item/{id}', [InvoiceReturnItemController::class, 'destroy']);
+    $route->get('invoice-return-item', [InvoiceReturnItemController::class, 'index'])
+        ->middleware('permission.type:sales-return,view');
+    $route->post('invoice-return-item', [InvoiceReturnItemController::class, 'store'])
+        ->middleware('permission.type:sales-return,create');
+    $route->get('invoice-return-item/{id}', [InvoiceReturnItemController::class, 'show'])
+        ->middleware('permission.type:sales-return,view');
+    $route->put('invoice-return-item/{id}', [InvoiceReturnItemController::class, 'update'])
+        ->middleware('permission.type:sales-return,update');
+    $route->delete('invoice-return-item/{id}', [InvoiceReturnItemController::class, 'destroy'])
+        ->middleware('permission.type:sales-return,delete');
 
     $route->get('product', [ProductController::class, 'index'])
         ->middleware('permission.type:product,view');
@@ -279,11 +298,16 @@ Route::prefix('api')->middleware(['web', 'central.auth', 'tenant.session'])->gro
     $route->delete('procurement/{id}', [ProcurementController::class, 'destroy'])
         ->middleware('permission.type:procurement,delete');
 
-    $route->get('procurement-item', [ProcurementItemController::class, 'index']);
-    $route->post('procurement-item', [ProcurementItemController::class, 'store']);
-    $route->get('procurement-item/{id}', [ProcurementItemController::class, 'show']);
-    $route->put('procurement-item/{id}', [ProcurementItemController::class, 'update']);
-    $route->delete('procurement-item/{id}', [ProcurementItemController::class, 'destroy']);
+    $route->get('procurement-item', [ProcurementItemController::class, 'index'])
+        ->middleware('permission.type:procurement,view');
+    $route->post('procurement-item', [ProcurementItemController::class, 'store'])
+        ->middleware('permission.type:procurement,create');
+    $route->get('procurement-item/{id}', [ProcurementItemController::class, 'show'])
+        ->middleware('permission.type:procurement,view');
+    $route->put('procurement-item/{id}', [ProcurementItemController::class, 'update'])
+        ->middleware('permission.type:procurement,update');
+    $route->delete('procurement-item/{id}', [ProcurementItemController::class, 'destroy'])
+        ->middleware('permission.type:procurement,delete');
 
     $route->get('dashboard', [DashboardController::class, 'index']);
     $route->get('/dashboard/graph', [DashboardController::class, 'graph']);

@@ -15,6 +15,7 @@ use App\Http\Middleware\CentralAuth;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\InitializeTenantFromSession;
 use App\Http\Middleware\InitializeTenantFromToken;
+use App\Http\Middleware\EnsureMobileOwner;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -36,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'prevent_access_from_central_domains' => PreventAccessFromCentralDomains::class,
             'user' => CheckAuthMiddleware::class,
             'tenant.owner' => EnsureTenantOwner::class,
+            'mobile.owner' => EnsureMobileOwner::class,
             'stateful' => EnsureFrontendRequestsAreStateful::class,
             'central.auth' => CentralAuth::class,
             'tenant.session' => InitializeTenantFromSession::class,

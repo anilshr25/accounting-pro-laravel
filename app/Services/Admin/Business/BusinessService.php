@@ -36,6 +36,32 @@ class BusinessService
         return BusinessResource::collection($business);
     }
 
+    public function ownerPaginate($request, $limit = 25)
+{
+    $ownerId = auth('owner')->id() ?? auth('sanctum')->id();
+
+    $businesses = $this->business
+        ->whereHas('owners', function ($query) use ($ownerId) {
+            $query->where('owner_users.id', $ownerId);
+        })
+        ->with([
+            'tenant',
+            'owners',
+        ])
+        ->when($request->filled('name'), function ($query) use ($request) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        })
+        ->when($request->filled('email'), function ($query) use ($request) {
+            $query->where('email', $request->email);
+        })
+        ->when($request->filled('status'), function ($query) use ($request) {
+            $query->where('status', $request->status);
+        })
+        ->latest('id')
+        ->paginate($request->integer('limit', $limit));
+
+    return BusinessResource::collection($businesses);
+}
     public function search($request, $limit = 10)
     {
         $business = $this->business

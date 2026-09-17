@@ -1,10 +1,8 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Http\Middleware;
 
-use App\Models\OwnerUser\OwnerUser;
+use App\Models\Business\Business;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,13 +11,24 @@ final class EnsureTenantOwner
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user('web');
-        $tenant = tenancy()->initialized ? tenant() : null;
-        $owner = $tenant?->owner_user_id
-            ? OwnerUser::query()->find($tenant->owner_user_id)
+        $owner = $request->user('owner');
+
+        $tenant = tenancy()->initialized
+            ? tenant()
             : null;
 
-        if ($user === null || $owner === null || ! hash_equals(strtolower($owner->email), strtolower($user->email))) {
+        if ($owner === null || $tenant === null) {
+            abort(403, 'Only the tenant owner may manage infrastructure settings.');
+        }
+
+        $hasAccess = Business::query()
+            ->where('tenant_id', $tenant->id)
+            ->whereHas('owners', function ($query) use ($owner) {
+                $query->where('owner_users.id', $owner->id);
+            })
+            ->exists();
+
+        if (! $hasAccess) {
             abort(403, 'Only the tenant owner may manage infrastructure settings.');
         }
 

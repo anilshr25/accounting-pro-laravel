@@ -87,6 +87,8 @@ Route::prefix('owner')->middleware(['web', 'auth:owner',])->group(function ($rou
         ->middleware('permission.type:role,update');
     $route->get('role/{id}/permission', [RoleController::class, 'permissions'])
         ->middleware('permission.type:role,view');
+
+    $route->get('business', [BusinessController::class, 'ownerBusinesses']);
 });
 
 Route::prefix('auth')->middleware(['web'])->group(function ($route) {

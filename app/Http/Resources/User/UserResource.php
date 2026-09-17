@@ -16,12 +16,14 @@ class UserResource extends JsonResource
 
             'businesses' => $this->whenLoaded('tenants', function () {
                 return $this->tenants->map(function ($tenant) {
+                    $tenantUser = $this->tenantUsers
+                        ->firstWhere('tenant_id', $tenant->id);
                     return [
                         'tenant_id' => $tenant->id,
                         'business_id' => $tenant->business?->id,
                         'business_name' => $tenant->business?->name,
 
-                        'role_id' => $tenant->pivot->role_id,
+                        'role' => $tenantUser?->role?->name,
                         'is_active' => (bool) $tenant->pivot->is_active,
                     ];
                 });

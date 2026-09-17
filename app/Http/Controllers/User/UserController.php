@@ -37,9 +37,16 @@ class UserController extends Controller
         return response(['status' => 'ERROR'], 500);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $user = $this->user->find($id, true);
+        $user = $this->user->find($id, true, $request);
+
+        if (! $user) {
+            return response([
+                'status' => 'NOT_FOUND',
+                'message' => 'User not found.',
+            ], 404);
+        }
 
         return response([
             'data' => $user
