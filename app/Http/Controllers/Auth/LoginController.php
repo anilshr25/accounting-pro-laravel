@@ -8,8 +8,8 @@ use App\Models\User\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use ReCaptcha\ReCaptcha;
+use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -21,13 +21,29 @@ class LoginController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (! $this->verifyRecaptcha($request->token)) {
+        $recaptcha = new ReCaptcha(
+            config('recaptcha.secret_key')
+        );
+
+        $response = $recaptcha->verify(
+            $request->token
+        );
+
+        if (! $response->isSuccess()) {
+
+            Log::error('Verification reCAPTCHA failed', [
+                'errors' => $response->getErrorCodes(),
+            ]);
+
             return response([
                 'status' => 'ERROR',
                 'message' => [
-                    'Something went wrong in recaptcha !!',
+                    'Something went wrong in recaptcha !!'
                 ],
-            ], 422);
+
+                'recaptcha_errors' => $response->getErrorCodes(),
+
+            ], 500);
         }
 
         $email = $request->email;
@@ -142,7 +158,7 @@ class LoginController extends Controller
         return response([
             'status' => 'NOT_FOUND',
             'message' => [
-                'The provided credentials are incorrect.',
+                'The provided credentials are incorrect.'
             ],
         ], 200);
     }
@@ -154,15 +170,6 @@ class LoginController extends Controller
             'email' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
-
-        if (! $this->verifyRecaptcha($request->token)) {
-            return response([
-                'status' => 'ERROR',
-                'message' => [
-                    'reCAPTCHA verification failed.',
-                ],
-            ], 422);
-        }
 
         $email = $request->email;
         $password = $request->password;
@@ -430,27 +437,4 @@ class LoginController extends Controller
     }
 
     protected function sendEmailVerificationCode($user) {}
-
-    private function verifyRecaptcha(string $token): bool
-    {
-        if (! config('recaptcha.enabled')) {
-            return true;
-        }
-
-        $recaptcha = new ReCaptcha(
-            config('recaptcha.secret_key')
-        );
-
-        $response = $recaptcha->verify($token);
-
-        if (! $response->isSuccess()) {
-            Log::error('Login reCAPTCHA failed', [
-                'errors' => $response->getErrorCodes(),
-            ]);
-
-            return false;
-        }
-
-        return true;
-    }
 }
