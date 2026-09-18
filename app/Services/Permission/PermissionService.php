@@ -32,8 +32,10 @@ class PermissionService extends Service
             ->when($request->filled('guard_name'), function ($query) use ($request) {
                 $query->where('guard_name', $request->guard_name);
             })
-            ->orderByDesc('id')
-            ->paginate($limit);
+            ->orderBy('id', 'asc')
+            ->get()
+            ->groupBy('name')
+            ->values();
 
         return PermissionResource::collection($permissions);
     }

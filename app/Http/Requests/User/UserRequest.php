@@ -19,20 +19,30 @@ class UserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => [
+                $this->isMethod('post') ? 'required' : 'sometimes',
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('users', 'email')->ignore($userId),
+                Rule::unique('central.users', 'email')
+                    ->ignore($userId),
             ],
             'password' => [
                 $this->isMethod('post') ? 'required' : 'nullable',
                 'string',
                 'min:8',
             ],
-            'tenant_id' => ['required', 'string', 'max:255', 'exists:tenants,id',],
+            'tenant_id' => ['required', 'string', 'max:255', 'exists:central.tenants,id',],
             'role' => ['required', 'string', 'max:255',],
-            'permission_ids.*' => ['integer', 'exists:permissions,id'],
+            'permission_ids.*' => ['integer', 'exists:central.permissions,id'],
             'is_active' => ['sometimes', 'boolean',],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'email.unique' => 'A user with this email already exists.',
+            'tenant_id.exists' => 'The selected business does not exist.',
         ];
     }
 }

@@ -10,10 +10,15 @@ class PermissionResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'type' => $this->type,
-            'guard_name' => $this->guard_name,
+            'name' => $this->first()->name,
+            'guard_name' => $this->first()->guard_name,
+
+            'permissions' => $this->map(function ($permission) {
+                return [
+                    'id' => $permission->id,
+                    'type' => $permission->type,
+                ];
+            })->values()->toArray(),
         ];
     }
 }
