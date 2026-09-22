@@ -105,6 +105,7 @@ class UserService extends Service
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
+                'is_active' => $data['is_active'] ?? true,
             ]);
 
             TenantUser::create([
@@ -224,10 +225,14 @@ class UserService extends Service
                 ]);
             }
 
-            $tenantUser->update([
-                'role_id' => $role->id,
-                'is_active' => $isActive ?? $tenantUser->is_active,
-            ]);
+            TenantUser::query()
+                ->where('user_id', $user->id)
+                ->where('tenant_id', $tenantId)
+                ->update([
+                    'role_id' => $role->id,
+                    'is_active' => $isActive ?? $tenantUser->is_active,
+                    'updated_at' => now(),
+                ]);
 
             return $user->fresh([
                 'tenants.business',

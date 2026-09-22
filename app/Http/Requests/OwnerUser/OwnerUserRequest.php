@@ -28,7 +28,7 @@ class OwnerUserRequest extends FormRequest
                 Rule::unique('owner_users', 'email')
                     ->ignore($ownerUserId),
             ],
-            'phone' => ['nullable', 'string', 'max:20',],
+            'phone' => ['nullable', 'string', 'max:10',],
             'password' => [$this->isMethod('POST') ? 'required' : 'nullable', 'string', 'min:8', 'confirmed',],
 
             'business_ids' => [

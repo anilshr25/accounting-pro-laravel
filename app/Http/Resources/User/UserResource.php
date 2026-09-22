@@ -33,6 +33,7 @@ class UserResource extends JsonResource
                     ];
                 })->values()
                 : [],
+        'is_active' => (bool) ($tenantUser?->is_active ?? false),
 
             'business' => [
                 'tenant_id' => $tenant?->id,

@@ -78,6 +78,7 @@ Route::prefix('api/mobile')
         $route->post('logout', [AppLoginController::class, 'logout']);
 
         $route->post('select-business', [AppLoginController::class, 'selectBusiness']);
+        $route->post('change-password',[AppLoginController::class, 'changePassword']);
     });
 
 Route::prefix('api/mobile')
@@ -164,7 +165,7 @@ Route::prefix('api/mobile')
                 ->middleware('permission.type:sales,delete');
 
             $route->get('invoice-item', [InvoiceItemController::class, 'index'])
-            ->middleware('permission.type:sales,view');
+                ->middleware('permission.type:sales,view');
             $route->post('invoice-item', [InvoiceItemController::class, 'store'])
                 ->middleware('permission.type:sales,create');
             $route->get('invoice-item/{id}', [InvoiceItemController::class, 'show'])

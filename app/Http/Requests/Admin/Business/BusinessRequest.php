@@ -24,8 +24,8 @@ class BusinessRequest extends FormRequest
                 'max:255',
                 Rule::unique('businesses', 'slug')->ignore($businessId)
             ],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('businesses', 'email')->ignore($businessId),],
+            'phone' => ['nullable', 'string', 'max:10'],
             'address' => ['nullable', 'string', 'max:500'],
             'status' => [
                 'nullable',
@@ -33,6 +33,16 @@ class BusinessRequest extends FormRequest
             ],
 
             'tenant_id' => ['nullable', 'string', 'exists:tenants,id'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Business name is required.',
+            'email.email' => 'Please provide a valid email address.',
+            'email.unique' => 'This email is already exists for another business.',
+            'tenant_id.exists' => 'The selected tenant does not exist.',
         ];
     }
 }

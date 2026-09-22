@@ -260,6 +260,7 @@ class LoginController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'user_type' => 'user',
+                    'is_active' => (bool) $user->is_active,
                     'businesses' => $businesses,
                 ],
             ], 200);
@@ -437,4 +438,97 @@ class LoginController extends Controller
     }
 
     protected function sendEmailVerificationCode($user) {}
+
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'string'],
+            'new_password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if (Auth::guard('owner')->check()) {
+
+            $owner = OwnerUser::find(
+                Auth::guard('owner')->id()
+            );
+
+            if (! $owner) {
+                return response()->json([
+                    'status' => 'UNAUTHORIZED',
+                    'message' => [
+                        'Please login first.'
+                    ],
+                ], 401);
+            }
+
+            if (! Hash::check(
+                $request->current_password,
+                $owner->password
+            )) {
+                return response()->json([
+                    'status' => 'ERROR',
+                    'message' => [
+                        'Current password is incorrect.'
+                    ],
+                ], 422);
+            }
+
+            $owner->password = Hash::make(
+                $request->new_password
+            );
+
+            $owner->save();
+
+            return response()->json([
+                'status' => 'OK',
+                'message' => 'Password changed successfully.',
+            ], 200);
+        }
+
+        if (Auth::guard('user')->check()) {
+
+            $user = User::find(
+                Auth::guard('user')->id()
+            );
+
+            if (! $user) {
+                return response()->json([
+                    'status' => 'UNAUTHORIZED',
+                    'message' => [
+                        'Please login first.'
+                    ],
+                ], 401);
+            }
+
+            if (! Hash::check(
+                $request->current_password,
+                $user->password
+            )) {
+                return response()->json([
+                    'status' => 'ERROR',
+                    'message' => [
+                        'Current password is incorrect.'
+                    ],
+                ], 422);
+            }
+
+            $user->password = Hash::make(
+                $request->new_password
+            );
+
+            $user->save();
+
+            return response()->json([
+                'status' => 'OK',
+                'message' => 'Password changed successfully.',
+            ], 200);
+        }
+
+        return response()->json([
+            'status' => 'UNAUTHORIZED',
+            'message' => [
+                'Please login first.'
+            ],
+        ], 401);
+    }
 }

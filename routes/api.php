@@ -100,5 +100,6 @@ Route::prefix('auth')->middleware(['web'])->group(function ($route) {
         $route->post('/select-business', [LoginController::class, 'selectBusiness']);
         $route->get('/verify', [LoginController::class, 'verify'])->name('auth.verify');
         $route->post('/logout', [LoginController::class, 'logout'])->name('auth.logout');
+        $route->post('/change-password', [LoginController::class, 'changePassword'])->name('auth.change-password');
     });
 });
