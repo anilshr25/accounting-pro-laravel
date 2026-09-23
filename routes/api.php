@@ -27,6 +27,7 @@ Route::group([
         $route->get('profile', [AdminLoginController::class, 'profile',]);
 
         $route->post('logout', [AdminLoginController::class, 'logout',]);
+        $route->get('verify', [AdminLoginController::class, 'verify',]);
 
         $route->get('/owner-user', [OwnerUserController::class, 'index']);
         $route->post('/owner-user', [OwnerUserController::class, 'store']);

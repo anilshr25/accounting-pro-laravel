@@ -19,7 +19,7 @@ class AdminLoginController extends Controller
                 ],
             ], 500);
         }
-        
+
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
@@ -105,6 +105,41 @@ class AdminLoginController extends Controller
         return response()->json([
             'status' => 'OK',
             'message' => 'Logout successfully.',
+        ], 200);
+    }
+
+    public function verify()
+    {
+        if (! Auth::guard('admin')->check()) {
+            return response()->json([
+                'status' => 'UNAUTHORIZED',
+                'message' => 'Admin is not authenticated.',
+            ], 401);
+        }
+
+        $admin = Auth::guard('admin')->user();
+
+        if (! $admin instanceof AdminUser) {
+            $admin = AdminUser::find(Auth::guard('admin')->id());
+        }
+
+        if (! $admin) {
+            return response()->json([
+                'status' => 'UNAUTHORIZED',
+                'message' => 'Admin is not authenticated.',
+            ], 401);
+        }
+
+        return response()->json([
+            'status' => 'OK',
+            'data' => [
+                'id' => $admin->id,
+                'first_name' => $admin->first_name,
+                'last_name' => $admin->last_name,
+                'email' => $admin->email,
+                'user_type' => $admin->user_type,
+                'is_active' => (bool) $admin->is_active,
+            ],
         ], 200);
     }
 }
