@@ -87,11 +87,6 @@ class ChequeService
                 fn($q) => $q->where('miti', '<=', $request->miti_upto)
             )
 
-            ->when(
-                $request->filled('status'),
-                fn($q) => $q->where('status', $request->status)
-            )
-
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->search;
 
@@ -144,7 +139,9 @@ class ChequeService
         $summaryCheques = $summaryQuery->get();
 
         $summary = [
-            'cheque_count' => $summaryCheques->count(),
+            'cheque_count' => $request->filled('status')
+                ? $summaryCheques->where('status', $request->status)->count()
+                : $summaryCheques->count(),
 
             'cleared_amount' => round(
                 $summaryCheques
@@ -152,23 +149,32 @@ class ChequeService
                     ->sum('amount'),
                 2
             ),
+
             'pending_amount' => round(
                 $summaryCheques
                     ->where('status', 'pending')
                     ->sum('amount'),
                 2
             ),
+
             'cancelled_amount' => round(
                 $summaryCheques
                     ->where('status', 'cancelled')
                     ->sum('amount'),
                 2
             ),
+
             'total_amount' => round(
                 $summaryCheques->sum('amount'),
                 2
             ),
         ];
+
+
+        $query->when(
+            $request->filled('status'),
+            fn($q) => $q->where('status', $request->status)
+        );
 
         if ($request->status === 'pending') {
             $query->orderBy('date', 'ASC');

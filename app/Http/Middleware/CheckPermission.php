@@ -15,7 +15,8 @@ class CheckPermission
     public function handle(
         Request $request,
         Closure $next,
-        string $permission
+        string $permissionName,
+        ?string $permissionType = null
     ): Response {
 
         if (auth('owner')->check()) {
@@ -103,8 +104,7 @@ class CheckPermission
             ], 403);
         }
 
-        $role = Role::with('permissions')
-            ->where('id', $roleId)
+        $role = Role::where('id', $roleId)
             ->where('tenant_id', $tenantId)
             ->first();
 
@@ -115,10 +115,6 @@ class CheckPermission
             ], 403);
         }
 
-        $parts = explode(',', $permission, 2);
-
-        $permissionName = $parts[0] ?? null;
-        $permissionType = $parts[1] ?? null;
 
         if (! $permissionName || ! $permissionType) {
             return response()->json([
@@ -127,13 +123,10 @@ class CheckPermission
             ], 403);
         }
 
-        $hasPermission = $role->permissions->contains(function ($rolePermission) use (
-            $permissionName,
-            $permissionType
-        ) {
-            return $rolePermission->name === $permissionName
-                && $rolePermission->type === $permissionType;
-        });
+        $hasPermission = $role->permissions()
+            ->where('name', $permissionName)
+            ->where('type', $permissionType)
+            ->exists();
 
         if (! $hasPermission) {
             return response()->json([

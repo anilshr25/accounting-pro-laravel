@@ -96,10 +96,6 @@ class LoanService
                 fn($q) => $q->where('bank_account_id', $request->bank_account_id)
             )
             ->when(
-                $request->filled('status'),
-                fn($q) => $q->where('status', $request->status)
-            )
-            ->when(
                 $request->filled('loan_type'),
                 fn($q) => $q->where('loan_type', $request->loan_type)
             )
@@ -136,6 +132,10 @@ class LoanService
             'monthly_emi' => round($summaryLoans->sum('emi_amount'), 2),
         ];
 
+        $query->when(
+            $request->filled('status'),
+            fn($q) => $q->where('status', $request->status)
+        );
         $loans = $query
             ->select($this->fields())
             ->latest()

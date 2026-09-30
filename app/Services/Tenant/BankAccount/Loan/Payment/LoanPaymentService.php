@@ -153,11 +153,11 @@ class LoanPaymentService
 
             $payment = $this->model->create($data);
 
+            $this->updateLoanRemainingAmount($data['loan_id']);
+
             if ($payment->status === 'paid') {
                 $this->createNextInstallment($payment);
             }
-
-            $this->updateLoanRemainingAmount($data['loan_id']);
 
             DB::commit();
 
@@ -193,12 +193,12 @@ class LoanPaymentService
 
             $payment->refresh();
 
+            $this->updateLoanRemainingAmount($loanId);
+            
             if ($payment->status === 'paid') {
 
                 $this->createNextInstallment($payment);
             }
-
-            $this->updateLoanRemainingAmount($loanId);
 
             DB::commit();
 
