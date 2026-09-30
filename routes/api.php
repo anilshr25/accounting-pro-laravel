@@ -88,8 +88,6 @@ Route::prefix('owner')->middleware(['web', 'auth:owner',])->group(function ($rou
         ->middleware('permission.type:role,update');
     $route->get('role/{id}/permission', [RoleController::class, 'permissions'])
         ->middleware('permission.type:role,view');
-
-    $route->get('business', [BusinessController::class, 'ownerBusinesses']);
 });
 
 Route::prefix('auth')->middleware(['web'])->group(function ($route) {
@@ -98,6 +96,7 @@ Route::prefix('auth')->middleware(['web'])->group(function ($route) {
     $route->post('/login', [LoginController::class, 'login'])->name('auth.login');
 
     Route::middleware(['auth:owner,user'])->group(function ($route) {
+        $route->get('/business', [BusinessController::class, 'accessibleBusinesses']);
         $route->post('/select-business', [LoginController::class, 'selectBusiness']);
         $route->get('/verify', [LoginController::class, 'verify'])->name('auth.verify');
         $route->post('/logout', [LoginController::class, 'logout'])->name('auth.logout');

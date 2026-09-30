@@ -36,32 +36,6 @@ class BusinessService
         return BusinessResource::collection($business);
     }
 
-    public function ownerPaginate($request, $limit = 25)
-{
-    $ownerId = auth('owner')->id() ?? auth('sanctum')->id();
-
-    $businesses = $this->business
-        ->whereHas('owners', function ($query) use ($ownerId) {
-            $query->where('owner_users.id', $ownerId);
-        })
-        ->with([
-            'tenant',
-            'owners',
-        ])
-        ->when($request->filled('name'), function ($query) use ($request) {
-            $query->where('name', 'like', '%' . $request->name . '%');
-        })
-        ->when($request->filled('email'), function ($query) use ($request) {
-            $query->where('email', $request->email);
-        })
-        ->when($request->filled('status'), function ($query) use ($request) {
-            $query->where('status', $request->status);
-        })
-        ->latest('id')
-        ->paginate($request->integer('limit', $limit));
-
-    return BusinessResource::collection($businesses);
-}
     public function search($request, $limit = 10)
     {
         $business = $this->business
@@ -82,61 +56,60 @@ class BusinessService
     }
 
     public function store($data)
-{
-    return DB::transaction(function () use ($data) {
+    {
+        return DB::transaction(function () use ($data) {
 
-        $slug = Str::slug($data['name']);
-
-        if (
-            $this->business
-                ->where('slug', $slug)
-                ->exists()
-        ) {
-            return false;
-        }
-
-        if (! empty($data['tenant_id'])) {
-
-            $tenant = Tenant::find($data['tenant_id']);
-
-            if (! $tenant) {
-                return false;
-            }
+            $slug = Str::slug($data['name']);
 
             if (
                 $this->business
-                    ->where('tenant_id', $tenant->id)
-                    ->exists()
+                ->where('slug', $slug)
+                ->exists()
             ) {
                 return false;
             }
 
-        } else {
+            if (! empty($data['tenant_id'])) {
 
-            $tenantId = (string) Str::uuid();
+                $tenant = Tenant::find($data['tenant_id']);
 
-            $tenant = Tenant::create([
-                'id' => $tenantId,
-                'tenancy_db_name' => 'tenant_' . $tenantId . '_' . $slug,
+                if (! $tenant) {
+                    return false;
+                }
+
+                if (
+                    $this->business
+                    ->where('tenant_id', $tenant->id)
+                    ->exists()
+                ) {
+                    return false;
+                }
+            } else {
+
+                $tenantId = (string) Str::uuid();
+
+                $tenant = Tenant::create([
+                    'id' => $tenantId,
+                    'tenancy_db_name' => 'tenant_' . $tenantId . '_' . $slug,
+                ]);
+            }
+
+            $business = $this->business->create([
+                'name' => $data['name'],
+                'slug' => $slug,
+                'email' => $data['email'] ?? null,
+                'phone' => $data['phone'] ?? null,
+                'address' => $data['address'] ?? null,
+                'status' => $data['status'] ?? 'active',
+                'tenant_id' => $tenant->id,
             ]);
-        }
 
-        $business = $this->business->create([
-            'name' => $data['name'],
-            'slug' => $slug,
-            'email' => $data['email'] ?? null,
-            'phone' => $data['phone'] ?? null,
-            'address' => $data['address'] ?? null,
-            'status' => $data['status'] ?? 'active',
-            'tenant_id' => $tenant->id,
-        ]);
-
-        return $business->load([
-            'tenant',
-            'owners',
-        ]);
-    });
-}
+            return $business->load([
+                'tenant',
+                'owners',
+            ]);
+        });
+    }
 
     public function find($id, $resource = false)
     {
@@ -200,5 +173,80 @@ class BusinessService
 
             return false;
         }
+    }
+
+    public function accessibleBusinesses($request, $limit = 25)
+    {
+        if (auth('owner')->check()) {
+
+            $ownerId = auth('owner')->id();
+
+            $businesses = $this->business
+                ->whereHas('owners', function ($query) use ($ownerId) {
+                    $query->where('owner_users.id', $ownerId);
+                })
+                ->with('tenant')
+                ->when($request->filled('name'), function ($query) use ($request) {
+                    $query->where(
+                        'businesses.name',
+                        'like',
+                        '%' . $request->name . '%'
+                    );
+                })
+                ->when($request->filled('email'), function ($query) use ($request) {
+                    $query->where('businesses.email', $request->email);
+                })
+                ->when($request->filled('status'), function ($query) use ($request) {
+                    $query->where('businesses.status', $request->status);
+                })
+                ->latest('businesses.id')
+                ->paginate($request->integer('limit', $limit));
+
+            return BusinessResource::collection($businesses);
+        }
+
+        if (auth('user')->check()) {
+
+            $userId = auth('user')->id();
+
+            $businesses = $this->business
+                ->join(
+                    'tenants',
+                    'businesses.tenant_id',
+                    '=',
+                    'tenants.id'
+                )
+                ->join(
+                    'tenant_user',
+                    'tenants.id',
+                    '=',
+                    'tenant_user.tenant_id'
+                )
+                ->where('tenant_user.user_id', $userId)
+                ->where('tenant_user.is_active', true)
+                ->select('businesses.*')
+                ->when($request->filled('name'), function ($query) use ($request) {
+                    $query->where(
+                        'businesses.name',
+                        'like',
+                        '%' . $request->name . '%'
+                    );
+                })
+                ->when($request->filled('email'), function ($query) use ($request) {
+                    $query->where('businesses.email', $request->email);
+                })
+                ->when($request->filled('status'), function ($query) use ($request) {
+                    $query->where('businesses.status', $request->status);
+                })
+                ->latest('businesses.id')
+                ->paginate($request->integer('limit', $limit));
+
+            return BusinessResource::collection($businesses);
+        }
+
+        return response()->json([
+            'status' => 'UNAUTHORIZED',
+            'message' => 'Authentication required.',
+        ], 401);
     }
 }
