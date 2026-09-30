@@ -58,8 +58,6 @@ Route::group([
 
 Route::prefix('owner')->middleware(['web', 'auth:owner',])->group(function ($route) {
 
-    $route->get('/user', [UserController::class, 'index'])
-        ->middleware('permission.type:user,view');
     $route->post('/user', [UserController::class, 'store'])
         ->middleware('permission.type:user,create');
     $route->get('/user/{id}', [UserController::class, 'show'])
@@ -101,5 +99,7 @@ Route::prefix('auth')->middleware(['web'])->group(function ($route) {
         $route->get('/verify', [LoginController::class, 'verify'])->name('auth.verify');
         $route->post('/logout', [LoginController::class, 'logout'])->name('auth.logout');
         $route->post('/change-password', [LoginController::class, 'changePassword'])->name('auth.change-password');
+        $route->get('/user', [UserController::class, 'index'])
+        ->middleware('permission.type:user,view');
     });
 });
