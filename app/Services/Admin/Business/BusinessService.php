@@ -177,9 +177,19 @@ class BusinessService
 
     public function accessibleBusinesses($request, $limit = 25)
     {
-        if (auth('owner')->check()) {
+        $ownerId = null;
 
+        if (auth('owner')->check()) {
             $ownerId = auth('owner')->id();
+        } elseif ($request->user()) {
+            $sanctumUser = $request->user();
+
+            if ($sanctumUser instanceof \App\Models\OwnerUser\OwnerUser) {
+                $ownerId = $sanctumUser->id;
+            }
+        }
+
+        if ($ownerId) {
 
             $businesses = $this->business
                 ->whereHas('owners', function ($query) use ($ownerId) {
@@ -194,20 +204,37 @@ class BusinessService
                     );
                 })
                 ->when($request->filled('email'), function ($query) use ($request) {
-                    $query->where('businesses.email', $request->email);
+                    $query->where(
+                        'businesses.email',
+                        $request->email
+                    );
                 })
                 ->when($request->filled('status'), function ($query) use ($request) {
-                    $query->where('businesses.status', $request->status);
+                    $query->where(
+                        'businesses.status',
+                        $request->status
+                    );
                 })
                 ->latest('businesses.id')
-                ->paginate($request->integer('limit', $limit));
+                ->paginate(
+                    $request->integer('limit', $limit)
+                );
 
             return BusinessResource::collection($businesses);
         }
 
-        if (auth('user')->check()) {
+        $userId = null;
 
+        if (auth('user')->check()) {
             $userId = auth('user')->id();
+        } elseif ($request->user()) {
+            $sanctumUser = $request->user();
+            if ($sanctumUser instanceof \App\Models\User\User) {
+                $userId = $sanctumUser->id;
+            }
+        }
+
+        if ($userId) {
 
             $businesses = $this->business
                 ->join(
@@ -233,13 +260,21 @@ class BusinessService
                     );
                 })
                 ->when($request->filled('email'), function ($query) use ($request) {
-                    $query->where('businesses.email', $request->email);
+                    $query->where(
+                        'businesses.email',
+                        $request->email
+                    );
                 })
                 ->when($request->filled('status'), function ($query) use ($request) {
-                    $query->where('businesses.status', $request->status);
+                    $query->where(
+                        'businesses.status',
+                        $request->status
+                    );
                 })
                 ->latest('businesses.id')
-                ->paginate($request->integer('limit', $limit));
+                ->paginate(
+                    $request->integer('limit', $limit)
+                );
 
             return BusinessResource::collection($businesses);
         }

@@ -16,6 +16,7 @@ use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\InitializeTenantFromSession;
 use App\Http\Middleware\InitializeTenantFromToken;
 use App\Http\Middleware\EnsureMobileOwner;
+use App\Http\Middleware\SetSessionCookie;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -31,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ->onOneServer();
     })
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prepend(SetSessionCookie::class);
         $middleware->alias([
             'permission.type' => CheckPermission::class,
             'tenant' => InitializeTenancyByDomain::class,

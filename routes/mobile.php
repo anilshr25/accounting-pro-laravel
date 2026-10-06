@@ -87,8 +87,7 @@ Route::prefix('api/mobile')
         'prevent_access_from_central_domains',
     ])
     ->group(function ($route) {
-        $route->get('owner/business', [BusinessController::class, 'ownerBusinesses'])
-            ->middleware('mobile.owner');
+        $route->get('owner/business', [BusinessController::class, 'accessibleBusinesses']);
         $route->get('business/{id}', [BusinessController::class, 'show'])
             ->middleware('mobile.owner');
 
