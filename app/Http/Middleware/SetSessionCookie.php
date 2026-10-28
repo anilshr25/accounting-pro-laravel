@@ -10,33 +10,39 @@ class SetSessionCookie
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $context = $request->header('X-Session-Context');
+        $path = $request->path();
 
-        $cookie = match ($context) {
-            'admin' => env(
-                'ADMIN_SESSION_COOKIE',
-                'accounting_admin_session'
-            ),
+        $context = match (true) {
+            $request->header('X-Session-Context') === 'admin',
+            str_starts_with($path, 'api/admin/') => 'admin',
 
-            'owner' => env(
-                'OWNER_SESSION_COOKIE',
-                'accounting_owner_session'
-            ),
+            $request->header('X-Session-Context') === 'owner',
+            str_starts_with($path, 'api/owner/') => 'owner',
 
-            'user' => env(
-                'USER_SESSION_COOKIE',
-                'accounting_user_session'
-            ),
+            $request->header('X-Session-Context') === 'user' => 'user',
 
-            default => config('session.cookie'),
+            default => null,
         };
 
-        config([
-            'session.cookie' => $cookie,
-        ]);
+        if ($context !== null) {
+            $cookie = match ($context) {
+                'admin' => env(
+                    'ADMIN_SESSION_COOKIE',
+                    'accounting_admin_session'
+                ),
+                'owner' => env(
+                    'OWNER_SESSION_COOKIE',
+                    'accounting_owner_session'
+                ),
+                'user' => env(
+                    'USER_SESSION_COOKIE',
+                    'accounting_user_session'
+                ),
+            };
 
-        $response = $next($request);
+            config(['session.cookie' => $cookie]);
+        }
 
-        return $response;
+        return $next($request);
     }
 }
