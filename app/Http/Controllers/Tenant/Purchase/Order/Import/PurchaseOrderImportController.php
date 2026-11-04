@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant\Purchase\Order\Import;
 
 use App\Http\Controllers\Controller;
 use App\Imports\PurchaseOrderImport;
+use App\Models\Tenant\Supplier\Supplier;
 use App\Services\Tenant\Purchase\Order\PurchaseOrderService;
 use DateTimeInterface;
 use Illuminate\Http\Request;
@@ -37,9 +38,14 @@ class PurchaseOrderImportController extends Controller
 
             $rows = $import->rows ?? collect();
 
-            // Normalize Excel values before validation.
             $rows = $rows->map(function ($row) {
                 $row = collect($row);
+
+                $row['supplier'] = trim((string) ($row['supplier'] ?? ''));
+
+                $row['purchase_invoice_number'] = trim(
+                    (string) ($row['purchase_invoice_number'] ?? '')
+                );
 
                 $row['order_date'] = $this->normalizeExcelDate(
                     $row['order_date'] ?? null
@@ -64,7 +70,6 @@ class PurchaseOrderImportController extends Controller
                 return $row;
             });
 
-            // Remove completely empty rows.
             $rows = $rows->filter(function ($row) {
                 return collect($row)->filter(function ($value) {
                     return $value !== null &&
@@ -79,12 +84,11 @@ class PurchaseOrderImportController extends Controller
                 ], 422);
             }
 
-            // Validate every row before importing anything.
             $errors = [];
 
             foreach ($rows as $index => $row) {
                 $validator = Validator::make($row->toArray(), [
-                    'supplier_id' => 'required|integer',
+                    'supplier' => 'required|string|max:255',
                     'purchase_invoice_number' => 'required|string|max:255',
                     'order_date' => 'required|date',
                     'order_date_miti' => 'nullable|string|max:20',
@@ -101,10 +105,9 @@ class PurchaseOrderImportController extends Controller
 
                 if ($validator->fails()) {
                     $errors[] = [
-                        // Excel row number (header is row 1).
                         'row' => $index + 2,
                         'invoice_number' =>
-                        $row['purchase_invoice_number'] ?? null,
+                            $row['purchase_invoice_number'] ?? null,
                         'errors' => $validator->errors()->all(),
                     ];
                 }
@@ -118,7 +121,6 @@ class PurchaseOrderImportController extends Controller
                 ], 422);
             }
 
-            // Group rows by invoice number.
             $groupedRows = $rows->groupBy(function ($row) {
                 return trim((string) $row['purchase_invoice_number']);
             });
@@ -132,10 +134,8 @@ class PurchaseOrderImportController extends Controller
 
                         $firstRow = $groupRows->first();
 
-                        // These fields must be identical for all rows
-                        // belonging to the same purchase order.
                         $orderFields = [
-                            'supplier_id',
+                            'supplier',
                             'order_date',
                             'order_date_miti',
                             'received_date',
@@ -153,13 +153,23 @@ class PurchaseOrderImportController extends Controller
                                 if ((string) $firstValue !== (string) $currentValue) {
                                     throw new \Exception(
                                         "Inconsistent {$field} for invoice number: " .
-                                            $firstRow['purchase_invoice_number']
+                                        $firstRow['purchase_invoice_number']
                                     );
                                 }
                             }
                         }
 
-                        // Build purchase order items.
+                        $supplier = Supplier::whereRaw(
+                            'LOWER(TRIM(name)) = ?',
+                            [mb_strtolower(trim($firstRow['supplier']))]
+                        )->first();
+
+                        if (!$supplier) {
+                            throw new \Exception(
+                                "Supplier not found: " . $firstRow['supplier']
+                            );
+                        }
+
                         $items = $groupRows->map(function ($row) {
                             return [
                                 'description' => $row['description'],
@@ -171,26 +181,26 @@ class PurchaseOrderImportController extends Controller
 
                         $subTotal = collect($items)->sum('amount');
 
-                        // Tax is treated as a percentage, e.g. 13 = 13%.
                         $tax = (float) ($firstRow['tax'] ?? 0);
 
                         $total = $subTotal + ($subTotal * $tax / 100);
 
                         $data = [
-                            'supplier_id' => $firstRow['supplier_id'],
+                            'supplier_id' => $supplier->id,
 
                             'purchase_invoice_number' =>
-                            $firstRow['purchase_invoice_number'],
+                                $firstRow['purchase_invoice_number'],
 
                             'order_date' => $firstRow['order_date'],
+
                             'order_date_miti' =>
-                            $firstRow['order_date_miti'] ?? null,
+                                $firstRow['order_date_miti'] ?? null,
 
                             'received_date' =>
-                            $firstRow['received_date'] ?? null,
+                                $firstRow['received_date'] ?? null,
 
                             'received_date_miti' =>
-                            $firstRow['received_date_miti'] ?? null,
+                                $firstRow['received_date_miti'] ?? null,
 
                             'tax' => $tax,
                             'sub_total' => $subTotal,
@@ -199,17 +209,23 @@ class PurchaseOrderImportController extends Controller
                             'status' => $firstRow['status'],
 
                             'received_by' =>
-                            $firstRow['received_by'] ?? null,
+                                $firstRow['received_by'] ?? null,
 
-                            // Passed to PurchaseOrderService::store()
-                            // for syncing purchase order items.
                             'items' => $items,
                         ];
 
-                        $this->purchaseOrderService->store($data);
+                        $result = $this->purchaseOrderService->store($data);
+
+                        if (!$result) {
+                            throw new \Exception(
+                                "Failed to save purchase order: " .
+                                $firstRow['purchase_invoice_number']
+                            );
+                        }
                     });
 
                     $successCount++;
+
                 } catch (Throwable $e) {
                     $failed[] = [
                         'purchase_invoice_number' => $invoiceNumber,
@@ -226,6 +242,7 @@ class PurchaseOrderImportController extends Controller
                 'failed_count' => count($failed),
                 'failed' => $failed,
             ], count($failed) > 0 ? 207 : 200);
+
         } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -235,9 +252,6 @@ class PurchaseOrderImportController extends Controller
         }
     }
 
-    /**
-     * Convert Excel date values into Y-m-d strings.
-     */
     private function normalizeExcelDate($value): ?string
     {
         if ($value === null || $value === '') {
@@ -265,9 +279,6 @@ class PurchaseOrderImportController extends Controller
         }
     }
 
-    /**
-     * Convert Excel numeric values into numbers.
-     */
     private function normalizeExcelNumber($value): float
     {
         if ($value === null || $value === '') {
