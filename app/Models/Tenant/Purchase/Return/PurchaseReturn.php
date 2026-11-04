@@ -28,8 +28,8 @@ class PurchaseReturn extends Model
     ];
 
     protected $casts = [
-        'return_date' => 'date',
-        'return_miti' => 'date',
+        'return_date' => 'date:Y-m-d',
+        'return_miti' => 'date:Y-m-d',
     ];
 
     protected $hidden = ['supplier'];
