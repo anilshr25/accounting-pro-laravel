@@ -35,6 +35,7 @@ use App\Http\Controllers\Tenant\Procurement\ProcurementController;
 use App\Http\Controllers\Tenant\Product\ProductController;
 use App\Http\Controllers\Tenant\Purchase\Order\Item\PurchaseOrderItemController;
 use App\Http\Controllers\Tenant\Purchase\Order\PurchaseOrderController;
+use App\Http\Controllers\Tenant\Purchase\Order\Import\PurchaseOrderImportController;    
 use App\Http\Controllers\Tenant\Purchase\Return\Item\PurchaseReturnItemController;
 use App\Http\Controllers\Tenant\Purchase\Return\PurchaseReturnController;
 use App\Http\Controllers\Tenant\Report\ChequeReportController;
@@ -163,6 +164,7 @@ Route::prefix('api')->middleware(['tenant', 'prevent_access_from_central_domains
     $route->get('purchase-order/{id}', [PurchaseOrderController::class, 'show']);
     $route->put('purchase-order/{id}', [PurchaseOrderController::class, 'update']);
     $route->delete('purchase-order/{id}', [PurchaseOrderController::class, 'destroy']);
+    $route->post('purchase-order/import', [PurchaseOrderImportController::class, 'import']);
 
     $route->get('purchase-order-item', [PurchaseOrderItemController::class, 'index']);
     $route->post('purchase-order-item', [PurchaseOrderItemController::class, 'store']);
